@@ -15,6 +15,7 @@ const view=document.getElementById('view');
 const searchInput=document.getElementById('searchInput');
 
 let current='heute';
+let openNavGroupLabel='Recruiting Cockpit';
 let selectedChapterIndex=null;
 let selectedDate=todayKey();
 let selectedSalesDate=todayKey();
@@ -133,6 +134,26 @@ function activeNavGroup(){
   const groups=window.APP_CONTENT.navGroups||[];
   return groups.find(g=>(g.sections||[]).includes(current)) || null;
 }
+function toggleNavGroup(label){
+  const groups=window.APP_CONTENT.navGroups||[];
+  const group=groups.find(g=>g.label===label);
+  if(!group)return;
+  if(openNavGroupLabel===label){
+    openNavGroupLabel=null;
+    renderNav();
+    return;
+  }
+  openNavGroupLabel=label;
+  const first=(group.sections||[])[0];
+  if(first && !(group.sections||[]).includes(current)){
+    current=first;
+    selectedChapterIndex=null;
+    searchInput.value='';
+    render();
+  }else{
+    renderNav();
+  }
+}
 function renderNav(){
   nav.innerHTML='';
   const groups=window.APP_CONTENT.navGroups||[];
@@ -148,12 +169,14 @@ function renderNav(){
   }
   const activeGroup=activeNavGroup();
   groups.forEach(g=>{
+    const isActive=activeGroup&&activeGroup.label===g.label;
+    const isOpen=openNavGroupLabel===g.label;
     const groupBtn=document.createElement('button');
-    groupBtn.className='nav-btn nav-group'+(activeGroup&&activeGroup.label===g.label?' active':'');
+    groupBtn.className='nav-btn nav-group'+(isActive?' active':'');
     groupBtn.textContent=g.label;
-    groupBtn.onclick=()=>go((g.sections||[])[0]);
+    groupBtn.onclick=()=>toggleNavGroup(g.label);
     nav.appendChild(groupBtn);
-    if(activeGroup&&activeGroup.label===g.label){
+    if(isOpen){
       (g.sections||[]).forEach(id=>{
         const s=sectionById(id); if(!s)return;
         const b=document.createElement('button');
@@ -180,7 +203,9 @@ function render(){
 }
 
 function go(id){
-  current=id; selectedChapterIndex=null; searchInput.value=''; render();
+  current=id; selectedChapterIndex=null; searchInput.value='';
+  const g=activeNavGroup(); if(g)openNavGroupLabel=g.label;
+  render();
   setTimeout(()=>scrollToContent(),0);
 }
 
@@ -433,7 +458,15 @@ function renderSalesHistory(){
 
 /* Content */
 function renderLinks(s){
-  view.innerHTML=`<div class="card"><h2>${esc(s.title)}</h2><p>Direkter Einstieg in die wichtigsten Bereiche.</p></div><div class="link-grid">${(s.links||[]).map(l=>`<button class="link-card" onclick="go('${l.target}')">${esc(l.label)}</button>`).join('')}</div>${renderProgressOverview()}`;
+  let html=`<div class="card"><h2>${esc(s.title)}</h2><p>Direkter Einstieg in die wichtigsten Bereiche.</p></div>`;
+  if(s.groups&&s.groups.length){
+    s.groups.forEach(g=>{
+      html+=`<div class="card"><h3>${esc(g.title)}</h3><div class="link-grid">${(g.links||[]).map(l=>`<button class="link-card" onclick="go('${l.target}')">${esc(l.label)}</button>`).join('')}</div></div>`;
+    });
+  }else{
+    html+=`<div class="link-grid">${(s.links||[]).map(l=>`<button class="link-card" onclick="go('${l.target}')">${esc(l.label)}</button>`).join('')}</div>`;
+  }
+  view.innerHTML=html+renderProgressOverview();
 }
 function openChapter(idx){selectedChapterIndex=idx; render(); setTimeout(()=>scrollToContent(),0)}
 function backToOverview(){selectedChapterIndex=null; render(); setTimeout(()=>scrollToContent(),0)}

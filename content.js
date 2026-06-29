@@ -29,61 +29,48 @@ window.APP_CONTENT = {
       "tags": [
         "Navigation"
       ],
-      "links": [
+      "groups": [
         {
-          "label": "WhatsApp Bibliothek",
-          "target": "whatsapp_lib"
+          "title": "Peter",
+          "links": [
+            { "label": "1. WhatsApp Bibliothek", "target": "whatsapp_lib" },
+            { "label": "2. LinkedIn Bibliothek", "target": "linkedin_lib" },
+            { "label": "3. Facebook Bibliothek", "target": "facebook_lib" },
+            { "label": "4. Unternehmer Bibliothek", "target": "unternehmer_lib" },
+            { "label": "5. Empfehlungs Bibliothek", "target": "empfehlungen_lib" },
+            { "label": "6. Kundenservice Bibliothek", "target": "kunden_lib" },
+            { "label": "7. Einwand Bibliothek", "target": "einwaende_lib" },
+            { "label": "8. Video- und Sprachnachrichten Bibliothek", "target": "video_lib" },
+            { "label": "9. LinkedIn Jahresplan", "target": "linkedin52" },
+            { "label": "10. Facebook Jahresplan", "target": "facebook52" },
+            { "label": "11. Video Jahresplan", "target": "videos52" }
+          ]
         },
         {
-          "label": "LinkedIn Bibliothek",
-          "target": "linkedin_lib"
+          "title": "Martina",
+          "links": [
+            { "label": "1. Persönlichkeit, Werte und Positionierung", "target": "martina_band1" },
+            { "label": "2. Social Media und Personal Branding", "target": "martina_band2" },
+            { "label": "3. Kundenservice, Vertrauen und Empfehlungsmarketing", "target": "martina_band3" },
+            { "label": "4. Unternehmertum, Motivation und Routinen", "target": "martina_band4" },
+            { "label": "5. Praxis, Vorlagen und Arbeitshilfen", "target": "martina_band5" },
+            { "label": "6. 52-Wochen-Programm", "target": "martina52" }
+          ]
         },
         {
-          "label": "Facebook Bibliothek",
-          "target": "facebook_lib"
-        },
-        {
-          "label": "Unternehmer Bibliothek",
-          "target": "unternehmer_lib"
-        },
-        {
-          "label": "Empfehlungs Bibliothek",
-          "target": "empfehlungen_lib"
-        },
-        {
-          "label": "Kundenservice Bibliothek",
-          "target": "kunden_lib"
-        },
-        {
-          "label": "Einwand Bibliothek",
-          "target": "einwaende_lib"
-        },
-        {
-          "label": "Video Bibliothek",
-          "target": "video_lib"
-        },
-        {
-          "label": "LinkedIn Jahresplan",
-          "target": "linkedin52"
-        },
-        {
-          "label": "Facebook Jahresplan",
-          "target": "facebook52"
-        },
-        {
-          "label": "Video Jahresplan",
-          "target": "videos52"
-        },
-        {
-          "label": "Arbeitscockpit",
-          "target": "heute"
+          "title": "Cockpit",
+          "links": [
+            { "label": "1. Arbeitscockpit", "target": "heute" },
+            { "label": "2. Schnellzugriff", "target": "schnellzugriff" },
+            { "label": "3. Vertriebs-Cockpit", "target": "kennzahlen" }
+          ]
         }
       ]
     },
     {
       "id": "whatsapp_lib",
-      "title": "3. WhatsApp Bibliothek",
-      "navTitle": "3. WhatsApp Bibliothek",
+      "title": "1. WhatsApp Bibliothek",
+      "navTitle": "1. WhatsApp Bibliothek",
       "type": "content",
       "tags": [
         "WhatsApp",
@@ -268,8 +255,8 @@ window.APP_CONTENT = {
     },
     {
       "id": "linkedin_lib",
-      "title": "4. LinkedIn Bibliothek",
-      "navTitle": "4. LinkedIn Bibliothek",
+      "title": "2. LinkedIn Bibliothek",
+      "navTitle": "2. LinkedIn Bibliothek",
       "type": "content",
       "tags": [
         "LinkedIn",
@@ -400,8 +387,8 @@ window.APP_CONTENT = {
     },
     {
       "id": "facebook_lib",
-      "title": "5. Facebook Bibliothek",
-      "navTitle": "5. Facebook Bibliothek",
+      "title": "3. Facebook Bibliothek",
+      "navTitle": "3. Facebook Bibliothek",
       "type": "content",
       "tags": [
         "Facebook",
@@ -502,8 +489,8 @@ window.APP_CONTENT = {
     },
     {
       "id": "unternehmer_lib",
-      "title": "6. Unternehmer Bibliothek",
-      "navTitle": "6. Unternehmer Bibliothek",
+      "title": "4. Unternehmer Bibliothek",
+      "navTitle": "4. Unternehmer Bibliothek",
       "type": "content",
       "tags": [
         "Unternehmer",
@@ -593,8 +580,8 @@ window.APP_CONTENT = {
     },
     {
       "id": "empfehlungen_lib",
-      "title": "7. Empfehlungs Bibliothek",
-      "navTitle": "7. Empfehlungs Bibliothek",
+      "title": "5. Empfehlungs Bibliothek",
+      "navTitle": "5. Empfehlungs Bibliothek",
       "type": "content",
       "tags": [
         "Empfehlungen",
@@ -675,8 +662,8 @@ window.APP_CONTENT = {
     },
     {
       "id": "kunden_lib",
-      "title": "8. Kundenservice Bibliothek",
-      "navTitle": "8. Kundenservice Bibliothek",
+      "title": "6. Kundenservice Bibliothek",
+      "navTitle": "6. Kundenservice Bibliothek",
       "type": "content",
       "tags": [
         "Kunden",
@@ -747,8 +734,8 @@ window.APP_CONTENT = {
     },
     {
       "id": "einwaende_lib",
-      "title": "9. Einwand Bibliothek",
-      "navTitle": "9. Einwand Bibliothek",
+      "title": "7. Einwand Bibliothek",
+      "navTitle": "7. Einwand Bibliothek",
       "type": "content",
       "tags": [
         "Einwände",
@@ -861,8 +848,8 @@ window.APP_CONTENT = {
     },
     {
       "id": "video_lib",
-      "title": "10. Video- und Sprachnachrichten Bibliothek",
-      "navTitle": "10. Video- und Sprachnachrichten Bibliothek",
+      "title": "8. Video- und Sprachnachrichten Bibliothek",
+      "navTitle": "8. Video- und Sprachnachrichten Bibliothek",
       "type": "content",
       "tags": [
         "Video",
@@ -927,8 +914,8 @@ window.APP_CONTENT = {
     },
     {
       "id": "linkedin52",
-      "title": "11. LinkedIn Jahresplan",
-      "navTitle": "11. LinkedIn Jahresplan",
+      "title": "9. LinkedIn Jahresplan",
+      "navTitle": "9. LinkedIn Jahresplan",
       "type": "content",
       "tags": [
         "LinkedIn",
@@ -1251,8 +1238,8 @@ window.APP_CONTENT = {
     },
     {
       "id": "facebook52",
-      "title": "12. Facebook Jahresplan",
-      "navTitle": "12. Facebook Jahresplan",
+      "title": "10. Facebook Jahresplan",
+      "navTitle": "10. Facebook Jahresplan",
       "type": "content",
       "tags": [
         "Facebook",
@@ -1575,8 +1562,8 @@ window.APP_CONTENT = {
     },
     {
       "id": "videos52",
-      "title": "13. Video Jahresplan",
-      "navTitle": "13. Video Jahresplan",
+      "title": "11. Video Jahresplan",
+      "navTitle": "11. Video Jahresplan",
       "type": "content",
       "tags": [
         "Video",
@@ -1899,8 +1886,8 @@ window.APP_CONTENT = {
     },
     {
       "id": "kennzahlen",
-      "title": "14. Vertriebs-Cockpit",
-      "navTitle": "14. Vertriebs-Cockpit",
+      "title": "3. Vertriebs-Cockpit",
+      "navTitle": "3. Vertriebs-Cockpit",
       "type": "sales_cockpit",
       "tags": [
         "Controlling"
@@ -1928,11 +1915,11 @@ window.APP_CONTENT = {
       ],
       "links": [
         {
-          "label": "Band 1. Persönlichkeit, Werte und Positionierung",
+          "label": "1. Persönlichkeit, Werte und Positionierung",
           "target": "martina_band1"
         },
         {
-          "label": "Band 2. Social Media und Personal Branding",
+          "label": "2. Social Media und Personal Branding",
           "target": "martina_band2"
         },
         {
@@ -1940,11 +1927,11 @@ window.APP_CONTENT = {
           "target": "martina_band3"
         },
         {
-          "label": "Band 4. Unternehmertum, Motivation und Routinen",
+          "label": "4. Unternehmertum, Motivation und Routinen",
           "target": "martina_band4"
         },
         {
-          "label": "Band 5. Praxis, Vorlagen und Arbeitshilfen",
+          "label": "5. Praxis, Vorlagen und Arbeitshilfen",
           "target": "martina_band5"
         },
         {
@@ -1955,8 +1942,8 @@ window.APP_CONTENT = {
     },
     {
       "id": "martina_band1",
-      "title": "Martina Band 1. Persönlichkeit, Werte und Positionierung",
-      "navTitle": "Band 1. Persönlichkeit, Werte und Positionierung",
+      "title": "Martina 1. Persönlichkeit, Werte und Positionierung",
+      "navTitle": "1. Persönlichkeit, Werte und Positionierung",
       "type": "content",
       "tags": [
         "Martina",
@@ -1999,8 +1986,8 @@ window.APP_CONTENT = {
     },
     {
       "id": "martina_band2",
-      "title": "Martina Band 2. Social Media und Personal Branding",
-      "navTitle": "Band 2. Social Media und Personal Branding",
+      "title": "Martina 2. Social Media und Personal Branding",
+      "navTitle": "2. Social Media und Personal Branding",
       "type": "content",
       "tags": [
         "Martina",
@@ -2043,8 +2030,8 @@ window.APP_CONTENT = {
     },
     {
       "id": "martina_band3",
-      "title": "Martina Band 3. Kundenservice, Vertrauen und Empfehlungsmarketing",
-      "navTitle": "Band 3. Kundenservice, Vertrauen und Empfehlungsmarketing",
+      "title": "Martina 3. Kundenservice, Vertrauen und Empfehlungsmarketing",
+      "navTitle": "3. Kundenservice, Vertrauen und Empfehlungsmarketing",
       "type": "content",
       "tags": [
         "Martina",
@@ -2087,8 +2074,8 @@ window.APP_CONTENT = {
     },
     {
       "id": "martina_band4",
-      "title": "Martina Band 4. Unternehmertum, Motivation und Routinen",
-      "navTitle": "Band 4. Unternehmertum, Motivation und Routinen",
+      "title": "Martina 4. Unternehmertum, Motivation und Routinen",
+      "navTitle": "4. Unternehmertum, Motivation und Routinen",
       "type": "content",
       "tags": [
         "Martina",
@@ -2131,8 +2118,8 @@ window.APP_CONTENT = {
     },
     {
       "id": "martina_band5",
-      "title": "Martina Band 5. Praxis, Vorlagen und Arbeitshilfen",
-      "navTitle": "Band 5. Praxis, Vorlagen und Arbeitshilfen",
+      "title": "Martina 5. Praxis, Vorlagen und Arbeitshilfen",
+      "navTitle": "5. Praxis, Vorlagen und Arbeitshilfen",
       "type": "content",
       "tags": [
         "Martina",
