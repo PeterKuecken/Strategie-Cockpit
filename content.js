@@ -31,30 +31,30 @@ window.APP_CONTENT = {
       ],
       "groups": [
         {
-          "title": "Peter",
+          "title": "Schnellzugriff Peter",
           "links": [
-            { "label": "1. WhatsApp Bibliothek", "target": "whatsapp_lib" },
-            { "label": "2. LinkedIn Bibliothek", "target": "linkedin_lib" },
-            { "label": "3. Facebook Bibliothek", "target": "facebook_lib" },
-            { "label": "4. Unternehmer Bibliothek", "target": "unternehmer_lib" },
-            { "label": "5. Empfehlungs Bibliothek", "target": "empfehlungen_lib" },
-            { "label": "6. Kundenservice Bibliothek", "target": "kunden_lib" },
-            { "label": "7. Einwand Bibliothek", "target": "einwaende_lib" },
-            { "label": "8. Video- und Sprachnachrichten Bibliothek", "target": "video_lib" },
-            { "label": "9. LinkedIn Jahresplan", "target": "linkedin52" },
-            { "label": "10. Facebook Jahresplan", "target": "facebook52" },
-            { "label": "11. Video Jahresplan", "target": "videos52" }
+            { "label": "1. WhatsApp-Bibliothek Peter", "target": "whatsapp_lib" },
+            { "label": "2. LinkedIn-Bibliothek Peter", "target": "linkedin_lib" },
+            { "label": "3. Facebook-Bibliothek Peter", "target": "facebook_lib" },
+            { "label": "4. Unternehmer-Bibliothek Peter", "target": "unternehmer_lib" },
+            { "label": "5. Empfehlungs-Bibliothek Peter", "target": "empfehlungen_lib" },
+            { "label": "6. Kundenservice-Bibliothek Peter", "target": "kunden_lib" },
+            { "label": "7. Einwand-Bibliothek Peter", "target": "einwaende_lib" },
+            { "label": "8. Video- und Sprachnachrichten-Bibliothek Peter", "target": "video_lib" },
+            { "label": "9. LinkedIn-Jahresplan Peter", "target": "linkedin52" },
+            { "label": "10. Facebook-Jahresplan Peter", "target": "facebook52" },
+            { "label": "11. Video-Jahresplan Peter", "target": "videos52" }
           ]
         },
         {
-          "title": "Martina",
+          "title": "Schnellzugriff Martina",
           "links": [
-            { "label": "1. Persönlichkeit, Werte und Positionierung", "target": "martina_band1" },
-            { "label": "2. Social Media und Personal Branding", "target": "martina_band2" },
-            { "label": "3. Kundenservice, Vertrauen und Empfehlungsmarketing", "target": "martina_band3" },
-            { "label": "4. Unternehmertum, Motivation und Routinen", "target": "martina_band4" },
-            { "label": "5. Praxis, Vorlagen und Arbeitshilfen", "target": "martina_band5" },
-            { "label": "6. 52-Wochen-Programm", "target": "martina52" }
+            { "label": "1. Positionierung Martina", "target": "martina_band1" },
+            { "label": "2. Personal Branding Martina", "target": "martina_band2" },
+            { "label": "3. Empfehlungsmarketing Martina", "target": "martina_band3" },
+            { "label": "4. Unternehmertum Martina", "target": "martina_band4" },
+            { "label": "5. Praxis-Vorlagen Martina", "target": "martina_band5" },
+            { "label": "6. 52-Wochen-Jahresplan Martina", "target": "martina52" }
           ]
         },
         {
@@ -2964,7 +2964,7 @@ window.APP_CONTENT = {
   ],
   "navGroups": [
     {
-      "label": "Recruiting Cockpit",
+      "label": "1. Vertriebs-Cockpit",
       "sections": [
         "heute",
         "schnellzugriff",
@@ -2972,7 +2972,7 @@ window.APP_CONTENT = {
       ]
     },
     {
-      "label": "Peter",
+      "label": "2. Peter",
       "sections": [
         "whatsapp_lib",
         "linkedin_lib",
@@ -2988,7 +2988,7 @@ window.APP_CONTENT = {
       ]
     },
     {
-      "label": "Martina",
+      "label": "3. Martina",
       "sections": [
         "martina_home",
         "martina_band1",

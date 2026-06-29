@@ -15,7 +15,7 @@ const view=document.getElementById('view');
 const searchInput=document.getElementById('searchInput');
 
 let current='heute';
-let openNavGroupLabel='Recruiting Cockpit';
+let openNavGroupLabel='1. Vertriebs-Cockpit';
 let selectedChapterIndex=null;
 let selectedDate=todayKey();
 let selectedSalesDate=todayKey();
@@ -346,7 +346,7 @@ function renderSalesCockpit(s){
   const date=selectedSalesDate || todayKey();
   ensureSalesDate(date);
   view.innerHTML=`
-    <div class="card"><h2>${esc(s.title || '14. Vertriebs-Cockpit')}</h2><p>${esc(s.text || 'Steuerung vom Kontakt bis zum Partner.')}</p></div>
+    <div class="card"><h2>${esc(s.title || '3. Vertriebs-Cockpit')}</h2><p>${esc(s.text || 'Steuerung vom Kontakt bis zum Partner.')}</p></div>
     ${renderSalesForecast()}
     <div class="card"><h3>Tages-Cockpit</h3><div class="date-row"><label>Datum wählen:</label><input type="date" value="${date}" onchange="selectedSalesDate=this.value; ensureSalesDate(this.value); render()"><button class="copy-btn" onclick="selectedSalesDate=todayKey(); render()">Heute anzeigen</button></div></div>
     <div class="grid">${renderSalesPerson('peter','Peter',date)}${renderSalesPerson('martina','Martina',date)}</div>

@@ -1,18 +1,19 @@
-# Recruiting Cockpit Kücken v21
+# Recruiting Cockpit Kücken v22 Navigation
 
-Änderungen in dieser Version:
+Diese Version enthält die korrigierte Navigation:
 
-- Linke Navigation: Recruiting Cockpit, Peter, Martina.
-- Navigation klappt per Klick auf Peter oder Martina auf und wieder zu.
-- Schnellzugriff ist in Peter, Martina und Cockpit aufgeteilt.
-- Vertriebs-Cockpit steht als Nummer 3 im Recruiting Cockpit.
-- Peters Bereich beginnt neu mit Nummer 1 bei WhatsApp Bibliothek.
-- Martinas Bereich nutzt Nummern 1 bis 6 ohne Band-Bezeichnungen.
+1. Vertriebs-Cockpit
+2. Peter
+3. Martina
 
-Für GitHub Pages müssen diese Dateien direkt im Hauptverzeichnis des Repositorys liegen:
+Der Schnellzugriff ist getrennt in:
 
-- index.html
-- style.css
-- app.js
-- content.js
-- README.md
+- Schnellzugriff Peter
+- Schnellzugriff Martina
+- Cockpit
+
+Die Nummerierung beginnt innerhalb jedes Bereichs wieder bei 1.
+
+## GitHub Pages
+
+Den Inhalt dieses Ordners in das Repository hochladen. Die Datei `index.html` muss direkt im Hauptverzeichnis liegen.
