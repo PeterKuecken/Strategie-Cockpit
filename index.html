@@ -1,33 +1,25 @@
 <!doctype html>
 <html lang="de">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Strategiehandbuch Peter & Martina Kücken</title>
-  <link rel="stylesheet" href="styles.css" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Recruiting-Cockpit Peter & Martina Kücken</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header class="topbar">
-    <div>
-      <p class="eyebrow">Strategiehandbuch</p>
-      <h1>Peter & Martina Kücken</h1>
-    </div>
-    <button id="themeToggle" class="ghost">Hell/Dunkel</button>
+    <div><h1>Recruiting-Cockpit</h1><p>Peter & Martina Kücken</p></div>
+    <button id="resetBtn" class="ghost">Heute zurücksetzen</button>
   </header>
-
   <main class="layout">
     <aside class="sidebar">
-      <button class="nav active" data-view="home">Startseite</button>
-      <button class="nav" data-view="peter">Bereich Peter</button>
-      <button class="nav" data-view="martina">Bereich Martina</button>
-      <button class="nav" data-view="weeks">52-Wochen-Plan</button>
-      <button class="nav" data-view="search">Suche</button>
+      <input id="searchInput" type="search" placeholder="Suchen, z. B. Einwand, Video 12, LinkedIn">
+      <nav id="nav"></nav>
     </aside>
-
-    <section id="content" class="content"></section>
+    <section class="content"><div id="view"></div></section>
   </main>
-
-  <script src="data.js"></script>
+  <footer>Daten bleiben lokal im Browser. GitHub-Pages-fähig.</footer>
+  <script src="content.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
