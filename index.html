@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Strategiehandbuch Peter & Martina Kücken</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">Strategiehandbuch</p>
+      <h1>Peter & Martina Kücken</h1>
+    </div>
+    <button id="themeToggle" class="ghost">Hell/Dunkel</button>
+  </header>
+
+  <main class="layout">
+    <aside class="sidebar">
+      <button class="nav active" data-view="home">Startseite</button>
+      <button class="nav" data-view="peter">Bereich Peter</button>
+      <button class="nav" data-view="martina">Bereich Martina</button>
+      <button class="nav" data-view="weeks">52-Wochen-Plan</button>
+      <button class="nav" data-view="search">Suche</button>
+    </aside>
+
+    <section id="content" class="content"></section>
+  </main>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
