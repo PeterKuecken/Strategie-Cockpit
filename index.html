@@ -3,32 +3,48 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Recruiting-Cockpit Peter & Martina Kücken</title>
+  <title>Recruiting-Cockpit Peter & Martina Kücken · V35 Login</title>
   <link rel="icon" href="favicon.ico" sizes="any">
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#102a43">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=35">
 </head>
 <body>
   <header class="topbar">
     <div class="brand">
       <img class="brand-logo" src="favicon.png" alt="App-Logo">
-      <div><h1>Recruiting-Cockpit</h1><p>Peter & Martina Kücken</p></div>
+      <div><h1>Recruiting-Cockpit</h1><p>Peter & Martina Kücken · Version 35 Login</p></div>
     </div>
-    <button id="resetBtn" class="ghost">Heute zurücksetzen</button>
+    <div class="top-actions"><span id="syncStatus" class="sync-status">Offline</span><span id="userInfo" class="user-info"></span><button id="logoutBtn" class="ghost hidden">Abmelden</button><button id="resetBtn" class="ghost">Heute zurücksetzen</button></div>
   </header>
-  <main class="layout">
+  <section id="loginScreen" class="login-screen">
+    <div class="login-card">
+      <img class="login-logo" src="favicon.png" alt="App-Logo">
+      <h2>Recruiting-Cockpit</h2>
+      <p>Version 35 · Bitte melde dich mit deiner E-Mail-Adresse an.</p>
+      <label>E-Mail</label>
+      <input id="loginEmail" type="email" autocomplete="username" placeholder="peter@kuecken.eu">
+      <label>Passwort</label>
+      <input id="loginPassword" type="password" autocomplete="current-password" placeholder="Passwort">
+      <button id="loginBtn" class="login-btn">Anmelden</button>
+      <p id="loginError" class="login-error"></p>
+    </div>
+  </section>
+  <main class="layout hidden" id="appLayout">
     <aside class="sidebar">
       <input id="searchInput" type="search" placeholder="Suchen, z. B. Einwand, Video 12, LinkedIn">
       <nav id="nav"></nav>
     </aside>
     <section class="content"><div id="view"></div></section>
   </main>
-  <footer>Daten bleiben lokal im Browser. GitHub-Pages-fähig.</footer>
-  <script src="content.js"></script>
-  <script src="app.js"></script>
+  <footer id="appFooter" class="hidden">Version 35 · Daten werden online in Firebase synchronisiert. GitHub-Pages-fähig.</footer>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+  <script src="content.js?v=35"></script>
+  <script src="app.js?v=35"></script>
 </body>
 </html>

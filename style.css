@@ -410,3 +410,15 @@ footer{padding:10px 22px;color:var(--muted);background:#fff;border-top:1px solid
 .weekly-entry{padding-bottom:12px;margin-bottom:14px;border-bottom:1px solid rgba(16,42,67,.08)}
 .weekly-platform{margin:12px 0 6px 0;font-weight:800}
 .weekly-day{margin-top:24px;padding-top:16px;border-top:2px solid rgba(16,42,67,.12);font-size:1.04rem}
+.hidden{display:none!important}
+.top-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.sync-status,.user-info{font-size:.85rem;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.18)}
+.login-screen{min-height:calc(100vh - 120px);display:flex;align-items:center;justify-content:center;padding:24px;background:linear-gradient(135deg,#eef5fb,#ffffff)}
+.login-card{width:min(440px,100%);background:#fff;border-radius:24px;padding:28px;box-shadow:0 18px 48px rgba(16,42,67,.16);border:1px solid #e7eef5}
+.login-logo{width:72px;height:72px;border-radius:18px;object-fit:cover;margin-bottom:12px}
+.login-card h2{margin:0 0 8px;color:#102a43}
+.login-card p{color:#52616b}
+.login-card label{display:block;margin:14px 0 6px;font-weight:700;color:#102a43}
+.login-card input{width:100%;box-sizing:border-box;border:1px solid #d6e2ee;border-radius:12px;padding:12px;font-size:1rem}
+.login-btn{width:100%;margin-top:18px;border:0;border-radius:12px;padding:13px 16px;background:#102a43;color:#fff;font-weight:700;cursor:pointer}
+.login-error{color:#b00020;min-height:20px;font-weight:700}
