@@ -1972,7 +1972,7 @@ window.APP_CONTENT = {
     {
       "id": "impressum",
       "title": "Impressum",
-      "navTitle": "4. Impressum",
+      "navTitle": "Impressum",
       "type": "impressum",
       "tags": [
         "Impressum",
@@ -3006,8 +3006,7 @@ window.APP_CONTENT = {
       "sections": [
         "heute",
         "schnellzugriff",
-        "kennzahlen",
-        "impressum"
+        "kennzahlen"
       ]
     },
     {
@@ -3037,6 +3036,12 @@ window.APP_CONTENT = {
         "martina_band4",
         "martina_band5",
         "martina52"
+      ]
+    },
+    {
+      "label": "4. Impressum",
+      "sections": [
+        "impressum"
       ]
     }
   ]
