@@ -551,8 +551,9 @@ function renderContent(s){
   if(isWeekly)html+=renderProgressOverviewForSection(s.id)+`<div class="card"><button class="copy-btn" onclick="openCurrentWeek('${s.id}')">Heute öffnen</button></div>`;
   html+=`<div class="${isWeekly?'week-list':'chapter-list'}">`;
   chapters.forEach((c,idx)=>{
-    const status=isWeekly ? (localStorage.getItem(`content_status_${s.id}_${idx}`)||'Offen') : 'öffnen';
-    html+=`<button class="${isWeekly?'week-row':'chapter-row'} ${isWeekly?statusClass(status):''}" onclick="openChapter(${idx})"><span>${isWeekly?`Woche ${idx+1}: `:''}${esc(c.title.replace(/^Woche\s*\d+[:.]?\s*/i,''))}</span><small>${isWeekly?`KW ${weekMeta(idx).kw} · ${weekMeta(idx).range}`:esc(status)}</small></button>`;
+    const status=isWeekly ? weekAggregateStatus(s.id,idx) : 'öffnen';
+    const progress=isWeekly ? weekMediaProgress(s.id,idx) : null;
+    html+=`<button class="${isWeekly?'week-row':'chapter-row'} ${isWeekly?statusClass(status):''}" onclick="openChapter(${idx})"><span>${isWeekly?`Woche ${idx+1}: `:''}${esc(c.title.replace(/^Woche\s*\d+[:.]?\s*/i,''))}</span><small>${isWeekly?`KW ${weekMeta(idx).kw} · ${weekMeta(idx).range} · ${progress.done}/${progress.total} erledigt`:esc(status)}</small></button>`;
   });
   html+=`</div>`;
   view.innerHTML=html;
@@ -568,15 +569,72 @@ function renderSingleChapter(s,c,idx){
   const prev=idx>0?`<button class="copy-btn" onclick="openChapter(${idx-1})">${prevLabel}</button>`:'';
   const next=idx<(s.chapters.length-1)?`<button class="copy-btn" onclick="openChapter(${idx+1})">${nextLabel}</button>`:'';
   let status='';
-  if(isPublishSection(s.id)){const cur=localStorage.getItem(`content_status_${s.id}_${idx}`)||'Offen'; status=`<div class="status-control ${statusClass(cur)}"><label><strong>Status dieses Inhalts:</strong></label><select class="${statusClass(cur)}" onchange="setContentStatus('${s.id}',${idx},this.value)"><option ${cur==='Offen'?'selected':''}>Offen</option><option ${cur==='Geplant'?'selected':''}>Geplant</option><option ${cur==='Veröffentlicht'?'selected':''}>Veröffentlicht</option></select></div>`}
+  if(isPublishSection(s.id)){status=renderMediaStatusPanel(s.id,idx)}
   view.innerHTML=html+`<div class="card">${status}${prev}${next}</div>`;
 }
 function statusClass(status){if(status==='Veröffentlicht')return 'status-published'; if(status==='Geplant')return 'status-planned'; return 'status-open'}
 function setContentStatus(section,idx,value){localStorage.setItem(`content_status_${section}_${idx}`,value); render()}
+
+function weeklyMediaForSection(sectionId){
+  if(sectionId==='peter52')return [
+    {key:'linkedin', label:'LinkedIn – Beitrag'},
+    {key:'facebook', label:'Facebook – Beitrag'},
+    {key:'whatsapp', label:'WhatsApp – Status'},
+    {key:'story', label:'Facebook/Instagram – Story'},
+    {key:'video', label:'Video – Video'}
+  ];
+  if(sectionId==='martina52')return [
+    {key:'linkedin', label:'LinkedIn – Beitrag'},
+    {key:'facebook', label:'Facebook – Beitrag'},
+    {key:'whatsapp', label:'WhatsApp – Status'},
+    {key:'story', label:'Facebook/Instagram – Story'}
+  ];
+  return [
+    {key:'linkedin', label:'LinkedIn – Beitrag'},
+    {key:'facebook', label:'Facebook – Beitrag'},
+    {key:'whatsapp', label:'WhatsApp – Status'},
+    {key:'story', label:'Facebook/Instagram – Story'},
+    {key:'video', label:'Video – Video'}
+  ];
+}
+function mediaStatusKey(section,idx,dayIdx,mediaKey){return `media_status_${section}_${idx}_${dayIdx}_${mediaKey}`}
+function getMediaStatus(section,idx,dayIdx,mediaKey){return localStorage.getItem(mediaStatusKey(section,idx,dayIdx,mediaKey))||'Offen'}
+function toggleMediaStatus(section,idx,dayIdx,mediaKey){
+  const key=mediaStatusKey(section,idx,dayIdx,mediaKey);
+  const cur=localStorage.getItem(key)||'Offen';
+  localStorage.setItem(key,cur==='Erledigt'?'Offen':'Erledigt');
+  render();
+}
+function weekMediaProgress(section,idx){
+  const media=weeklyMediaForSection(section);
+  const total=7*media.length;
+  let done=0;
+  for(let d=0; d<7; d++){media.forEach(m=>{if(getMediaStatus(section,idx,d,m.key)==='Erledigt')done++;});}
+  return {total,done,open:total-done,percent:total?Math.round(done/total*100):0};
+}
+function weekAggregateStatus(section,idx){
+  const p=weekMediaProgress(section,idx);
+  if(p.done>=p.total)return 'Veröffentlicht';
+  if(p.done>0)return 'Geplant';
+  return 'Offen';
+}
+function renderMediaStatusPanel(section,idx){
+  const media=weeklyMediaForSection(section);
+  const m=weekMeta(idx);
+  const p=weekMediaProgress(section,idx);
+  return `<div class="media-status-panel"><h3>Status pro Tag und Medium</h3><p class="small">${p.done} von ${p.total} erledigt. Offen: ${p.open}.</p>${m.days.map((d,di)=>{
+    const dayDone=media.filter(md=>getMediaStatus(section,idx,di,md.key)==='Erledigt').length;
+    const dayClass=dayDone===media.length?'day-complete':(dayDone>0?'day-started':'day-open');
+    return `<div class="media-day ${dayClass}"><div class="media-day-title"><strong>${esc(d.name)}, ${esc(d.date)}</strong><span>${dayDone} von ${media.length} erledigt</span></div><div class="media-buttons">${media.map(md=>{
+      const st=getMediaStatus(section,idx,di,md.key);
+      return `<button class="media-pill ${st==='Erledigt'?'done':'open'}" onclick="toggleMediaStatus('${section}',${idx},${di},'${md.key}')"><strong>${esc(md.label)}</strong><span>${st}</span></button>`;
+    }).join('')}</div></div>`;
+  }).join('')}</div>`;
+}
 function getSectionProgress(sectionId){
   const s=sectionById(sectionId); if(!s||!s.chapters)return {total:0,published:0,planned:0,open:0};
   let total=s.chapters.length,published=0,planned=0,open=0;
-  s.chapters.forEach((c,idx)=>{const val=localStorage.getItem(`content_status_${sectionId}_${idx}`)||'Offen'; if(val==='Veröffentlicht')published++; else if(val==='Geplant')planned++; else open++});
+  s.chapters.forEach((c,idx)=>{const val=isPublishSection(sectionId)?weekAggregateStatus(sectionId,idx):(localStorage.getItem(`content_status_${sectionId}_${idx}`)||'Offen'); if(val==='Veröffentlicht')published++; else if(val==='Geplant')planned++; else open++});
   return {total,published,planned,open};
 }
 function progressBar(sectionId,label){

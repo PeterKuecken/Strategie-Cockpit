@@ -308,3 +308,69 @@ footer{padding:10px 22px;color:var(--muted);background:#fff;border-top:1px solid
 .weekly-platform{margin:16px 0 6px 0;font-weight:bold;color:var(--blue)}
 .weekly-text{margin:4px 0 8px 0;white-space:normal}
 .weekly-space{height:6px}
+
+.media-status-panel{
+  margin:4px 0 18px 0;
+}
+.media-status-panel h3{
+  margin-top:0;
+}
+.media-day{
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:12px;
+  margin:12px 0;
+  background:#fff;
+}
+.media-day.day-complete{
+  border-color:#8ccf9b;
+  background:#f4fff6;
+}
+.media-day.day-started{
+  border-color:#e0c36a;
+  background:#fffaf0;
+}
+.media-day-title{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  align-items:center;
+  margin-bottom:10px;
+  color:var(--blue);
+}
+.media-day-title span{
+  color:var(--muted);
+  font-size:13px;
+}
+.media-buttons{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+.media-pill{
+  border:1px solid var(--border);
+  border-radius:999px;
+  padding:8px 12px;
+  background:#fff;
+  color:var(--text);
+  cursor:pointer;
+  display:flex;
+  gap:8px;
+  align-items:center;
+  font-size:13px;
+}
+.media-pill.done{
+  border-color:#7bc48a;
+  background:#eaf8ed;
+}
+.media-pill.open{
+  border-color:#e2a2a2;
+  background:#fff5f5;
+}
+.media-pill span{
+  color:var(--muted);
+}
+@media(max-width:700px){
+  .media-day-title{flex-direction:column;align-items:flex-start}
+  .media-pill{width:100%;justify-content:space-between;border-radius:12px}
+}

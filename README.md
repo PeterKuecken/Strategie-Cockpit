@@ -1,18 +1,17 @@
-# Recruiting Cockpit Kücken V27
+# Recruiting Cockpit Kücken Version 29
 
-Vollständige GitHub-Version.
+Neue Version mit klickbarem Status pro Tag und Medium für Peter und Martina.
 
-Neu in Version 27:
+## Enthalten
+- Vertriebs-Cockpit
+- Peter-Bereich mit 52-Wochen-Jahresplan
+- Martina-Bereich mit 52-Wochen-Jahresplan
+- Favicon und App-Icons
+- Datumsangaben ab Montag, 13.07.2026
+- Fett formatierte Tage, Daten und Plattformen
+- Kennzeichnung als Beitrag, Status, Story oder Video
+- Status pro Tag und Medium anklickbar
+- Lokale Speicherung im Browser
 
-- Peter und Martina haben beide einen vollständigen 52-Wochen-Jahresplan.
-- Jeder einzelne Tag enthält eigene Vorlagen.
-- Peter: LinkedIn, Facebook, WhatsApp, Story und Video.
-- Martina: LinkedIn, Facebook, WhatsApp und Story.
-- Datumsangaben starten bei Montag, 13.07.2026.
-- Kalenderwochen und Wochenzeitraum bleiben aktiv.
-- Favicon und App-Icons bleiben enthalten.
-
-Für GitHub Pages den entpackten Inhalt direkt in das Hauptverzeichnis des Repositorys hochladen.
-
-
-Version 28: Wochenpläne Peter und Martina mit fetten Tagesdaten, fetten Plattformzeilen, eindeutiger Kennzeichnung als Beitrag, Status, Story, Video oder Short sowie mehr Abstand zwischen den Einträgen.
+## GitHub Pages
+Den Inhalt dieses Ordners in das Hauptverzeichnis deines GitHub-Repository hochladen.
