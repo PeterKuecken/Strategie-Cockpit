@@ -374,3 +374,31 @@ footer{padding:10px 22px;color:var(--muted);background:#fff;border-top:1px solid
   .media-day-title{flex-direction:column;align-items:flex-start}
   .media-pill{width:100%;justify-content:space-between;border-radius:12px}
 }
+
+.inline-day-status{
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:12px;
+  margin:8px 0 18px 0;
+  background:#fff;
+}
+.inline-day-status.day-complete{
+  border-color:#8ccf9b;
+  background:#f4fff6;
+}
+.inline-day-status.day-started{
+  border-color:#e0c36a;
+  background:#fffaf0;
+}
+.inline-status-title{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  align-items:center;
+  margin-bottom:10px;
+  color:var(--blue);
+}
+.inline-status-title span{
+  color:var(--muted);
+  font-size:13px;
+}

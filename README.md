@@ -15,3 +15,6 @@ Neue Version mit klickbarem Status pro Tag und Medium für Peter und Martina.
 
 ## GitHub Pages
 Den Inhalt dieses Ordners in das Hauptverzeichnis deines GitHub-Repository hochladen.
+
+
+Version 30: Medienstatus steht jetzt direkt unter jedem einzelnen Tag im Wochenplan. Jedes Medium kann pro Tag einzeln auf Offen oder Erledigt gesetzt werden.

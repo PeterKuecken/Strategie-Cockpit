@@ -162,7 +162,7 @@ function weeklyTemplateDatePrefix(t,idx){
   const header=`Woche ${m.week} von 52\nKW ${m.kw}\nZeitraum: ${m.range}\n\n`;
   return text.startsWith(`Woche ${m.week} von 52`) ? text : header+text;
 }
-function formatWeeklyTemplateHtml(t,idx){
+function formatWeeklyTemplateHtml(t,idx,sectionId){
   const txt=weeklyTemplateDatePrefix(t,idx);
   const platformMap={
     'LinkedIn':'LinkedIn – Beitrag',
@@ -175,21 +175,30 @@ function formatWeeklyTemplateHtml(t,idx){
     'Short':'YouTube – Short',
     'Instagram':'Instagram – Story'
   };
-  return txt.split('\n').map(line=>{
+  const dayIndexByName={Montag:0,Dienstag:1,Mittwoch:2,Donnerstag:3,Freitag:4,Samstag:5,Sonntag:6};
+  let html='';
+  txt.split('\n').forEach(line=>{
     const raw=String(line||'');
     const trimmed=raw.trim();
-    if(!trimmed)return '<div class="weekly-space"></div>';
-    if(/^(Montag|Dienstag|Mittwoch|Donnerstag|Freitag|Samstag|Sonntag),\s*\d{2}\.\d{2}\.\d{4}$/.test(trimmed)){
-      return `<div class="weekly-day"><strong>${esc(trimmed)}</strong></div>`;
+    if(!trimmed){html+='<div class="weekly-space"></div>'; return;}
+    const dayMatch=trimmed.match(/^(Montag|Dienstag|Mittwoch|Donnerstag|Freitag|Samstag|Sonntag),\s*\d{2}\.\d{2}\.\d{4}$/);
+    if(dayMatch){
+      const dayIdx=dayIndexByName[dayMatch[1]];
+      html+=`<div class="weekly-day"><strong>${esc(trimmed)}</strong></div>`;
+      if(sectionId && isPublishSection(sectionId)){
+        html+=renderInlineDayMediaStatus(sectionId,idx,dayIdx);
+      }
+      return;
     }
     if(/^Woche\s+\d+\s+von\s+52$/.test(trimmed) || /^KW\s+\d+$/.test(trimmed) || /^Zeitraum:/.test(trimmed)){
-      return `<div class="weekly-meta"><strong>${esc(trimmed)}</strong></div>`;
+      html+=`<div class="weekly-meta"><strong>${esc(trimmed)}</strong></div>`; return;
     }
     if(platformMap[trimmed]){
-      return `<div class="weekly-platform"><strong>${esc(platformMap[trimmed])}</strong></div>`;
+      html+=`<div class="weekly-platform"><strong>${esc(platformMap[trimmed])}</strong></div>`; return;
     }
-    return `<p class="weekly-text">${esc(trimmed)}</p>`;
-  }).join('');
+    html+=`<p class="weekly-text">${esc(trimmed)}</p>`;
+  });
+  return html;
 }
 
 
@@ -562,15 +571,14 @@ function renderSingleChapter(s,c,idx){
   const weekly=isPublishSection(s.id);
   let html=`<div class="card single-page"><button class="copy-btn" onclick="backToOverview()">Zurück zur Übersicht</button><h2>${esc(s.title)}</h2><h3>${weekly?`Woche ${idx+1}: `:''}${esc(c.title.replace(/^Woche\s*\d+[:.]?\s*/i,''))}</h3>${weekly?renderWeekDateBox(idx):''}`;
   if(c.body)html+=`<div class="chapter-body">${esc(c.body)}</div>`;
-  (c.templates||[]).forEach((t,ti)=>{const id=`single-${s.id}-${idx}-${ti}`; const txt=weekly?weeklyTemplateDatePrefix(t,idx):t; const body=weekly?formatWeeklyTemplateHtml(t,idx):esc(txt); html+=`<div class="template ${weekly?'weekly-template':''}" id="${id}">${body}</div><button class="copy-btn" onclick="copyFromElement('${id}')">Text kopieren</button>`});
+  (c.templates||[]).forEach((t,ti)=>{const id=`single-${s.id}-${idx}-${ti}`; const txt=weekly?weeklyTemplateDatePrefix(t,idx):t; const body=weekly?formatWeeklyTemplateHtml(t,idx,s.id):esc(txt); html+=`<div class="template ${weekly?'weekly-template':''}" id="${id}">${body}</div><button class="copy-btn" onclick="copyFromElement('${id}')">Text kopieren</button>`});
   html+=`</div>`;
   const prevLabel=isPublishSection(s.id)?'Vorherige Woche':'Vorheriger Eintrag';
   const nextLabel=isPublishSection(s.id)?'Nächste Woche':'Nächster Eintrag';
   const prev=idx>0?`<button class="copy-btn" onclick="openChapter(${idx-1})">${prevLabel}</button>`:'';
   const next=idx<(s.chapters.length-1)?`<button class="copy-btn" onclick="openChapter(${idx+1})">${nextLabel}</button>`:'';
   let status='';
-  if(isPublishSection(s.id)){status=renderMediaStatusPanel(s.id,idx)}
-  view.innerHTML=html+`<div class="card">${status}${prev}${next}</div>`;
+  view.innerHTML=html+`<div class="card">${prev}${next}</div>`;
 }
 function statusClass(status){if(status==='Veröffentlicht')return 'status-published'; if(status==='Geplant')return 'status-planned'; return 'status-open'}
 function setContentStatus(section,idx,value){localStorage.setItem(`content_status_${section}_${idx}`,value); render()}
@@ -617,6 +625,15 @@ function weekAggregateStatus(section,idx){
   if(p.done>=p.total)return 'Veröffentlicht';
   if(p.done>0)return 'Geplant';
   return 'Offen';
+}
+function renderInlineDayMediaStatus(section,idx,dayIdx){
+  const media=weeklyMediaForSection(section);
+  const done=media.filter(md=>getMediaStatus(section,idx,dayIdx,md.key)==='Erledigt').length;
+  const cls=done===media.length?'day-complete':(done>0?'day-started':'day-open');
+  return `<div class="inline-day-status ${cls}"><div class="inline-status-title"><strong>Status</strong><span>${done} von ${media.length} erledigt</span></div><div class="media-buttons">${media.map(md=>{
+    const st=getMediaStatus(section,idx,dayIdx,md.key);
+    return `<button class="media-pill ${st==='Erledigt'?'done':'open'}" onclick="toggleMediaStatus('${section}',${idx},${dayIdx},'${md.key}')"><strong>${esc(md.label)}</strong><span>${st}</span></button>`;
+  }).join('')}</div></div>`;
 }
 function renderMediaStatusPanel(section,idx){
   const media=weeklyMediaForSection(section);
