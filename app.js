@@ -162,6 +162,22 @@ function weeklyTemplateDatePrefix(t,idx){
   const header=`Woche ${m.week} von 52\nKW ${m.kw}\nZeitraum: ${m.range}\n\n`;
   return text.startsWith(`Woche ${m.week} von 52`) ? text : header+text;
 }
+
+function copyButtonLabel(platformLabel){
+  const label=String(platformLabel||'').toLowerCase();
+  if(label.includes('linkedin'))return 'LinkedIn-Beitrag kopieren';
+  if(label.includes('facebook') && label.includes('beitrag'))return 'Facebook-Beitrag kopieren';
+  if(label.includes('whatsapp'))return 'WhatsApp-Status kopieren';
+  if(label.includes('instagram') && label.includes('story'))return 'Instagram-Story kopieren';
+  if(label.includes('facebook') && label.includes('story'))return 'Facebook-Story kopieren';
+  if(label.includes('story'))return 'Story kopieren';
+  if(label.includes('short'))return 'Short kopieren';
+  if(label.includes('reel'))return 'Reel kopieren';
+  if(label.includes('video') || label.includes('youtube'))return 'Videoskript kopieren';
+  if(label.includes('status'))return 'Status kopieren';
+  return 'Beitrag kopieren';
+}
+
 function formatWeeklyTemplateHtml(t,idx,sectionId){
   const txt=weeklyTemplateDatePrefix(t,idx);
   const platformMap={
@@ -190,8 +206,8 @@ function formatWeeklyTemplateHtml(t,idx,sectionId){
       if(clean){
         const id=`copy-${esc(sectionId||'section')}-${idx}-${segmentCounter++}`;
         html+=`<div class="weekly-copy-text" id="${id}">${clean.split('\n').map(x=>`<p class="weekly-text">${esc(x)}</p>`).join('')}</div>`;
-        const label=currentPlatformLabel.includes('Status')?'Status kopieren':currentPlatformLabel.includes('Story')?'Story kopieren':currentPlatformLabel.includes('Video')?'Video kopieren':currentPlatformLabel.includes('Short')?'Short kopieren':'Beitrag kopieren';
-        html+=`<button class="copy-btn small-copy block-copy" onclick="copyFromElement('${id}')">📋 ${esc(label)}</button>`;
+        const copyLabel=copyButtonLabel(currentPlatformLabel);
+        html+=`<button class="copy-btn small-copy block-copy" onclick="copyFromElement('${id}')">📋 ${esc(copyLabel)}</button>`;
       }
       html+=`</div>`;
     }else if(clean){
