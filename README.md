@@ -18,3 +18,6 @@ Diese Version ist vollständig und GitHub-Pages-fähig.
 Den Ordner entpacken. Danach alle Dateien aus diesem Ordner direkt ins Repository hochladen.
 
 Im Repository müssen index.html, app.js, content.js und style.css direkt im Hauptverzeichnis liegen.
+
+
+Version 26: Peter hat einen eigenen 52-Wochen-Jahresplan mit Tagesinhalten für LinkedIn, Facebook, WhatsApp, Story und Video. Startdatum bleibt Montag, 13.07.2026.
