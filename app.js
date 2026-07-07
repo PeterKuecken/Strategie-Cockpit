@@ -177,12 +177,37 @@ function formatWeeklyTemplateHtml(t,idx,sectionId){
   };
   const dayIndexByName={Montag:0,Dienstag:1,Mittwoch:2,Donnerstag:3,Freitag:4,Samstag:5,Sonntag:6};
   let html='';
+  let currentPlatform='';
+  let currentPlatformLabel='';
+  let buffer=[];
+  let segmentCounter=0;
+  function flushSegment(){
+    if(!currentPlatformLabel && !buffer.length)return;
+    const clean=buffer.map(x=>String(x||'').trim()).filter(Boolean).join('\n');
+    if(currentPlatformLabel){
+      html+=`<div class="weekly-entry">`;
+      html+=`<div class="weekly-platform"><strong>${esc(currentPlatformLabel)}</strong></div>`;
+      if(clean){
+        const id=`copy-${esc(sectionId||'section')}-${idx}-${segmentCounter++}`;
+        html+=`<div class="weekly-copy-text" id="${id}">${clean.split('\n').map(x=>`<p class="weekly-text">${esc(x)}</p>`).join('')}</div>`;
+        const label=currentPlatformLabel.includes('Status')?'Status kopieren':currentPlatformLabel.includes('Story')?'Story kopieren':currentPlatformLabel.includes('Video')?'Video kopieren':currentPlatformLabel.includes('Short')?'Short kopieren':'Beitrag kopieren';
+        html+=`<button class="copy-btn small-copy" onclick="copyFromElement('${id}')">${esc(label)}</button>`;
+      }
+      html+=`</div>`;
+    }else if(clean){
+      html+=clean.split('\n').map(x=>`<p class="weekly-text">${esc(x)}</p>`).join('');
+    }
+    currentPlatform='';
+    currentPlatformLabel='';
+    buffer=[];
+  }
   txt.split('\n').forEach(line=>{
     const raw=String(line||'');
     const trimmed=raw.trim();
-    if(!trimmed){html+='<div class="weekly-space"></div>'; return;}
+    if(!trimmed){return;}
     const dayMatch=trimmed.match(/^(Montag|Dienstag|Mittwoch|Donnerstag|Freitag|Samstag|Sonntag),\s*\d{2}\.\d{2}\.\d{4}$/);
     if(dayMatch){
+      flushSegment();
       const dayIdx=dayIndexByName[dayMatch[1]];
       html+=`<div class="weekly-day"><strong>${esc(trimmed)}</strong></div>`;
       if(sectionId && isPublishSection(sectionId)){
@@ -191,13 +216,19 @@ function formatWeeklyTemplateHtml(t,idx,sectionId){
       return;
     }
     if(/^Woche\s+\d+\s+von\s+52$/.test(trimmed) || /^KW\s+\d+$/.test(trimmed) || /^Zeitraum:/.test(trimmed)){
-      html+=`<div class="weekly-meta"><strong>${esc(trimmed)}</strong></div>`; return;
+      flushSegment();
+      html+=`<div class="weekly-meta"><strong>${esc(trimmed)}</strong></div>`;
+      return;
     }
     if(platformMap[trimmed]){
-      html+=`<div class="weekly-platform"><strong>${esc(platformMap[trimmed])}</strong></div>`; return;
+      flushSegment();
+      currentPlatform=trimmed;
+      currentPlatformLabel=platformMap[trimmed];
+      return;
     }
-    html+=`<p class="weekly-text">${esc(trimmed)}</p>`;
+    buffer.push(trimmed);
   });
+  flushSegment();
   return html;
 }
 
