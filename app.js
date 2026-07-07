@@ -20,7 +20,7 @@ let selectedChapterIndex=null;
 let selectedDate=todayKey();
 let selectedSalesDate=todayKey();
 
-const publishSections=['linkedin52','facebook52','videos52','martina52'];
+const publishSections=['linkedin52','facebook52','videos52','peter52','martina52'];
 
 const activityConfig={
   peter:[
@@ -554,8 +554,8 @@ function progressBar(sectionId,label){
   const p=getSectionProgress(sectionId); const percent=p.total?Math.round((p.published/p.total)*100):0;
   return `<div class="progress-card"><div class="progress-head"><strong>${esc(label)}</strong><span>${p.published} von ${p.total} veröffentlicht</span></div><div class="progress-bar"><div class="progress-fill" style="width:${percent}%"></div></div><div class="progress-meta">Geplant: ${p.planned} · Offen: ${p.open} · Fortschritt: ${percent}%</div></div>`;
 }
-function renderProgressOverview(){return `<div class="card"><h3>Fortschritt Jahrespläne</h3>${progressBar('linkedin52','LinkedIn Jahresplan')}${progressBar('facebook52','Facebook Jahresplan')}${progressBar('videos52','Video Jahresplan')}${progressBar('martina52','Martina 52-Wochen-Programm')}</div>`}
-function renderProgressOverviewForSection(id){if(id==='linkedin52')return `<div class="card">${progressBar(id,'LinkedIn Jahresplan')}</div>`; if(id==='facebook52')return `<div class="card">${progressBar(id,'Facebook Jahresplan')}</div>`; if(id==='videos52')return `<div class="card">${progressBar(id,'Video Jahresplan')}</div>`; if(id==='martina52')return `<div class="card">${progressBar(id,'Martina 52-Wochen-Programm')}</div>`; return ''}
+function renderProgressOverview(){return `<div class="card"><h3>Fortschritt Jahrespläne</h3>${progressBar('peter52','Peter 52-Wochen-Jahresplan')}${progressBar('linkedin52','LinkedIn Jahresplan')}${progressBar('facebook52','Facebook Jahresplan')}${progressBar('videos52','Video Jahresplan')}${progressBar('martina52','Martina 52-Wochen-Programm')}</div>`}
+function renderProgressOverviewForSection(id){if(id==='peter52')return `<div class="card">${progressBar(id,'Peter 52-Wochen-Jahresplan')}</div>`; if(id==='linkedin52')return `<div class="card">${progressBar(id,'LinkedIn Jahresplan')}</div>`; if(id==='facebook52')return `<div class="card">${progressBar(id,'Facebook Jahresplan')}</div>`; if(id==='videos52')return `<div class="card">${progressBar(id,'Video Jahresplan')}</div>`; if(id==='martina52')return `<div class="card">${progressBar(id,'Martina 52-Wochen-Programm')}</div>`; return ''}
 
 async function copyFromElement(id){const el=document.getElementById(id); if(el) await copyText(el.innerText||el.textContent||'')}
 async function copyText(text){
