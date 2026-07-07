@@ -9,7 +9,7 @@ const firebaseConfig = {
   appId: "1:523160644442:web:ff840ac629a9f62ebae163"
 };
 
-const APP_VERSION='38';
+const APP_VERSION='1.0';
 const APP_BUILD='07.07.2026';
 let firebaseApp=null;
 let auth=null;

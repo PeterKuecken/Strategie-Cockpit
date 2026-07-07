@@ -1,3 +1,3 @@
-Recruiting-Cockpit Kücken Version 38
+Recruiting-Cockpit Kücken Version 1.0
 
-Änderung: Vor dem Login werden nur noch der Status „Nicht angemeldet“ angezeigt. Wochenpläne Peter und Martina wurden auf vollständige Inhalte geprüft.
+Stabiler Entwicklungsstand vom 07.07.2026.
