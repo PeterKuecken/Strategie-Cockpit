@@ -120,6 +120,50 @@ function statusText(actual,target){const p=pct(actual,target); if(p>=100)return 
 function esc(str){return String(str ?? '').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 function formatDate(date){const [y,m,d]=date.split('-'); return `${d}.${m}.${y}`}
 
+const yearPlanStart=new Date(2026,6,13); // Montag, 13.07.2026
+const dayNames=['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+function dateObjToKey(d){const y=d.getFullYear(); const m=String(d.getMonth()+1).padStart(2,'0'); const day=String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${day}`}
+function formatDateObj(d){return `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`}
+function addDays(d,days){const x=new Date(d.getFullYear(),d.getMonth(),d.getDate()); x.setDate(x.getDate()+days); return x}
+function isoWeekNumber(d){
+  const date=new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const dayNum=date.getUTCDay() || 7;
+  date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+  const yearStart=new Date(Date.UTC(date.getUTCFullYear(),0,1));
+  return Math.ceil((((date-yearStart)/86400000)+1)/7);
+}
+function weekMeta(idx){
+  const start=addDays(yearPlanStart, idx*7); const end=addDays(start,6);
+  const days=[]; for(let i=0;i<7;i++){const d=addDays(start,i); days.push({name:dayNames[d.getDay()], date:formatDateObj(d), key:dateObjToKey(d)});}
+  return {week:idx+1, kw:isoWeekNumber(start), start, end, range:`${formatDateObj(start)} bis ${formatDateObj(end)}`, days};
+}
+function renderWeekDateBox(idx){
+  const m=weekMeta(idx);
+  return `<div class="week-date-box"><div><strong>Woche ${m.week} von 52</strong></div><div>KW ${m.kw}</div><div>Zeitraum: ${m.range}</div><div class="week-days">${m.days.map(d=>`<span>${d.name}, ${d.date}</span>`).join('')}</div></div>`;
+}
+function currentPlanWeekIndex(){
+  const now=new Date(); const today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  const diff=Math.floor((today-yearPlanStart)/86400000);
+  if(diff<0)return 0;
+  const idx=Math.floor(diff/7);
+  return Math.max(0,Math.min(51,idx));
+}
+function openCurrentWeek(sectionId){current=sectionId; selectedChapterIndex=currentPlanWeekIndex(); searchInput.value=''; const g=activeNavGroup(); if(g)openNavGroupLabel=g.label; render(); setTimeout(()=>scrollToContent(),0)}
+function weeklyTemplateDatePrefix(t,idx){
+  const m=weekMeta(idx);
+  let text=String(t||'');
+  text=text.replace(/\bMontag\b(?!,)/,`Montag, ${m.days[0].date}`)
+           .replace(/\bDienstag\b(?!,)/,`Dienstag, ${m.days[1].date}`)
+           .replace(/\bMittwoch\b(?!,)/,`Mittwoch, ${m.days[2].date}`)
+           .replace(/\bDonnerstag\b(?!,)/,`Donnerstag, ${m.days[3].date}`)
+           .replace(/\bFreitag\b(?!,)/,`Freitag, ${m.days[4].date}`)
+           .replace(/\bSamstag\b(?!,)/,`Samstag, ${m.days[5].date}`)
+           .replace(/\bSonntag\b(?!,)/,`Sonntag, ${m.days[6].date}`);
+  const header=`Woche ${m.week} von 52\nKW ${m.kw}\nZeitraum: ${m.range}\n\n`;
+  return text.startsWith(`Woche ${m.week} von 52`) ? text : header+text;
+}
+
+
 
 function scrollToContent(){
   const content = document.querySelector('.content');
@@ -475,19 +519,20 @@ function renderContent(s){
   if(selectedChapterIndex!==null && chapters[selectedChapterIndex]) return renderSingleChapter(s,chapters[selectedChapterIndex],selectedChapterIndex);
   const isWeekly=isPublishSection(s.id);
   let html=`<div class="card"><h2>${esc(s.title)}</h2>${(s.tags||[]).map(t=>`<span class="badge">${esc(t)}</span>`).join('')}<p class="small">Wähle unten einen Eintrag. Er öffnet sich als eigene Seite.</p></div>`;
-  if(isWeekly)html+=renderProgressOverviewForSection(s.id);
+  if(isWeekly)html+=renderProgressOverviewForSection(s.id)+`<div class="card"><button class="copy-btn" onclick="openCurrentWeek('${s.id}')">Heute öffnen</button></div>`;
   html+=`<div class="${isWeekly?'week-list':'chapter-list'}">`;
   chapters.forEach((c,idx)=>{
     const status=isWeekly ? (localStorage.getItem(`content_status_${s.id}_${idx}`)||'Offen') : 'öffnen';
-    html+=`<button class="${isWeekly?'week-row':'chapter-row'} ${isWeekly?statusClass(status):''}" onclick="openChapter(${idx})"><span>${esc(c.title)}</span><small>${esc(status)}</small></button>`;
+    html+=`<button class="${isWeekly?'week-row':'chapter-row'} ${isWeekly?statusClass(status):''}" onclick="openChapter(${idx})"><span>${isWeekly?`Woche ${idx+1}: `:''}${esc(c.title.replace(/^Woche\s*\d+[:.]?\s*/i,''))}</span><small>${isWeekly?`KW ${weekMeta(idx).kw} · ${weekMeta(idx).range}`:esc(status)}</small></button>`;
   });
   html+=`</div>`;
   view.innerHTML=html;
 }
 function renderSingleChapter(s,c,idx){
-  let html=`<div class="card single-page"><button class="copy-btn" onclick="backToOverview()">Zurück zur Übersicht</button><h2>${esc(s.title)}</h2><h3>${esc(c.title)}</h3>`;
+  const weekly=isPublishSection(s.id);
+  let html=`<div class="card single-page"><button class="copy-btn" onclick="backToOverview()">Zurück zur Übersicht</button><h2>${esc(s.title)}</h2><h3>${weekly?`Woche ${idx+1}: `:''}${esc(c.title.replace(/^Woche\s*\d+[:.]?\s*/i,''))}</h3>${weekly?renderWeekDateBox(idx):''}`;
   if(c.body)html+=`<div class="chapter-body">${esc(c.body)}</div>`;
-  (c.templates||[]).forEach((t,ti)=>{const id=`single-${s.id}-${idx}-${ti}`; html+=`<div class="template" id="${id}">${esc(t)}</div><button class="copy-btn" onclick="copyFromElement('${id}')">Text kopieren</button>`});
+  (c.templates||[]).forEach((t,ti)=>{const id=`single-${s.id}-${idx}-${ti}`; const txt=weekly?weeklyTemplateDatePrefix(t,idx):t; html+=`<div class="template" id="${id}">${esc(txt)}</div><button class="copy-btn" onclick="copyFromElement('${id}')">Text kopieren</button>`});
   html+=`</div>`;
   const prevLabel=isPublishSection(s.id)?'Vorherige Woche':'Vorheriger Eintrag';
   const nextLabel=isPublishSection(s.id)?'Nächste Woche':'Nächster Eintrag';

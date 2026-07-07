@@ -1,19 +1,20 @@
-# Recruiting Cockpit Kücken v22 Navigation
+# Recruiting-Cockpit Kücken v25 komplett
 
-Diese Version enthält die korrigierte Navigation:
+Diese Version ist vollständig und GitHub-Pages-fähig.
 
-1. Vertriebs-Cockpit
-2. Peter
-3. Martina
+## Enthalten
 
-Der Schnellzugriff ist getrennt in:
+- Vertriebs-Cockpit an Position 1
+- Peter an Position 2
+- Martina an Position 3
+- getrennter Schnellzugriff für Peter und Martina
+- Frosch-Favicon und App-Icons
+- Datumsangaben ab Montag, 13.07.2026
+- KW und Zeitraum je Woche
+- Wochen-Navigation für Peter und Martina
 
-- Schnellzugriff Peter
-- Schnellzugriff Martina
-- Cockpit
+## Upload bei GitHub
 
-Die Nummerierung beginnt innerhalb jedes Bereichs wieder bei 1.
+Den Ordner entpacken. Danach alle Dateien aus diesem Ordner direkt ins Repository hochladen.
 
-## GitHub Pages
-
-Den Inhalt dieses Ordners in das Repository hochladen. Die Datei `index.html` muss direkt im Hauptverzeichnis liegen.
+Im Repository müssen index.html, app.js, content.js und style.css direkt im Hauptverzeichnis liegen.
