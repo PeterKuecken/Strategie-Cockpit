@@ -9,6 +9,8 @@ const firebaseConfig = {
   appId: "1:523160644442:web:ff840ac629a9f62ebae163"
 };
 
+const APP_VERSION='37';
+const APP_BUILD='07.07.2026';
 let firebaseApp=null;
 let auth=null;
 let db=null;
@@ -386,6 +388,7 @@ function render(){
   if(s.type==='dashboard')return renderDashboard(s);
   if(s.type==='links')return renderLinks(s);
   if(s.type==='sales_cockpit')return renderSalesCockpit(s);
+  if(s.type==='impressum')return renderImpressum(s);
   if(s.type==='kpi')return renderSalesCockpit(s);
   renderContent(s);
 }
@@ -664,6 +667,28 @@ function renderSalesHistory(){
 }
 
 /* Content */
+
+function renderImpressum(s){
+  const email=currentUser?.email || 'Nicht angemeldet';
+  const firebaseState=cloudError ? 'Fehler' : (cloudReady ? 'Verbunden' : 'Nicht verbunden');
+  const syncText=document.getElementById('syncStatus')?.textContent || 'Nicht bekannt';
+  const userName=email.includes('martina') ? 'Martina' : (email.includes('peter') ? 'Peter' : email);
+  view.innerHTML=`
+    <div class="card single-page">
+      <h2>Impressum</h2>
+      <p><strong>Recruiting-Cockpit</strong></p>
+      <p>Peter & Martina Kücken</p>
+      <div class="info-grid">
+        <div><strong>Version</strong><br>${esc(APP_VERSION)}</div>
+        <div><strong>Letzte Aktualisierung</strong><br>${esc(APP_BUILD)}</div>
+        <div><strong>Firebase</strong><br>${esc(firebaseState)}</div>
+        <div><strong>Synchronisierung</strong><br>${esc(syncText)}</div>
+        <div><strong>Angemeldet als</strong><br>${esc(userName)}</div>
+      </div>
+      <p class="muted">Diese Angaben dienen nur zur internen Kontrolle der App-Version und der Synchronisierung.</p>
+    </div>`;
+}
+
 function renderLinks(s){
   let html=`<div class="card"><h2>${esc(s.title)}</h2><p>Direkter Einstieg in die wichtigsten Bereiche.</p></div>`;
   if(s.groups&&s.groups.length){

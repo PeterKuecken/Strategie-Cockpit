@@ -1970,6 +1970,18 @@ window.APP_CONTENT = {
       ]
     },
     {
+      "id": "impressum",
+      "title": "Impressum",
+      "navTitle": "4. Impressum",
+      "type": "impressum",
+      "tags": [
+        "Impressum",
+        "Version",
+        "Technik"
+      ],
+      "text": "Technische Informationen zur aktuell laufenden App-Version."
+    },
+    {
       "id": "peter52",
       "title": "Peter 52-Wochen-Jahresplan",
       "navTitle": "9. 52-Wochen-Jahresplan",
@@ -2994,7 +3006,8 @@ window.APP_CONTENT = {
       "sections": [
         "heute",
         "schnellzugriff",
-        "kennzahlen"
+        "kennzahlen",
+        "impressum"
       ]
     },
     {

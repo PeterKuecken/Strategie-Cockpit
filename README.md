@@ -1,3 +1,5 @@
-Recruiting-Cockpit Kücken Version 36
+Recruiting-Cockpit Peter & Martina Kücken
 
-Arbeitscockpit und Vertriebs-Cockpit akzeptieren nur ganze Zahlen ohne Nachkommastellen. Enthält Login, Firebase-Anbindung, Favicon und vollständige GitHub-Pages-Struktur.
+Version 37
+
+Änderung: Versionshinweis von der Startseite entfernt und technische Versionsanzeige im Impressum ergänzt.
