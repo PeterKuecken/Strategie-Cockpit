@@ -1,5 +1,3 @@
-Recruiting-Cockpit Peter & Martina Kücken
+Recruiting-Cockpit Kücken Version 38
 
-Version 37
-
-Änderung: Versionshinweis von der Startseite entfernt und technische Versionsanzeige im Impressum ergänzt.
+Änderung: Vor dem Login werden nur noch der Status „Nicht angemeldet“ angezeigt. Wochenpläne Peter und Martina wurden auf vollständige Inhalte geprüft.

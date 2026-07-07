@@ -9,7 +9,7 @@ const firebaseConfig = {
   appId: "1:523160644442:web:ff840ac629a9f62ebae163"
 };
 
-const APP_VERSION='37';
+const APP_VERSION='38';
 const APP_BUILD='07.07.2026';
 let firebaseApp=null;
 let auth=null;
@@ -841,7 +841,8 @@ function showLogin(){
   document.getElementById('appLayout')?.classList.add('hidden');
   document.getElementById('appFooter')?.classList.add('hidden');
   document.getElementById('logoutBtn')?.classList.add('hidden');
-  const u=document.getElementById('userInfo'); if(u)u.textContent='';
+  document.getElementById('resetBtn')?.classList.add('hidden');
+  const u=document.getElementById('userInfo'); if(u){u.textContent=''; u.classList.add('hidden')}
   setSyncStatus(cloudError ? 'Firebase-Fehler' : 'Nicht angemeldet');
 }
 function showApp(){
@@ -849,7 +850,8 @@ function showApp(){
   document.getElementById('appLayout')?.classList.remove('hidden');
   document.getElementById('appFooter')?.classList.remove('hidden');
   document.getElementById('logoutBtn')?.classList.remove('hidden');
-  const u=document.getElementById('userInfo'); if(u)u.textContent=currentUser?.email || '';
+  document.getElementById('resetBtn')?.classList.remove('hidden');
+  const u=document.getElementById('userInfo'); if(u){u.textContent=currentUser?.email || ''; u.classList.remove('hidden')}
 }
 async function login(){
   const email=document.getElementById('loginEmail')?.value.trim();
