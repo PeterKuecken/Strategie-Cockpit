@@ -1,4 +1,33 @@
 
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCC6oG4f-GGqFoG785z_ePREt86Sugptd4",
+  authDomain: "kuecken-cockpit.firebaseapp.com",
+  projectId: "kuecken-cockpit",
+  storageBucket: "kuecken-cockpit.firebasestorage.app",
+  messagingSenderId: "523160644442",
+  appId: "1:523160644442:web:ff840ac629a9f62ebae163"
+};
+
+let firebaseApp=null;
+let auth=null;
+let db=null;
+let currentUser=null;
+let cloudReady=false;
+let applyingRemote=false;
+let unsubscribeAppState=null;
+let saveTimer=null;
+let mediaStatus={};
+let cloudError='';
+
+try{
+  firebaseApp=firebase.initializeApp(firebaseConfig);
+  auth=firebase.auth();
+  db=firebase.firestore();
+}catch(e){
+  cloudError=e && e.message ? e.message : String(e);
+}
+
 const stateKey='kuecken_state_v18';
 const activityKey='kuecken_activity_v18';
 const salesKey='kuecken_sales_v18';
@@ -7,6 +36,7 @@ const todayKey=()=>new Date().toISOString().slice(0,10);
 let state=JSON.parse(localStorage.getItem(stateKey)||'{}');
 let activity=JSON.parse(localStorage.getItem(activityKey)||'{}');
 let sales=JSON.parse(localStorage.getItem(salesKey)||'{}');
+mediaStatus=JSON.parse(localStorage.getItem('kuecken_media_status_v18')||'{}');
 if(!state.checks)state.checks={};
 if(!state.kpis)state.kpis={};
 
@@ -108,9 +138,32 @@ const funnelKeys=[
   ['partner','Partner']
 ];
 
-function save(){localStorage.setItem(stateKey,JSON.stringify(state))}
-function saveActivity(){localStorage.setItem(activityKey,JSON.stringify(activity))}
-function saveSales(){localStorage.setItem(salesKey,JSON.stringify(sales))}
+function save(){localStorage.setItem(stateKey,JSON.stringify(state)); scheduleCloudSave()}
+function saveActivity(){localStorage.setItem(activityKey,JSON.stringify(activity)); scheduleCloudSave()}
+function saveSales(){localStorage.setItem(salesKey,JSON.stringify(sales)); scheduleCloudSave()}
+function saveMediaStatus(){localStorage.setItem('kuecken_media_status_v18',JSON.stringify(mediaStatus)); scheduleCloudSave()}
+function scheduleCloudSave(){
+  if(applyingRemote || !currentUser || !db || !cloudReady)return;
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(writeCloudState,350);
+}
+async function writeCloudState(){
+  if(!currentUser || !db)return;
+  setSyncStatus('Speichert ...');
+  try{
+    await db.collection('app').doc('sharedState').set({
+      state, activity, sales, mediaStatus,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      updatedBy: currentUser.email || currentUser.uid
+    },{merge:true});
+    setSyncStatus('Synchronisiert');
+  }catch(e){
+    setSyncStatus('Speicherfehler');
+    console.error(e);
+  }
+}
+function setSyncStatus(text){const el=document.getElementById('syncStatus'); if(el)el.textContent=text}
+
 function sectionById(id){return window.APP_CONTENT.sections.find(s=>s.id===id)}
 function isPublishSection(id){return publishSections.includes(id)}
 function pct(actual,target){return target ? Math.round((Number(actual||0)/target)*100) : 100}
@@ -642,7 +695,7 @@ function renderSingleChapter(s,c,idx){
   view.innerHTML=html+`<div class="card">${prev}${next}</div>`;
 }
 function statusClass(status){if(status==='Veröffentlicht')return 'status-published'; if(status==='Geplant')return 'status-planned'; return 'status-open'}
-function setContentStatus(section,idx,value){localStorage.setItem(`content_status_${section}_${idx}`,value); render()}
+function setContentStatus(section,idx,value){if(!state.contentStatuses)state.contentStatuses={}; state.contentStatuses[`content_status_${section}_${idx}`]=value; save(); render()}
 
 function weeklyMediaForSection(sectionId){
   if(sectionId==='peter52')return [
@@ -667,11 +720,12 @@ function weeklyMediaForSection(sectionId){
   ];
 }
 function mediaStatusKey(section,idx,dayIdx,mediaKey){return `media_status_${section}_${idx}_${dayIdx}_${mediaKey}`}
-function getMediaStatus(section,idx,dayIdx,mediaKey){return localStorage.getItem(mediaStatusKey(section,idx,dayIdx,mediaKey))||'Offen'}
+function getMediaStatus(section,idx,dayIdx,mediaKey){return mediaStatus[mediaStatusKey(section,idx,dayIdx,mediaKey)]||'Offen'}
 function toggleMediaStatus(section,idx,dayIdx,mediaKey){
   const key=mediaStatusKey(section,idx,dayIdx,mediaKey);
-  const cur=localStorage.getItem(key)||'Offen';
-  localStorage.setItem(key,cur==='Erledigt'?'Offen':'Erledigt');
+  const cur=mediaStatus[key]||'Offen';
+  mediaStatus[key]=cur==='Erledigt'?'Offen':'Erledigt';
+  saveMediaStatus();
   render();
 }
 function weekMediaProgress(section,idx){
@@ -712,7 +766,7 @@ function renderMediaStatusPanel(section,idx){
 function getSectionProgress(sectionId){
   const s=sectionById(sectionId); if(!s||!s.chapters)return {total:0,published:0,planned:0,open:0};
   let total=s.chapters.length,published=0,planned=0,open=0;
-  s.chapters.forEach((c,idx)=>{const val=isPublishSection(sectionId)?weekAggregateStatus(sectionId,idx):(localStorage.getItem(`content_status_${sectionId}_${idx}`)||'Offen'); if(val==='Veröffentlicht')published++; else if(val==='Geplant')planned++; else open++});
+  s.chapters.forEach((c,idx)=>{const val=isPublishSection(sectionId)?weekAggregateStatus(sectionId,idx):(state.contentStatuses?.[`content_status_${sectionId}_${idx}`]||'Offen'); if(val==='Veröffentlicht')published++; else if(val==='Geplant')planned++; else open++});
   return {total,published,planned,open};
 }
 function progressBar(sectionId,label){
@@ -738,6 +792,79 @@ function renderSearch(q){
   view.innerHTML=html;
 }
 
+function showLogin(){
+  document.getElementById('loginScreen')?.classList.remove('hidden');
+  document.getElementById('appLayout')?.classList.add('hidden');
+  document.getElementById('appFooter')?.classList.add('hidden');
+  document.getElementById('logoutBtn')?.classList.add('hidden');
+  const u=document.getElementById('userInfo'); if(u)u.textContent='';
+  setSyncStatus(cloudError ? 'Firebase-Fehler' : 'Nicht angemeldet');
+}
+function showApp(){
+  document.getElementById('loginScreen')?.classList.add('hidden');
+  document.getElementById('appLayout')?.classList.remove('hidden');
+  document.getElementById('appFooter')?.classList.remove('hidden');
+  document.getElementById('logoutBtn')?.classList.remove('hidden');
+  const u=document.getElementById('userInfo'); if(u)u.textContent=currentUser?.email || '';
+}
+async function login(){
+  const email=document.getElementById('loginEmail')?.value.trim();
+  const password=document.getElementById('loginPassword')?.value;
+  const err=document.getElementById('loginError'); if(err)err.textContent='';
+  if(!email || !password){if(err)err.textContent='Bitte E-Mail und Passwort eingeben.'; return;}
+  try{await auth.signInWithEmailAndPassword(email,password)}catch(e){if(err)err.textContent='Anmeldung fehlgeschlagen. Bitte E-Mail und Passwort prüfen.'; console.error(e)}
+}
+function subscribeCloudState(){
+  if(unsubscribeAppState)unsubscribeAppState();
+  setSyncStatus('Lädt ...');
+  unsubscribeAppState=db.collection('app').doc('sharedState').onSnapshot(async snap=>{
+    applyingRemote=true;
+    if(snap.exists){
+      const data=snap.data()||{};
+      state=data.state || state || {};
+      activity=data.activity || activity || {};
+      sales=data.sales || sales || {};
+      mediaStatus=data.mediaStatus || mediaStatus || {};
+      if(!state.checks)state.checks={};
+      if(!state.kpis)state.kpis={};
+      localStorage.setItem(stateKey,JSON.stringify(state));
+      localStorage.setItem(activityKey,JSON.stringify(activity));
+      localStorage.setItem(salesKey,JSON.stringify(sales));
+      localStorage.setItem('kuecken_media_status_v18',JSON.stringify(mediaStatus));
+    }else{
+      await db.collection('app').doc('sharedState').set({state,activity,sales,mediaStatus,createdAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:currentUser.email||currentUser.uid},{merge:true});
+    }
+    applyingRemote=false;
+    cloudReady=true;
+    setSyncStatus('Synchronisiert');
+    ensureActivityDate(todayKey()); ensureSalesDate(todayKey()); render();
+  },err=>{
+    applyingRemote=false;
+    setSyncStatus('Sync-Fehler');
+    console.error(err);
+  });
+}
+
 document.getElementById('resetBtn').onclick=()=>{selectedDate=todayKey(); selectedSalesDate=todayKey(); render()}
+document.getElementById('loginBtn')?.addEventListener('click',login);
+document.getElementById('loginPassword')?.addEventListener('keydown',e=>{if(e.key==='Enter')login()});
+document.getElementById('logoutBtn')?.addEventListener('click',()=>auth.signOut());
 searchInput.addEventListener('input',()=>{selectedChapterIndex=null; render()});
-ensureActivityDate(todayKey()); ensureSalesDate(todayKey()); render();
+
+if(auth && db){
+  auth.onAuthStateChanged(user=>{
+    currentUser=user;
+    cloudReady=false;
+    if(user){showApp(); subscribeCloudState();}
+    else{
+      if(unsubscribeAppState)unsubscribeAppState();
+      unsubscribeAppState=null;
+      showLogin();
+    }
+  });
+}else{
+  showLogin();
+  const err=document.getElementById('loginError');
+  if(err)err.textContent='Firebase konnte nicht geladen werden. Bitte Internetverbindung prüfen.';
+}
+
