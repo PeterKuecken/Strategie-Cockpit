@@ -1,5 +1,3 @@
-Recruiting-Cockpit Kücken Version 35
+Recruiting-Cockpit Kücken Version 36
 
-Enthält sichtbaren Login-Bildschirm mit Versionskennung, Firebase-Anbindung und Cache-Busting für GitHub Pages.
-
-Nach dem Hochladen in GitHub Pages Browser mit Strg+F5 neu laden.
+Arbeitscockpit und Vertriebs-Cockpit akzeptieren nur ganze Zahlen ohne Nachkommastellen. Enthält Login, Firebase-Anbindung, Favicon und vollständige GitHub-Pages-Struktur.

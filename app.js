@@ -403,9 +403,28 @@ function ensureActivityDate(date){
   if(!activity[date].peter)activity[date].peter={};
   if(!activity[date].martina)activity[date].martina={};
 }
+function toWholeNumber(value){
+  if(value === '' || value === null || value === undefined)return '';
+  const cleaned = String(value).split(/[.,]/)[0].replace(/\D/g,'');
+  if(cleaned === '')return '';
+  return Math.max(0, parseInt(cleaned, 10));
+}
+function sanitizeIntegerInput(input){
+  const old = input.value;
+  const cleaned = toWholeNumber(old);
+  input.value = cleaned === '' ? '' : String(cleaned);
+}
+function blockNonIntegerKeys(event){
+  const blocked = ['e','E','+','-','.',','];
+  if(blocked.includes(event.key)){event.preventDefault(); return false;}
+  return true;
+}
+function integerInput(attrs){
+  return `type="number" min="0" step="1" inputmode="numeric" pattern="[0-9]*" onkeydown="return blockNonIntegerKeys(event)" oninput="sanitizeIntegerInput(this)" ${attrs}`;
+}
 function setActivity(date,person,key,value){
   ensureActivityDate(date);
-  activity[date][person][key]=value==='' ? '' : Math.max(0,Number(value));
+  activity[date][person][key]=toWholeNumber(value);
   saveActivity(); render();
 }
 function personActivityStats(person,date){
@@ -454,7 +473,7 @@ function renderPersonActivity(person,title,date){
       const help=fieldHelp[person]?.[f.key] || ['',''];
       return `<div class="activity-row ${targetClass(Number(val||0),f.target)}">
         <div><strong>${esc(f.label)}</strong><small>Soll: ${f.target} · Bereich: ${esc(f.channel)}</small></div>
-        <input type="number" min="0" step="0.1" value="${val}" onchange="setActivity('${date}','${person}','${f.key}',this.value)">
+        <input ${integerInput(`value="${val}" onchange="setActivity('${date}','${person}','${f.key}',this.value)"`)}>
       </div>
       <details class="field-help"><summary>Erklärung und nächster Schritt</summary>
         <p><strong>Ziel:</strong> ${esc(help[0])}</p>
@@ -527,7 +546,7 @@ function ensureSalesDate(date){
 }
 function setSales(date,person,key,value){
   ensureSalesDate(date);
-  sales[date][person][key]=value==='' ? '' : Math.max(0,Number(value));
+  sales[date][person][key]=toWholeNumber(value);
   saveSales(); render();
 }
 function renderSalesCockpit(s){
@@ -550,7 +569,7 @@ function renderSalesPerson(person,title,date){
   ${fields.map(f=>{
     const val=sales[date][person][f.key] ?? '';
     const n=Number(val||0);
-    return `<tr class="${targetClass(n,f.target)}"><td>${esc(f.label)}</td><td>${round(f.target)}</td><td><input type="number" min="0" step="0.1" value="${val}" onchange="setSales('${date}','${person}','${f.key}',this.value)"></td><td>${statusText(n,f.target)}</td></tr>`;
+    return `<tr class="${targetClass(n,f.target)}"><td>${esc(f.label)}</td><td>${round(f.target)}</td><td><input ${integerInput(`value="${val}" onchange="setSales('${date}','${person}','${f.key}',this.value)"`)}></td><td>${statusText(n,f.target)}</td></tr>`;
   }).join('')}</tbody></table></div>`;
 }
 function salesDates(type){
@@ -782,7 +801,7 @@ async function copyText(text){
   const ta=document.createElement('textarea'); ta.value=text; ta.style.position='fixed'; ta.style.top='-1000px'; document.body.appendChild(ta); ta.focus(); ta.select(); const ok=document.execCommand('copy'); document.body.removeChild(ta); showCopyNotice(ok?'Text kopiert.':'Bitte Text markieren und kopieren.');
 }
 function showCopyNotice(msg){let n=document.getElementById('copyNotice'); if(!n){n=document.createElement('div'); n.id='copyNotice'; n.className='copy-notice'; document.body.appendChild(n)} n.textContent=msg; n.classList.add('show'); setTimeout(()=>n.classList.remove('show'),1600)}
-function round(n){return Math.round(Number(n||0)*10)/10}
+function round(n){return Math.round(Number(n||0))}
 
 function renderSearch(q){
   selectedChapterIndex=null; let hits=[];
