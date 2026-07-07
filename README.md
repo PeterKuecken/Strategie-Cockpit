@@ -13,3 +13,6 @@ Neu in Version 27:
 - Favicon und App-Icons bleiben enthalten.
 
 Für GitHub Pages den entpackten Inhalt direkt in das Hauptverzeichnis des Repositorys hochladen.
+
+
+Version 28: Wochenpläne Peter und Martina mit fetten Tagesdaten, fetten Plattformzeilen, eindeutiger Kennzeichnung als Beitrag, Status, Story, Video oder Short sowie mehr Abstand zwischen den Einträgen.

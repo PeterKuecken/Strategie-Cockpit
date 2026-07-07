@@ -162,6 +162,35 @@ function weeklyTemplateDatePrefix(t,idx){
   const header=`Woche ${m.week} von 52\nKW ${m.kw}\nZeitraum: ${m.range}\n\n`;
   return text.startsWith(`Woche ${m.week} von 52`) ? text : header+text;
 }
+function formatWeeklyTemplateHtml(t,idx){
+  const txt=weeklyTemplateDatePrefix(t,idx);
+  const platformMap={
+    'LinkedIn':'LinkedIn – Beitrag',
+    'Facebook':'Facebook – Beitrag',
+    'WhatsApp':'WhatsApp – Status',
+    'Story':'Facebook/Instagram – Story',
+    'Video':'Video – Video',
+    'YouTube':'YouTube – Video',
+    'YouTube Short':'YouTube – Short',
+    'Short':'YouTube – Short',
+    'Instagram':'Instagram – Story'
+  };
+  return txt.split('\n').map(line=>{
+    const raw=String(line||'');
+    const trimmed=raw.trim();
+    if(!trimmed)return '<div class="weekly-space"></div>';
+    if(/^(Montag|Dienstag|Mittwoch|Donnerstag|Freitag|Samstag|Sonntag),\s*\d{2}\.\d{2}\.\d{4}$/.test(trimmed)){
+      return `<div class="weekly-day"><strong>${esc(trimmed)}</strong></div>`;
+    }
+    if(/^Woche\s+\d+\s+von\s+52$/.test(trimmed) || /^KW\s+\d+$/.test(trimmed) || /^Zeitraum:/.test(trimmed)){
+      return `<div class="weekly-meta"><strong>${esc(trimmed)}</strong></div>`;
+    }
+    if(platformMap[trimmed]){
+      return `<div class="weekly-platform"><strong>${esc(platformMap[trimmed])}</strong></div>`;
+    }
+    return `<p class="weekly-text">${esc(trimmed)}</p>`;
+  }).join('');
+}
 
 
 
@@ -532,7 +561,7 @@ function renderSingleChapter(s,c,idx){
   const weekly=isPublishSection(s.id);
   let html=`<div class="card single-page"><button class="copy-btn" onclick="backToOverview()">Zurück zur Übersicht</button><h2>${esc(s.title)}</h2><h3>${weekly?`Woche ${idx+1}: `:''}${esc(c.title.replace(/^Woche\s*\d+[:.]?\s*/i,''))}</h3>${weekly?renderWeekDateBox(idx):''}`;
   if(c.body)html+=`<div class="chapter-body">${esc(c.body)}</div>`;
-  (c.templates||[]).forEach((t,ti)=>{const id=`single-${s.id}-${idx}-${ti}`; const txt=weekly?weeklyTemplateDatePrefix(t,idx):t; html+=`<div class="template" id="${id}">${esc(txt)}</div><button class="copy-btn" onclick="copyFromElement('${id}')">Text kopieren</button>`});
+  (c.templates||[]).forEach((t,ti)=>{const id=`single-${s.id}-${idx}-${ti}`; const txt=weekly?weeklyTemplateDatePrefix(t,idx):t; const body=weekly?formatWeeklyTemplateHtml(t,idx):esc(txt); html+=`<div class="template ${weekly?'weekly-template':''}" id="${id}">${body}</div><button class="copy-btn" onclick="copyFromElement('${id}')">Text kopieren</button>`});
   html+=`</div>`;
   const prevLabel=isPublishSection(s.id)?'Vorherige Woche':'Vorheriger Eintrag';
   const nextLabel=isPublishSection(s.id)?'Nächste Woche':'Nächster Eintrag';

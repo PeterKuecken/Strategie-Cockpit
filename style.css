@@ -300,3 +300,11 @@ footer{padding:10px 22px;color:var(--muted);background:#fff;border-top:1px solid
 .week-date-box{margin:16px 0;padding:14px 16px;border:1px solid var(--border);border-radius:14px;background:rgba(255,255,255,.04);line-height:1.6}
 .week-days{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:6px;margin-top:10px;font-size:.95rem}
 .week-days span{padding:6px 8px;border-radius:10px;background:rgba(255,255,255,.05)}
+
+
+.weekly-template{line-height:1.55}
+.weekly-meta{font-weight:bold;margin:2px 0;color:var(--blue)}
+.weekly-day{font-size:1.08rem;margin:22px 0 12px 0;padding-top:14px;border-top:1px solid var(--border);font-weight:bold;color:var(--blue)}
+.weekly-platform{margin:16px 0 6px 0;font-weight:bold;color:var(--blue)}
+.weekly-text{margin:4px 0 8px 0;white-space:normal}
+.weekly-space{height:6px}
