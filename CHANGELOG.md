@@ -1,3 +1,10 @@
+# Version 1.3.7
+
+- Reiter der Kontaktakte stehen jetzt direkt unter dem Kontaktkopf.
+- Fortschrittsanzeige folgt erst unter den Reitern.
+- Schritt „Kontakt“ aus der Fortschrittsanzeige entfernt.
+- App-Version und Cache-Parameter auf 1.3.7 aktualisiert.
+
 # Version 1.3.6
 
 - Bei Interesse, Vertrauen und Aktivität ergänzt: 1 = gering · 5 = hoch.

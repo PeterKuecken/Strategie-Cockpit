@@ -1173,15 +1173,15 @@ function crmTabButton(key,label){return `<button class="tab-btn ${selectedContac
 function crmTabButton(key,label){return `<button class="tab-btn ${selectedContactTab===key?'active':''}" onclick="selectedContactTab='${key}'; render()">${label}</button>`}
 function crmProgress(c){
   return [
-    ['Kontakt',true],['Vernetzt',['Vernetzt','Erstgespräch','Interesse','Präsentation geplant','Präsentation erfolgt','Nachfassen','Kunde','Geschäftspartner'].includes(c.status)],['Gespräch',['Erstgespräch','Interesse','Präsentation geplant','Präsentation erfolgt','Nachfassen','Kunde','Geschäftspartner'].includes(c.status)],['Landingpage',!!c.landingSeen],['Video 1',!!c.video1Seen],['Video 2',!!c.video2Seen],['Video 3',!!c.video3Seen],['Follow-up',!!c.followupActive],['Präsentation',['Präsentation geplant','Präsentation erfolgt','Kunde','Geschäftspartner'].includes(c.status)],['Geschäftspartner',c.status==='Geschäftspartner']
+    ['Vernetzt',['Vernetzt','Erstgespräch','Interesse','Präsentation geplant','Präsentation erfolgt','Nachfassen','Kunde','Geschäftspartner'].includes(c.status)],['Gespräch',['Erstgespräch','Interesse','Präsentation geplant','Präsentation erfolgt','Nachfassen','Kunde','Geschäftspartner'].includes(c.status)],['Landingpage',!!c.landingSeen],['Video 1',!!c.video1Seen],['Video 2',!!c.video2Seen],['Video 3',!!c.video3Seen],['Follow-up',!!c.followupActive],['Präsentation',['Präsentation geplant','Präsentation erfolgt','Kunde','Geschäftspartner'].includes(c.status)],['Geschäftspartner',c.status==='Geschäftspartner']
   ];
 }
 function renderCrmProgress(c){return `<div class="crm-progress-steps">${crmProgress(c).map(([label,done])=>`<span class="crm-step ${done?'done':''}">${esc(label)}</span>`).join('')}</div>`}
 function renderCrmDetail(id){
   const c=crmFindContact(id); if(!c)return renderCrmForm(null);
   return `<div class="card contact-file"><div class="contact-file-actions"><button class="copy-btn" onclick="crmCloseContact()">◀ Zur Kontaktübersicht</button><div><button class="copy-btn" onclick="selectedContactTab='edit'; render()">Bearbeiten</button><button class="copy-btn danger" onclick="crmDeleteContact('${esc(c.id)}')">Löschen</button></div></div><div class="contact-sticky-head"><div><p class="eyebrow">Kontaktakte</p><h3>${esc(crmFullName(c))}</h3><p class="contact-code-line">${esc(c.contactCode||'')}</p><p>${esc(c.company||'')} ${c.city?'· '+esc(c.city):''}</p></div><div class="contact-head-meta"><span class="badge">Prio ${esc(c.priority||'A')}</span><span class="badge">${esc(c.status||'Neu')}</span><p class="small">Zuständig: ${esc(c.owner||'Peter')}${c.support?' · Unterstützung: '+esc(c.support):''}</p><p class="small"><strong>Nächster Schritt:</strong> ${esc(c.nextStep||'offen')}</p><p class="small"><strong>Wiedervorlage:</strong> ${esc(c.followDate||'offen')} ${esc(c.followTime||'')}</p></div></div>
-    ${renderCrmProgress(c)}
     <div class="tabs">${crmTabButton('overview','Übersicht')}${crmTabButton('communication','Kommunikation')}${crmTabButton('tasks','Aufgaben')}${crmTabButton('timeline','Zeitachse')}${crmTabButton('notes','Notizen')}${crmTabButton('documents','Dokumente')}${crmTabButton('edit','Bearbeiten')}</div>
+    ${renderCrmProgress(c)}
     ${renderCrmTabContent(c)}
     <div class="quick-actions contact-close-bottom"><button class="primary" onclick="crmCloseContact()">Kontakt schließen</button></div>
   </div>`;
