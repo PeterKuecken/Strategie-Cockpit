@@ -1,9 +1,12 @@
-# Recruiting-Cockpit Peter & Martina Kücken
+# Recruiting-Cockpit Kücken
 
-Version 1.5.0 RC1
+Version 1.5.0 RC2
 
-Diese Version basiert auf der funktionierenden Version 1.4.0 RC5.
+Diese Version basiert auf Version 1.4.0 RC5 und erweitert den Aufgaben- und Prozessmanager.
 
-Neu ist der Aufgaben- und Prozessmanager im persönlichen Dashboard.
+## Neu in RC2
 
-Upload-Hinweis: In GitHub immer nur den Inhalt dieser ZIP ins Hauptverzeichnis hochladen, nicht den Ordner selbst.
+- Überfällige Aufgaben werden rot hervorgehoben.
+- Aufgaben stehen nicht mehr in einer langen Zeile.
+- Aufgabe, Fälligkeit und Priorität stehen getrennt untereinander.
+- Prioritäten sind farblich markiert.

@@ -839,7 +839,7 @@ function round(n){return Math.round(Number(n||0))}
 
 
 
-/* Recruiting CRM Version 1.5.0 RC1 */
+/* Recruiting CRM Version 1.5.0 RC2 */
 function ensureCrm(){
   if(!state.crm)state.crm={contacts:[],tasks:[],dailyDone:{},counters:{PK:0,MK:0}};
   if(!Array.isArray(state.crm.contacts))state.crm.contacts=[];
@@ -1246,8 +1246,10 @@ function crmCompleteProcessItem(kind,id){
   }
   save(); render();
 }
+function crmPriorityClass(priority){return 'prio-'+String(priority||'A').toLowerCase()}
 function crmRenderProcessList(title,items,emptyText,extraClass=''){
-  return `<div class="process-card ${extraClass}"><h4>${esc(title)}</h4>${items.length?`<div class="process-list">${items.map(i=>{const c=i.contact; return `<div class="process-item"><button class="process-main" onclick="crmOpenContact('${esc(i.contactId||'')}')"><strong>${c?esc(crmFullName(c)):esc(i.title)}</strong><span>${c?esc(c.contactCode||'')+' · '+esc(c.company||c.job||'')+' '+(c.city?'· '+esc(c.city):''):''}</span><small>${esc(i.due||'ohne Datum')}${i.time?' · '+esc(i.time):''} · Prio ${esc(i.priority||'A')} · ${esc(i.title)}</small></button><button class="copy-btn" onclick="crmCompleteProcessItem('${esc(i.kind)}','${esc(i.id)}')">Erledigt</button></div>`}).join('')}</div>`:`<p class="small">${esc(emptyText)}</p>`}</div>`;
+  const countBadge = items.length ? `<span class="process-count">${items.length}${extraClass.includes('danger-zone')?' überfällig':''}</span>` : '';
+  return `<div class="process-card ${extraClass}"><div class="process-card-head"><h4>${esc(title)}</h4>${countBadge}</div>${items.length?`<div class="process-list">${items.map(i=>{const c=i.contact; const name=c?crmFullName(c):i.title; const meta=c?[c.contactCode||'',c.company||c.job||'',c.city||''].filter(Boolean).join(' · '):''; return `<div class="process-item ${extraClass.includes('danger-zone')?'process-overdue-item':''}"><button class="process-main" onclick="crmOpenContact('${esc(i.contactId||'')}')"><strong>${esc(name)}</strong>${meta?`<span>${esc(meta)}</span>`:''}<div class="process-task-line"><b>Aufgabe:</b> ${esc(i.title)}</div><small><b>Fällig:</b> ${esc(i.due||'ohne Datum')}${i.time?' · '+esc(i.time):''}</small><small><b>Priorität:</b> <span class="priority-pill ${crmPriorityClass(i.priority)}">${esc(i.priority||'A')}</span></small></button><button class="copy-btn" onclick="crmCompleteProcessItem('${esc(i.kind)}','${esc(i.id)}')">✓ Erledigt</button></div>`}).join('')}</div>`:`<p class="small">${esc(emptyText)}</p>`}</div>`;
 }
 function crmNewContacts(person){
   const yesterday=crmDateAddKey(-1);
@@ -1296,7 +1298,7 @@ function renderProcessManager(person){
   const newer=crmNewContacts(person);
   const m=crmMetricsFor(person);
   const suggestions=crmSuggestions(person);
-  return `<div class="card process-manager"><div class="section-title-row"><div><p class="eyebrow">Version 1.5.0 RC1</p><h3>Aufgaben- und Prozessmanager</h3></div><span class="badge">${all.length} offene Aufgaben</span></div>
+  return `<div class="card process-manager"><div class="section-title-row"><div><p class="eyebrow">Version 1.5.0 RC2</p><h3>Aufgaben- und Prozessmanager</h3></div><span class="badge">${all.length} offene Aufgaben</span></div>
     <div class="metric-grid"><div><strong>${m.contacts}</strong><span>Kontakte</span></div><div><strong>${m.tasks}</strong><span>Aufgaben</span></div><div><strong>${m.landing}</strong><span>Landingpages</span></div><div><strong>${m.v1}</strong><span>Video 1</span></div><div><strong>${m.v2}</strong><span>Video 2</span></div><div><strong>${m.v3}</strong><span>Video 3</span></div><div><strong>${m.partners}</strong><span>Partner</span></div></div>
     <div class="grid process-grid">
       ${crmRenderProcessList('Überfällig',overdue,'Keine überfälligen Aufgaben.','danger-zone')}
