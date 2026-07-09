@@ -9,7 +9,7 @@ const firebaseConfig = {
   appId: "1:523160644442:web:ff840ac629a9f62ebae163"
 };
 
-const APP_VERSION='1.3.0';
+const APP_VERSION='1.3.1';
 const APP_BUILD='09.07.2026';
 let firebaseApp=null;
 let auth=null;
@@ -837,7 +837,7 @@ function round(n){return Math.round(Number(n||0))}
 
 
 
-/* Recruiting CRM Version 1.3.0 */
+/* Recruiting CRM Version 1.3.1 */
 function ensureCrm(){
   if(!state.crm)state.crm={contacts:[],tasks:[],dailyDone:{},counters:{PK:0,MK:0}};
   if(!Array.isArray(state.crm.contacts))state.crm.contacts=[];
@@ -867,7 +867,11 @@ function crmNextContactCode(owner){
 function crmEnsureContactCodes(){
   let changed=false;
   (state.crm.contacts||[]).forEach(c=>{
-    if(!c.contactCode){c.contactCode=crmNextContactCode(c.createdBy||c.owner||'Peter'); changed=true;}
+    const validCode=crmCodeNumber(c.contactCode);
+    if(!validCode){
+      c.contactCode=crmNextContactCode(c.createdBy||c.owner||'Peter');
+      changed=true;
+    }
     if(!c.createdBy)c.createdBy=(c.contactCode||'').startsWith('MK-')?'Martina':'Peter';
     if(!Array.isArray(c.communication))c.communication=[];
     if(!Array.isArray(c.noteEntries))c.noteEntries=[];
@@ -933,8 +937,10 @@ function crmCollectForm(id){
   const val=k=>document.getElementById(p+k)?.value?.trim()||'';
   const nextStepSelect=val('nextStepSelect');
   const nextStepOther=val('nextStepOther');
+  const rawContactCode=val('contactCode');
+  const cleanContactCode=crmCodeNumber(rawContactCode) ? rawContactCode : '';
   return {
-    id:id||crmId(), contactCode:val('contactCode'), createdBy:val('createdBy')||currentPerson(), firstName:val('firstName'), lastName:val('lastName'), company:val('company'), job:(val('jobOther')||val('jobSelect')||val('job')), branch:(val('branchOther')||val('branchSelect')||val('branch')), city:val('city'), phone:val('phone'), email:val('email'), website:val('website'), linkedin:val('linkedin'), facebook:val('facebook'), instagram:val('instagram'), whatsapp:document.getElementById('crm_whatsapp')?.checked||false, owner:val('owner')||currentPerson(), support:val('support'), source:val('source'), targetGroup:(val('targetGroupOther')||val('targetGroupSelect')||val('targetGroup')), status:val('status')||'Neu', priority:val('priority')||'A', followDate:val('followDate'), followTime:val('followTime'), nextStep:(nextStepOther||nextStepSelect||val('nextStep')), landingSeen:document.getElementById('crm_landingSeen')?.checked||false, landingDate:(document.getElementById('crm_landingSeen')?.checked?val('landingDate'):''), video1Seen:(document.getElementById('crm_landingSeen')?.checked && (document.getElementById('crm_video1Seen')?.checked||false)), video2Seen:(document.getElementById('crm_landingSeen')?.checked && (document.getElementById('crm_video1Seen')?.checked||false) && (document.getElementById('crm_video2Seen')?.checked||false)), video3Seen:(document.getElementById('crm_landingSeen')?.checked && (document.getElementById('crm_video1Seen')?.checked||false) && (document.getElementById('crm_video2Seen')?.checked||false) && (document.getElementById('crm_video3Seen')?.checked||false)), followupActive:(document.getElementById('crm_landingSeen')?.checked && (document.getElementById('crm_video1Seen')?.checked||false) && (document.getElementById('crm_video2Seen')?.checked||false) && (document.getElementById('crm_video3Seen')?.checked||false) && (document.getElementById('crm_followupActive')?.checked||false)), interest:val('interest')||'3', trust:val('trust')||'3', activityLevel:val('activityLevel')||'3', notes:val('notes')
+    id:id||crmId(), contactCode:cleanContactCode, createdBy:val('createdBy')||currentPerson(), firstName:val('firstName'), lastName:val('lastName'), company:val('company'), job:(val('jobOther')||val('jobSelect')||val('job')), branch:(val('branchOther')||val('branchSelect')||val('branch')), city:val('city'), phone:val('phone'), email:val('email'), website:val('website'), linkedin:val('linkedin'), facebook:val('facebook'), instagram:val('instagram'), whatsapp:document.getElementById('crm_whatsapp')?.checked||false, owner:val('owner')||currentPerson(), support:val('support'), source:val('source'), targetGroup:(val('targetGroupOther')||val('targetGroupSelect')||val('targetGroup')), status:val('status')||'Neu', priority:val('priority')||'A', followDate:val('followDate'), followTime:val('followTime'), nextStep:(nextStepOther||nextStepSelect||val('nextStep')), landingSeen:document.getElementById('crm_landingSeen')?.checked||false, landingDate:(document.getElementById('crm_landingSeen')?.checked?val('landingDate'):''), video1Seen:(document.getElementById('crm_landingSeen')?.checked && (document.getElementById('crm_video1Seen')?.checked||false)), video2Seen:(document.getElementById('crm_landingSeen')?.checked && (document.getElementById('crm_video1Seen')?.checked||false) && (document.getElementById('crm_video2Seen')?.checked||false)), video3Seen:(document.getElementById('crm_landingSeen')?.checked && (document.getElementById('crm_video1Seen')?.checked||false) && (document.getElementById('crm_video2Seen')?.checked||false) && (document.getElementById('crm_video3Seen')?.checked||false)), followupActive:(document.getElementById('crm_landingSeen')?.checked && (document.getElementById('crm_video1Seen')?.checked||false) && (document.getElementById('crm_video2Seen')?.checked||false) && (document.getElementById('crm_video3Seen')?.checked||false) && (document.getElementById('crm_followupActive')?.checked||false)), interest:val('interest')||'3', trust:val('trust')||'3', activityLevel:val('activityLevel')||'3', notes:val('notes')
   }
 }
 function crmSaveContact(id){
@@ -1093,7 +1099,7 @@ function renderCrmForm(c){
   const stars=(k,label,val)=>`<label>${label}<select id="crm_${k}">${crmHtmlOptions(['1','2','3','4','5'],String(val||'3'))}</select></label>`;
   return `<div id="crmFormCard" class="card"><h3>${id?'Kontakt bearbeiten':'Neuen Kontakt anlegen'}</h3>
     <div class="crm-form-group"><h4>Kontaktkopf</h4><div class="crm-form">
-      <label>Kontakt-ID<input id="crm_contactCode" value="${esc(c.contactCode||'wird automatisch vergeben')}" disabled></label>
+      <label>Kontakt-ID<input id="crm_contactCode" value="${esc(c.contactCode||'wird beim Speichern vergeben')}" disabled></label>
       <label>Angelegt von<input id="crm_createdBy" value="${esc(c.createdBy||currentPerson())}" disabled></label>
     </div></div>
     <div class="crm-form-group"><h4>Persönliche Daten</h4><div class="crm-form">${input('firstName','Vorname')}${input('lastName','Nachname')}${input('company','Firma')}${crmSelectWithOther('job','Beruf',crmJobOptions(),c.job||'','Sonstiges')}${crmSelectWithOther('branch','Branche',crmBranchOptions(),c.branch||'','Sonstige Branche')}${input('city','Ort')}${input('phone','Mobilnummer','tel')}${input('email','E-Mail','email')}${input('website','Website','url')}</div></div>

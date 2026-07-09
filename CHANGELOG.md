@@ -1,5 +1,17 @@
 # Changelog
 
+## Version 1.3.1
+
+- Automatische Kontakt-ID vollständig aktiviert.
+- Neue Kontakte erhalten beim Speichern eine PK- oder MK-ID.
+- Peter-Kontakte starten mit PK-000001.
+- Martina-Kontakte starten mit MK-000001.
+- Zähler laufen getrennt und dauerhaft weiter.
+- Kontakt-ID erscheint in Kontaktliste, Kontaktkopf und Kontaktakte.
+- Suche findet Kontakte auch über die Kontakt-ID.
+- Platzhalter „Kontakt-ID wird automatisch vergeben“ wird nicht mehr als echte ID gespeichert.
+- Vorhandene Kontakte mit ungültiger ID werden beim Laden korrigiert.
+
 ## Version 1.3.0
 
 - Digitale Kontaktakte 2.0 ergänzt.
