@@ -9,7 +9,7 @@ const firebaseConfig = {
   appId: "1:523160644442:web:ff840ac629a9f62ebae163"
 };
 
-const APP_VERSION='1.3.4';
+const APP_VERSION='1.3.5';
 const APP_BUILD='09.07.2026';
 let firebaseApp=null;
 let auth=null;
@@ -1084,7 +1084,7 @@ function renderRecruiting(s){
   const html=`
     ${renderCrmDashboard(person,my,dueToday,open,active)}
     <div id="crmContactsSection" class="card section-card"><h3>Adressdatenbank</h3>${renderCrmToolbar()}${renderCrmContacts()}</div>
-    ${selectedContactId ? (selectedContactId==='__new' ? renderCrmForm(null) : renderCrmDetail(selectedContactId)) : renderCrmEmptyState()}
+    ${selectedContactId ? (selectedContactId==='__new' ? renderCrmForm(null) : renderCrmDetail(selectedContactId)) : ''}
     <div class="card"><h3>Teamübersicht</h3>${renderCrmTeamOverview()}</div>`;
   view.innerHTML=html;
 }

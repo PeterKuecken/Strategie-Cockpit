@@ -1,3 +1,9 @@
+# Version 1.3.5
+
+- Platzhalter-Kasten „Kontaktakte“ unter der Kontaktliste entfernt.
+- Nach „Meine Kontakte anzeigen“ erscheint direkt die Adressdatenbank mit Suche, Filter und Kontaktliste.
+- Neuer Kontakt bleibt über die Werkzeugleiste erreichbar.
+
 # Changelog
 
 ## v1.3.4
