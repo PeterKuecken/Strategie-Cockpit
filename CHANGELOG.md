@@ -1,3 +1,9 @@
+# Version 1.3.6
+
+- Bei Interesse, Vertrauen und Aktivität ergänzt: 1 = gering · 5 = hoch.
+- Keine Sterneanzeige ergänzt.
+- App-Version und Cache-Parameter auf 1.3.6 aktualisiert.
+
 # Version 1.3.5
 
 - Platzhalter-Kasten „Kontaktakte“ unter der Kontaktliste entfernt.

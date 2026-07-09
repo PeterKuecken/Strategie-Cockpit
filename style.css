@@ -480,3 +480,5 @@ footer{padding:10px 22px;color:var(--muted);background:#fff;border-top:1px solid
 .copy-btn.danger{border-color:#ffd0d0;background:#fff5f5;color:#9b1c1c}
 .contact-close-bottom{margin-top:18px;border-top:1px solid var(--line);padding-top:16px}
 @media(max-width:720px){.contact-file-actions{align-items:stretch}.contact-file-actions button{width:100%}.contact-file-actions>div{width:100%}.contact-file-actions>div button{flex:1}}
+
+.field-hint{display:block;font-size:.78rem;color:#6b7280;margin:.15rem 0 .35rem;}

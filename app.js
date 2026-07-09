@@ -1132,7 +1132,7 @@ function renderCrmForm(c){
   const input=(k,label,type='text')=>`<label>${label}<input id="crm_${k}" type="${type}" value="${esc(c[k]||'')}"></label>`;
   const nextSelected=crmNextStepOptions().includes(c.nextStep||'') ? (c.nextStep||'') : ((c.nextStep||'') ? 'Sonstiges' : '');
   const nextOther=(c.nextStep && !crmNextStepOptions().includes(c.nextStep)) ? c.nextStep : '';
-  const stars=(k,label,val)=>`<label>${label}<select id="crm_${k}">${crmHtmlOptions(['1','2','3','4','5'],String(val||'3'))}</select></label>`;
+  const stars=(k,label,val)=>`<label>${label}<span class="field-hint">1 = gering · 5 = hoch</span><select id="crm_${k}">${crmHtmlOptions(['1','2','3','4','5'],String(val||'3'))}</select></label>`;
   return `<div id="crmFormCard" class="card"><h3>${id?'Kontakt bearbeiten':'Neuen Kontakt anlegen'}</h3>
     <div class="crm-form-group"><h4>Kontaktkopf</h4><div class="crm-form">
       <label>Kontakt-ID<input id="crm_contactCode" value="${esc(c.contactCode||'wird beim Speichern vergeben')}" disabled></label>
