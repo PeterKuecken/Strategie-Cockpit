@@ -9,7 +9,7 @@ const firebaseConfig = {
   appId: "1:523160644442:web:ff840ac629a9f62ebae163"
 };
 
-const APP_VERSION='1.2.4';
+const APP_VERSION='1.3.0';
 const APP_BUILD='09.07.2026';
 let firebaseApp=null;
 let auth=null;
@@ -837,12 +837,42 @@ function round(n){return Math.round(Number(n||0))}
 
 
 
-/* Recruiting CRM Version 1.2.3 */
+/* Recruiting CRM Version 1.3.0 */
 function ensureCrm(){
-  if(!state.crm)state.crm={contacts:[],tasks:[],dailyDone:{}};
+  if(!state.crm)state.crm={contacts:[],tasks:[],dailyDone:{},counters:{PK:0,MK:0}};
   if(!Array.isArray(state.crm.contacts))state.crm.contacts=[];
   if(!Array.isArray(state.crm.tasks))state.crm.tasks=[];
   if(!state.crm.dailyDone)state.crm.dailyDone={};
+  if(!state.crm.counters)state.crm.counters={PK:0,MK:0};
+  crmNormalizeCounters();
+  crmEnsureContactCodes();
+}
+function crmOwnerPrefix(owner){return owner==='Martina'?'MK':'PK'}
+function crmCodeNumber(code){const m=String(code||'').match(/^(PK|MK)-(\d{1,})$/); return m?{prefix:m[1],num:Number(m[2])}:null}
+function crmFormatCode(prefix,num){return `${prefix}-${String(num).padStart(6,'0')}`}
+function crmNormalizeCounters(){
+  if(!state.crm.counters)state.crm.counters={PK:0,MK:0};
+  ['PK','MK'].forEach(prefix=>{
+    let max=Number(state.crm.counters[prefix]||0);
+    (state.crm.contacts||[]).forEach(c=>{const parsed=crmCodeNumber(c.contactCode); if(parsed && parsed.prefix===prefix && parsed.num>max)max=parsed.num});
+    state.crm.counters[prefix]=max;
+  });
+}
+function crmNextContactCode(owner){
+  const prefix=crmOwnerPrefix(owner);
+  crmNormalizeCounters();
+  state.crm.counters[prefix]=Number(state.crm.counters[prefix]||0)+1;
+  return crmFormatCode(prefix,state.crm.counters[prefix]);
+}
+function crmEnsureContactCodes(){
+  let changed=false;
+  (state.crm.contacts||[]).forEach(c=>{
+    if(!c.contactCode){c.contactCode=crmNextContactCode(c.createdBy||c.owner||'Peter'); changed=true;}
+    if(!c.createdBy)c.createdBy=(c.contactCode||'').startsWith('MK-')?'Martina':'Peter';
+    if(!Array.isArray(c.communication))c.communication=[];
+    if(!Array.isArray(c.noteEntries))c.noteEntries=[];
+  });
+  return changed;
 }
 function currentPerson(){
   const email=(currentUser?.email || '').toLowerCase();
@@ -856,11 +886,16 @@ function crmToday(){return todayKey()}
 function crmSave(){ensureCrm(); save(); render()}
 function crmFindContact(id){return crmContacts().find(c=>c.id===id)}
 function crmFullName(c){return `${c.firstName||''} ${c.lastName||''}`.trim() || c.company || 'Unbenannter Kontakt'}
+function crmDisplayName(c){return `${c.contactCode?c.contactCode+' · ':''}${crmFullName(c)}${c.company?' · '+c.company:''}${c.city?' · '+c.city:''}`}
+function crmShortLabel(c){return `${c.contactCode||''} ${crmFullName(c)} ${c.company||''} ${c.city||''}`.trim()}
 function crmLastActivity(c){return (c.timeline||[]).slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''))[0]}
 function crmPersonFilter(c){return (c.owner || 'Peter')===currentPerson() || (c.support || '')===currentPerson()}
 function crmStatusOptions(){return ['Neu','Kontaktanfrage gesendet','Vernetzt','Erstgespräch','Interesse','Präsentation geplant','Präsentation erfolgt','Nachfassen','Kunde','Geschäftspartner','Kein Interesse','Archiv']}
 function crmSources(){return ['LinkedIn','Facebook','WhatsApp','Empfehlung','Veranstaltung','Kunde','Sonstiges']}
 function crmPriorities(){return ['A','B','C']}
+function crmNextStepOptions(){return ['LinkedIn-Anfrage senden','Facebook-Nachricht senden','WhatsApp senden','Telefonat führen','Landingpage senden','Video 1 senden','Video 2 senden','Video 3 senden','Zoom vereinbaren','Präsentation durchführen','Nachfassen','Kunde betreuen','Geschäftspartner begleiten','Sonstiges']}
+function crmChannelOptions(){return ['LinkedIn','Facebook','WhatsApp','Telefon','Zoom','Persönlich','E-Mail','Sonstiges']}
+function crmTaskOptions(){return ['LinkedIn-Nachricht','WhatsApp senden','Rückruf','Zoom vorbereiten','Präsentation','Landingpage senden','Video senden','Nachfassen','Sonstiges']}
 function crmSortAz(items,lastLabel){
   const collator=new Intl.Collator('de',{sensitivity:'base',numeric:true});
   const base=(items||[]).filter(x=>x!==lastLabel).sort((a,b)=>collator.compare(a,b));
@@ -873,7 +908,16 @@ function crmTargetGroupOptions(){return crmSortAz(['Dachdecker','Elektriker','Fi
 function crmSelectedFromOptions(value,items,otherLabel){return items.includes(value||'') ? (value||'') : ((value||'') ? otherLabel : '')}
 function crmOtherValue(value,items){return (value && !items.includes(value)) ? value : ''}
 function crmSelectWithOther(key,label,items,value,otherLabel){const selected=crmSelectedFromOptions(value,items,otherLabel); const other=crmOtherValue(value,items); return `<label>${label}<select id="crm_${key}Select">${crmHtmlOptions(items,selected)}</select></label><label>${label} frei eintragen<input id="crm_${key}Other" value="${esc(other)}" placeholder="Nur nutzen, wenn nicht in der Liste"></label>`}
-function crmToggleLandingDetails(){const seen=document.getElementById('crm_landingSeen')?.checked; const details=document.getElementById('crm_landingDetails'); if(details)details.style.display=seen?'contents':'none';}
+function crmToggleLandingDetails(){
+  const seen=document.getElementById('crm_landingSeen')?.checked;
+  const v1=document.getElementById('crm_video1Seen')?.checked;
+  const v2=document.getElementById('crm_video2Seen')?.checked;
+  const v3=document.getElementById('crm_video3Seen')?.checked;
+  const details=document.getElementById('crm_landingDetails'); if(details)details.style.display=seen?'contents':'none';
+  document.querySelectorAll('.crm-step-video2').forEach(el=>el.style.display=(seen&&v1)?'flex':'none');
+  document.querySelectorAll('.crm-step-video3').forEach(el=>el.style.display=(seen&&v1&&v2)?'flex':'none');
+  document.querySelectorAll('.crm-step-followup').forEach(el=>el.style.display=(seen&&v1&&v2&&v3)?'flex':'none');
+}
 function crmHtmlOptions(items,selected){return items.map(x=>`<option value="${esc(x)}" ${x===(selected||'')?'selected':''}>${esc(x)}</option>`).join('')}
 function crmNormalize(v){return String(v||'').trim().toLowerCase().replace(/\s+/g,' ')}
 function crmActive(c){return !['Archiv','Kein Interesse','Kunde','Geschäftspartner'].includes(c.status)}
@@ -887,27 +931,34 @@ function crmDuplicateWarning(data,id){
 function crmCollectForm(id){
   const p='crm_';
   const val=k=>document.getElementById(p+k)?.value?.trim()||'';
+  const nextStepSelect=val('nextStepSelect');
+  const nextStepOther=val('nextStepOther');
   return {
-    id:id||crmId(), firstName:val('firstName'), lastName:val('lastName'), company:val('company'), job:(val('jobOther')||val('jobSelect')||val('job')), branch:(val('branchOther')||val('branchSelect')||val('branch')), city:val('city'), phone:val('phone'), email:val('email'), website:val('website'), linkedin:val('linkedin'), facebook:val('facebook'), instagram:val('instagram'), whatsapp:document.getElementById('crm_whatsapp')?.checked||false, owner:val('owner')||currentPerson(), support:val('support'), source:val('source'), targetGroup:(val('targetGroupOther')||val('targetGroupSelect')||val('targetGroup')), status:val('status')||'Neu', priority:val('priority')||'B', followDate:val('followDate'), followTime:val('followTime'), nextStep:val('nextStep'), landingSeen:document.getElementById('crm_landingSeen')?.checked||false, landingDate:(document.getElementById('crm_landingSeen')?.checked?val('landingDate'):''), video1Seen:(document.getElementById('crm_landingSeen')?.checked && (document.getElementById('crm_video1Seen')?.checked||false)), video2Seen:(document.getElementById('crm_landingSeen')?.checked && (document.getElementById('crm_video2Seen')?.checked||false)), video3Seen:(document.getElementById('crm_landingSeen')?.checked && (document.getElementById('crm_video3Seen')?.checked||false)), followupActive:(document.getElementById('crm_landingSeen')?.checked && (document.getElementById('crm_followupActive')?.checked||false)), notes:val('notes')
+    id:id||crmId(), contactCode:val('contactCode'), createdBy:val('createdBy')||currentPerson(), firstName:val('firstName'), lastName:val('lastName'), company:val('company'), job:(val('jobOther')||val('jobSelect')||val('job')), branch:(val('branchOther')||val('branchSelect')||val('branch')), city:val('city'), phone:val('phone'), email:val('email'), website:val('website'), linkedin:val('linkedin'), facebook:val('facebook'), instagram:val('instagram'), whatsapp:document.getElementById('crm_whatsapp')?.checked||false, owner:val('owner')||currentPerson(), support:val('support'), source:val('source'), targetGroup:(val('targetGroupOther')||val('targetGroupSelect')||val('targetGroup')), status:val('status')||'Neu', priority:val('priority')||'A', followDate:val('followDate'), followTime:val('followTime'), nextStep:(nextStepOther||nextStepSelect||val('nextStep')), landingSeen:document.getElementById('crm_landingSeen')?.checked||false, landingDate:(document.getElementById('crm_landingSeen')?.checked?val('landingDate'):''), video1Seen:(document.getElementById('crm_landingSeen')?.checked && (document.getElementById('crm_video1Seen')?.checked||false)), video2Seen:(document.getElementById('crm_landingSeen')?.checked && (document.getElementById('crm_video1Seen')?.checked||false) && (document.getElementById('crm_video2Seen')?.checked||false)), video3Seen:(document.getElementById('crm_landingSeen')?.checked && (document.getElementById('crm_video1Seen')?.checked||false) && (document.getElementById('crm_video2Seen')?.checked||false) && (document.getElementById('crm_video3Seen')?.checked||false)), followupActive:(document.getElementById('crm_landingSeen')?.checked && (document.getElementById('crm_video1Seen')?.checked||false) && (document.getElementById('crm_video2Seen')?.checked||false) && (document.getElementById('crm_video3Seen')?.checked||false) && (document.getElementById('crm_followupActive')?.checked||false)), interest:val('interest')||'3', trust:val('trust')||'3', activityLevel:val('activityLevel')||'3', notes:val('notes')
   }
 }
 function crmSaveContact(id){
   ensureCrm();
   const data=crmCollectForm(id);
   const dup=crmDuplicateWarning(data,id);
-  if(dup && !confirm(`Dieser Kontakt existiert vermutlich bereits: ${crmFullName(dup)}. Trotzdem speichern?`))return;
+  if(dup && !confirm(`Dieser Kontakt existiert vermutlich bereits: ${crmDisplayName(dup)}. Trotzdem speichern?`))return;
   const now=new Date().toISOString();
   const idx=state.crm.contacts.findIndex(c=>c.id===data.id);
   if(idx>=0){
     const old=state.crm.contacts[idx];
-    data.createdAt=old.createdAt||now; data.updatedAt=now; data.timeline=old.timeline||[];
-    if(old.status!==data.status)data.timeline.push({date:todayKey(),type:'Status',text:`Status geändert: ${old.status||'ohne'} → ${data.status}`});
-    if(old.owner!==data.owner)data.timeline.push({date:todayKey(),type:'Zuständigkeit',text:`Zuständigkeit geändert: ${old.owner||'offen'} → ${data.owner}`});
-    if(old.followDate!==data.followDate || old.nextStep!==data.nextStep)data.timeline.push({date:todayKey(),type:'Wiedervorlage',text:`Nächster Schritt: ${data.nextStep||'offen'}`});
-    if(old.landingSeen!==data.landingSeen || old.video1Seen!==data.video1Seen || old.video2Seen!==data.video2Seen || old.video3Seen!==data.video3Seen || old.followupActive!==data.followupActive)data.timeline.push({date:todayKey(),type:'Landingpage',text:'Landingpage-Status aktualisiert'});
+    data.contactCode=old.contactCode||data.contactCode||crmNextContactCode(old.createdBy||data.createdBy||old.owner||data.owner||currentPerson());
+    data.createdBy=old.createdBy||data.createdBy||currentPerson();
+    data.createdAt=old.createdAt||now; data.updatedAt=now; data.timeline=old.timeline||[]; data.communication=old.communication||[]; data.noteEntries=old.noteEntries||[];
+    if(old.status!==data.status)data.timeline.push({date:todayKey(),time:new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}),type:'Status',text:`Status geändert: ${old.status||'ohne'} → ${data.status}`});
+    if(old.owner!==data.owner)data.timeline.push({date:todayKey(),time:new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}),type:'Zuständigkeit',text:`Zuständigkeit geändert: ${old.owner||'offen'} → ${data.owner}`});
+    if(old.priority!==data.priority)data.timeline.push({date:todayKey(),time:new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}),type:'Priorität',text:`Priorität geändert: ${old.priority||'offen'} → ${data.priority}`});
+    if(old.followDate!==data.followDate || old.followTime!==data.followTime || old.nextStep!==data.nextStep)data.timeline.push({date:todayKey(),time:new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}),type:'Wiedervorlage',text:`Nächster Schritt: ${data.nextStep||'offen'}`});
+    if(old.landingSeen!==data.landingSeen || old.video1Seen!==data.video1Seen || old.video2Seen!==data.video2Seen || old.video3Seen!==data.video3Seen || old.followupActive!==data.followupActive)data.timeline.push({date:todayKey(),time:new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}),type:'Landingpage',text:'Landingpage-Status aktualisiert'});
     state.crm.contacts[idx]=data;
   }else{
-    data.createdAt=now; data.updatedAt=now; data.timeline=[{date:todayKey(),type:'Anlage',text:'Kontakt angelegt'}];
+    data.contactCode=data.contactCode||crmNextContactCode(data.createdBy||data.owner||currentPerson());
+    data.createdBy=data.createdBy||currentPerson();
+    data.createdAt=now; data.updatedAt=now; data.communication=[]; data.noteEntries=[]; data.timeline=[{date:todayKey(),time:new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}),type:'Anlage',text:`Kontakt ${data.contactCode} angelegt`}];
     state.crm.contacts.unshift(data);
   }
   selectedContactId=data.id; selectedContactTab='overview'; crmSave();
@@ -948,7 +999,7 @@ function crmFilteredContacts(){
     if(branch && c.branch!==branch)return false;
     if(targetGroup && c.targetGroup!==targetGroup)return false;
     if(q){
-      const hay=crmNormalize([crmFullName(c),c.firstName,c.lastName,c.company,c.job,c.branch,c.city,c.phone,c.email,c.linkedin,c.facebook,c.targetGroup,c.source,c.status].join(' '));
+      const hay=crmNormalize([c.contactCode,crmFullName(c),c.firstName,c.lastName,c.company,c.job,c.branch,c.city,c.phone,c.email,c.linkedin,c.facebook,c.targetGroup,c.source,c.status].join(' '));
       if(!hay.includes(q))return false;
     }
     return true;
@@ -1011,12 +1062,12 @@ function renderCrmDashboard(person,my,dueToday,open,active){
     <div class="card"><h3>Aktive Kontakte</h3><div class="big-number">${active.length}</div><p class="small">Deine laufenden Kontakte.</p></div>
     <div class="card"><h3>Ohne nächsten Schritt</h3><div class="big-number">${open.length}</div><p class="small">Diese Kontakte brauchen eine klare Aufgabe.</p></div>
   </div>
-  ${dueToday.length?`<div class="card"><h3>Heute zuerst erledigen</h3><div class="focus-list">${dueToday.slice(0,8).map(c=>`<button class="focus-contact" onclick="selectedContactId='${esc(c.id)}'; selectedContactTab='overview'; render()"><strong>${esc(crmFullName(c))}</strong><span>${esc(c.followDate||'')}${c.followTime?' · '+esc(c.followTime):''} · ${esc(c.nextStep||'Nachfassen')}</span></button>`).join('')}</div></div>`:''}`;
+  ${dueToday.length?`<div class="card"><h3>Heute zuerst erledigen</h3><div class="focus-list">${dueToday.slice(0,8).map(c=>`<button class="focus-contact" onclick="selectedContactId='${esc(c.id)}'; selectedContactTab='overview'; render()"><strong>${esc(c.contactCode||'')} · ${esc(crmFullName(c))}</strong><span>${esc(c.company||c.job||'')} ${c.city?'· '+esc(c.city):''}</span><small>${esc(c.followDate||'')}${c.followTime?' · '+esc(c.followTime):''} · ${esc(c.nextStep||'Nachfassen')}</small></button>`).join('')}</div></div>`:''}`;
 }
 function crmSetFilter(key,value){crmFilters[key]=value; render()}
 function renderCrmToolbar(){
   return `<div class="crm-toolbar">
-    <input id="crmSearch" class="crm-search-wide" type="search" value="${esc(crmFilters.q||'')}" placeholder="Kontakt suchen: Name, Nachname, Firma, Ort, Telefon, E-Mail, LinkedIn oder Facebook" oninput="crmSetFilter('q',this.value)">
+    <input id="crmSearch" class="crm-search-wide" type="search" value="${esc(crmFilters.q||'')}" placeholder="Kontakt suchen: ID, Name, Firma, Ort, Telefon, E-Mail, LinkedIn oder Facebook" oninput="crmSetFilter('q',this.value)">
     <select id="crmOwnerFilter" onchange="crmSetFilter('owner',this.value)">${crmHtmlOptions(['Meine','Alle','Peter','Martina'],crmFilters.owner||'Meine')}</select>
     <select id="crmStatusFilter" onchange="crmSetFilter('status',this.value)"><option value="">Alle Status</option>${crmHtmlOptions(crmStatusOptions(),crmFilters.status||'')}</select>
     <select id="crmSourceFilter" onchange="crmSetFilter('source',this.value)"><option value="">Alle Quellen</option>${crmHtmlOptions(crmSources(),crmFilters.source||'')}</select>
@@ -1030,14 +1081,21 @@ function renderCrmToolbar(){
 function renderCrmContacts(){
   const list=crmFilteredContacts();
   if(!list.length)return `<p class="small">Noch keine Kontakte in dieser Ansicht.</p>`;
-  return `<div class="contact-list">${list.map(c=>`<button onclick="selectedContactId='${esc(c.id)}'; selectedContactTab='overview'; render()" class="contact-card ${selectedContactId===c.id?'active':''}"><div><strong>${esc(crmFullName(c))}</strong><span>${esc(c.company||c.job||'')}</span><small>${esc(c.city||'')} · ${esc(c.source||'')}</small></div><div><span class="badge">${esc(c.status||'Neu')}</span><small>${esc(c.followDate||'')}</small></div></button>`).join('')}</div>`;
+  return `<div class="contact-list">${list.map(c=>`<button onclick="selectedContactId='${esc(c.id)}'; selectedContactTab='overview'; render()" class="contact-card ${selectedContactId===c.id?'active':''}"><div><strong>${esc(c.contactCode||'')} · ${esc(crmFullName(c))}</strong><span>${esc(c.company||c.job||'')}</span><small>${esc(c.city||'')} · ${esc(c.source||'')} · Prio ${esc(c.priority||'A')}</small></div><div><span class="badge">${esc(c.status||'Neu')}</span><small>${esc(c.followDate||'')}</small></div></button>`).join('')}</div>`;
 }
 function renderCrmEmptyState(){return `<div class="card empty-state"><h3>Kontaktakte</h3><p>Wähle einen Kontakt aus der Liste oder lege einen neuen Kontakt an.</p><button class="primary" onclick="selectedContactId='__new'; render()">Neuen Kontakt anlegen</button></div>`}
 function renderCrmForm(c){
-  c=c||{owner:currentPerson(),status:'Neu',priority:'B',source:'LinkedIn'};
+  c=c||{owner:currentPerson(),createdBy:currentPerson(),status:'Neu',priority:'A',source:'LinkedIn',interest:'3',trust:'3',activityLevel:'3'};
   const id=c.id||'';
   const input=(k,label,type='text')=>`<label>${label}<input id="crm_${k}" type="${type}" value="${esc(c[k]||'')}"></label>`;
+  const nextSelected=crmNextStepOptions().includes(c.nextStep||'') ? (c.nextStep||'') : ((c.nextStep||'') ? 'Sonstiges' : '');
+  const nextOther=(c.nextStep && !crmNextStepOptions().includes(c.nextStep)) ? c.nextStep : '';
+  const stars=(k,label,val)=>`<label>${label}<select id="crm_${k}">${crmHtmlOptions(['1','2','3','4','5'],String(val||'3'))}</select></label>`;
   return `<div id="crmFormCard" class="card"><h3>${id?'Kontakt bearbeiten':'Neuen Kontakt anlegen'}</h3>
+    <div class="crm-form-group"><h4>Kontaktkopf</h4><div class="crm-form">
+      <label>Kontakt-ID<input id="crm_contactCode" value="${esc(c.contactCode||'wird automatisch vergeben')}" disabled></label>
+      <label>Angelegt von<input id="crm_createdBy" value="${esc(c.createdBy||currentPerson())}" disabled></label>
+    </div></div>
     <div class="crm-form-group"><h4>Persönliche Daten</h4><div class="crm-form">${input('firstName','Vorname')}${input('lastName','Nachname')}${input('company','Firma')}${crmSelectWithOther('job','Beruf',crmJobOptions(),c.job||'','Sonstiges')}${crmSelectWithOther('branch','Branche',crmBranchOptions(),c.branch||'','Sonstige Branche')}${input('city','Ort')}${input('phone','Mobilnummer','tel')}${input('email','E-Mail','email')}${input('website','Website','url')}</div></div>
     <div class="crm-form-group"><h4>Online-Profile</h4><div class="crm-form">${input('linkedin','LinkedIn-Profil','url')}${input('facebook','Facebook-Profil','url')}${input('instagram','Instagram-Profil','url')}<label class="check-inline"><input id="crm_whatsapp" type="checkbox" ${c.whatsapp?'checked':''}> WhatsApp vorhanden</label></div></div>
     <div class="crm-form-group"><h4>Recruiting</h4><div class="crm-form">
@@ -1046,19 +1104,21 @@ function renderCrmForm(c){
       <label>Quelle<select id="crm_source">${crmHtmlOptions(crmSources(),c.source||'LinkedIn')}</select></label>
       ${crmSelectWithOther('targetGroup','Zielgruppe',crmTargetGroupOptions(),c.targetGroup||'','Sonstige Zielgruppe')}
       <label>Status<select id="crm_status">${crmHtmlOptions(crmStatusOptions(),c.status||'Neu')}</select></label>
-      <label>Priorität<select id="crm_priority">${crmHtmlOptions(crmPriorities(),c.priority||'B')}</select></label>
+      <label>Priorität<select id="crm_priority">${crmHtmlOptions(crmPriorities(),c.priority||'A')}</select></label>
       <label>Wiedervorlage Datum<input id="crm_followDate" type="date" value="${esc(c.followDate||'')}"></label>
       <label>Wiedervorlage Uhrzeit<input id="crm_followTime" type="time" value="${esc(c.followTime||'')}"></label>
-      <label class="span2">Nächster Schritt<input id="crm_nextStep" value="${esc(c.nextStep||'')}"></label>
+      <label>Nächster Schritt<select id="crm_nextStepSelect">${crmHtmlOptions(['',...crmNextStepOptions()],nextSelected)}</select></label>
+      <label>Nächster Schritt frei<input id="crm_nextStepOther" value="${esc(nextOther)}" placeholder="Nur nutzen, wenn nicht in der Liste"></label>
+      ${stars('interest','Interesse',c.interest)}${stars('trust','Vertrauen',c.trust)}${stars('activityLevel','Aktivität',c.activityLevel)}
     </div></div>
     <div class="crm-form-group"><h4>Landingpage</h4><div class="crm-form">
       <label class="check-inline"><input id="crm_landingSeen" type="checkbox" ${c.landingSeen?'checked':''} onchange="crmToggleLandingDetails()"> Landingpage gesehen</label>
       <div id="crm_landingDetails" style="display:${c.landingSeen?'contents':'none'}" class="crm-form-nested">
         <label>Datum<input id="crm_landingDate" type="date" value="${esc(c.landingDate||'')}"></label>
-        <label class="check-inline"><input id="crm_video1Seen" type="checkbox" ${c.video1Seen?'checked':''}> Video 1 gesehen</label>
-        <label class="check-inline"><input id="crm_video2Seen" type="checkbox" ${c.video2Seen?'checked':''}> Video 2 gesehen</label>
-        <label class="check-inline"><input id="crm_video3Seen" type="checkbox" ${c.video3Seen?'checked':''}> Video 3 gesehen</label>
-        <label class="check-inline"><input id="crm_followupActive" type="checkbox" ${c.followupActive?'checked':''}> Follow-up-System aktiviert</label>
+        <label class="check-inline"><input id="crm_video1Seen" type="checkbox" ${c.video1Seen?'checked':''} onchange="crmToggleLandingDetails()"> Video 1 gesehen</label>
+        <label class="check-inline crm-step-video2" style="display:${c.video1Seen?'flex':'none'}"><input id="crm_video2Seen" type="checkbox" ${c.video2Seen?'checked':''} onchange="crmToggleLandingDetails()"> Video 2 gesehen</label>
+        <label class="check-inline crm-step-video3" style="display:${c.video2Seen?'flex':'none'}"><input id="crm_video3Seen" type="checkbox" ${c.video3Seen?'checked':''} onchange="crmToggleLandingDetails()"> Video 3 gesehen</label>
+        <label class="check-inline crm-step-followup" style="display:${c.video3Seen?'flex':'none'}"><input id="crm_followupActive" type="checkbox" ${c.followupActive?'checked':''}> Follow-up-System aktiviert</label>
       </div>
     </div></div>
     <div class="crm-form-group"><h4>Notizen</h4><label>Notizen<textarea id="crm_notes">${esc(c.notes||'')}</textarea></label></div>
@@ -1068,10 +1128,18 @@ function renderCrmForm(c){
   </div>`;
 }
 function crmTabButton(key,label){return `<button class="tab-btn ${selectedContactTab===key?'active':''}" onclick="selectedContactTab='${key}'; render()">${label}</button>`}
+function crmTabButton(key,label){return `<button class="tab-btn ${selectedContactTab===key?'active':''}" onclick="selectedContactTab='${key}'; render()">${label}</button>`}
+function crmProgress(c){
+  return [
+    ['Kontakt',true],['Vernetzt',['Vernetzt','Erstgespräch','Interesse','Präsentation geplant','Präsentation erfolgt','Nachfassen','Kunde','Geschäftspartner'].includes(c.status)],['Gespräch',['Erstgespräch','Interesse','Präsentation geplant','Präsentation erfolgt','Nachfassen','Kunde','Geschäftspartner'].includes(c.status)],['Landingpage',!!c.landingSeen],['Video 1',!!c.video1Seen],['Video 2',!!c.video2Seen],['Video 3',!!c.video3Seen],['Follow-up',!!c.followupActive],['Präsentation',['Präsentation geplant','Präsentation erfolgt','Kunde','Geschäftspartner'].includes(c.status)],['Geschäftspartner',c.status==='Geschäftspartner']
+  ];
+}
+function renderCrmProgress(c){return `<div class="crm-progress-steps">${crmProgress(c).map(([label,done])=>`<span class="crm-step ${done?'done':''}">${esc(label)}</span>`).join('')}</div>`}
 function renderCrmDetail(id){
   const c=crmFindContact(id); if(!c)return renderCrmForm(null);
-  return `<div class="card contact-file"><div class="contact-file-head"><div><p class="eyebrow">Kontaktakte</p><h3>${esc(crmFullName(c))}</h3><p>${esc(c.company||'')} ${c.city?'· '+esc(c.city):''}</p></div><div><span class="badge">${esc(c.status||'Neu')}</span><p class="small">Zuständig: ${esc(c.owner||'Peter')}${c.support?' · Unterstützung: '+esc(c.support):''}</p></div></div>
-    <div class="tabs">${crmTabButton('overview','Übersicht')}${crmTabButton('timeline','Zeitachse')}${crmTabButton('tasks','Aufgaben')}${crmTabButton('communication','Kommunikation')}${crmTabButton('notes','Notizen')}${crmTabButton('edit','Bearbeiten')}</div>
+  return `<div class="card contact-file"><div class="contact-sticky-head"><div><p class="eyebrow">Kontaktakte ${esc(c.contactCode||'')}</p><h3>${esc(crmFullName(c))}</h3><p>${esc(c.company||'')} ${c.city?'· '+esc(c.city):''}</p></div><div class="contact-head-meta"><span class="badge">Prio ${esc(c.priority||'A')}</span><span class="badge">${esc(c.status||'Neu')}</span><p class="small">Zuständig: ${esc(c.owner||'Peter')}${c.support?' · Unterstützung: '+esc(c.support):''}</p><p class="small"><strong>Nächster Schritt:</strong> ${esc(c.nextStep||'offen')}</p><p class="small"><strong>Wiedervorlage:</strong> ${esc(c.followDate||'offen')} ${esc(c.followTime||'')}</p></div></div>
+    ${renderCrmProgress(c)}
+    <div class="tabs">${crmTabButton('overview','Übersicht')}${crmTabButton('communication','Kommunikation')}${crmTabButton('tasks','Aufgaben')}${crmTabButton('timeline','Zeitachse')}${crmTabButton('notes','Notizen')}${crmTabButton('documents','Dokumente')}${crmTabButton('edit','Bearbeiten')}</div>
     ${renderCrmTabContent(c)}
   </div>`;
 }
@@ -1080,15 +1148,73 @@ function renderCrmTabContent(c){
   if(selectedContactTab==='timeline')return renderCrmTimeline(c);
   if(selectedContactTab==='tasks')return renderCrmTasksTab(c);
   if(selectedContactTab==='communication')return renderCrmCommunication(c);
-  if(selectedContactTab==='notes')return `<div class="tab-content"><h4>Notizen</h4><p class="note-box">${esc(c.notes||'Noch keine Notizen vorhanden.')}</p><button class="copy-btn" onclick="selectedContactTab='edit'; render()">Notizen bearbeiten</button></div>`;
-  return `<div class="tab-content"><div class="grid"><div><h4>Persönliche Daten</h4><p><strong>Firma:</strong> ${esc(c.company||'')}</p><p><strong>Beruf:</strong> ${esc(c.job||'')}</p><p><strong>Branche:</strong> ${esc(c.branch||'')}</p><p><strong>Ort:</strong> ${esc(c.city||'')}</p></div><div><h4>Nächster Schritt</h4><p><strong>Wiedervorlage:</strong> ${esc(c.followDate||'offen')} ${esc(c.followTime||'')}</p><p><strong>Aufgabe:</strong> ${esc(c.nextStep||'Noch kein nächster Schritt eingetragen.')}</p><p><strong>Quelle:</strong> ${esc(c.source||'')}</p><p><strong>Priorität:</strong> ${esc(c.priority||'')}</p></div><div><h4>Landingpage</h4><p><strong>Gesehen:</strong> ${c.landingSeen?'Ja':'Nein'} ${c.landingDate?'am '+esc(c.landingDate):''}</p>${c.landingSeen?`<p><strong>Video 1:</strong> ${c.video1Seen?'Ja':'Nein'}</p><p><strong>Video 2:</strong> ${c.video2Seen?'Ja':'Nein'}</p><p><strong>Video 3:</strong> ${c.video3Seen?'Ja':'Nein'}</p><p><strong>Follow-up aktiv:</strong> ${c.followupActive?'Ja':'Nein'}</p>`:''}</div></div><div class="quick-actions"><button class="primary" onclick="selectedContactTab='edit'; render()">Bearbeiten</button><button class="copy-btn" onclick="selectedContactTab='timeline'; render()">Aktivität eintragen</button></div></div>`;
+  if(selectedContactTab==='notes')return renderCrmNotes(c);
+  if(selectedContactTab==='documents')return `<div class="tab-content"><h4>Dokumente</h4><p class="small">Dieser Bereich ist vorbereitet. Dokumente, Angebote, Bilder und PDFs folgen in einer späteren Version.</p></div>`;
+  return `<div class="tab-content"><div class="grid"><div><h4>Persönliche Daten</h4><p><strong>Kontakt-ID:</strong> ${esc(c.contactCode||'')}</p><p><strong>Angelegt von:</strong> ${esc(c.createdBy||'')}</p><p><strong>Firma:</strong> ${esc(c.company||'')}</p><p><strong>Beruf:</strong> ${esc(c.job||'')}</p><p><strong>Branche:</strong> ${esc(c.branch||'')}</p><p><strong>Ort:</strong> ${esc(c.city||'')}</p></div><div><h4>Nächster Schritt</h4><p><strong>Wiedervorlage:</strong> ${esc(c.followDate||'offen')} ${esc(c.followTime||'')}</p><p><strong>Aufgabe:</strong> ${esc(c.nextStep||'Noch kein nächster Schritt eingetragen.')}</p><p><strong>Quelle:</strong> ${esc(c.source||'')}</p><p><strong>Priorität:</strong> ${esc(c.priority||'A')}</p><p><strong>Bewertung:</strong> Interesse ${esc(c.interest||'3')}/5 · Vertrauen ${esc(c.trust||'3')}/5 · Aktivität ${esc(c.activityLevel||'3')}/5</p></div><div><h4>Landingpage</h4><p><strong>Gesehen:</strong> ${c.landingSeen?'Ja':'Nein'} ${c.landingDate?'am '+esc(c.landingDate):''}</p>${c.landingSeen?`<p><strong>Video 1:</strong> ${c.video1Seen?'Ja':'Nein'}</p>${c.video1Seen?`<p><strong>Video 2:</strong> ${c.video2Seen?'Ja':'Nein'}</p>`:''}${c.video2Seen?`<p><strong>Video 3:</strong> ${c.video3Seen?'Ja':'Nein'}</p>`:''}${c.video3Seen?`<p><strong>Follow-up aktiv:</strong> ${c.followupActive?'Ja':'Nein'}</p>`:''}`:''}</div></div><div class="quick-actions"><button class="primary" onclick="selectedContactTab='edit'; render()">Bearbeiten</button><button class="copy-btn" onclick="selectedContactTab='communication'; render()">Kommunikation eintragen</button><button class="copy-btn" onclick="selectedContactTab='timeline'; render()">Zeitachse öffnen</button></div></div>`;
+}
+function crmAddTimeline(id){
+  const c=crmFindContact(id); if(!c)return;
+  const text=document.getElementById('crm_timeline_text')?.value.trim();
+  const type=document.getElementById('crm_timeline_type')?.value || 'Notiz';
+  if(!text)return;
+  if(!c.timeline)c.timeline=[];
+  c.timeline.push({date:todayKey(),time:new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}),type,text});
+  c.updatedAt=new Date().toISOString();
+  save(); render();
 }
 function renderCrmTimeline(c){
   const timeline=(c.timeline||[]).slice().reverse();
-  return `<div class="tab-content"><h4>Zeitachse</h4><div class="crm-toolbar"><select id="crm_timeline_type"><option>Notiz</option><option>Anruf</option><option>WhatsApp</option><option>LinkedIn</option><option>Facebook</option><option>Termin</option><option>Präsentation</option></select><input id="crm_timeline_text" placeholder="Aktivität oder Gesprächsnotiz"><button class="primary" onclick="crmAddTimeline('${esc(c.id)}')">Eintragen</button></div>${timeline.length?timeline.map(t=>`<div class="timeline-item"><strong>${esc(t.date||'')}</strong> <span class="badge">${esc(t.type||'Notiz')}</span><br>${esc(t.text||'')}</div>`).join(''):'<p class="small">Noch keine Aktivitäten.</p>'}</div>`;
+  return `<div class="tab-content"><h4>Zeitachse</h4><div class="crm-toolbar"><select id="crm_timeline_type"><option>Notiz</option><option>Anruf</option><option>WhatsApp</option><option>LinkedIn</option><option>Facebook</option><option>Termin</option><option>Präsentation</option><option>Landingpage</option></select><input id="crm_timeline_text" placeholder="Aktivität oder Gesprächsnotiz"><button class="primary" onclick="crmAddTimeline('${esc(c.id)}')">Eintragen</button></div>${timeline.length?timeline.map(t=>`<div class="timeline-item"><strong>${esc(t.date||'')}${t.time?' · '+esc(t.time):''}</strong> <span class="badge">${esc(t.type||'Notiz')}</span><br>${esc(t.text||'')}</div>`).join(''):'<p class="small">Noch keine Aktivitäten.</p>'}</div>`;
 }
-function renderCrmTasksTab(c){return `<div class="tab-content"><h4>Aufgaben</h4><p><strong>Nächster Schritt:</strong> ${esc(c.nextStep||'Noch offen')}</p><p><strong>Wiedervorlage:</strong> ${esc(c.followDate||'kein Datum')} ${esc(c.followTime||'')}</p><button class="primary" onclick="selectedContactTab='edit'; render()">Aufgabe bearbeiten</button></div>`}
-function renderCrmCommunication(c){return `<div class="tab-content"><h4>Kommunikation</h4><div class="link-grid">${c.phone?`<a class="link-card" href="tel:${esc(c.phone)}">Anrufen</a>`:''}${c.email?`<a class="link-card" href="mailto:${esc(c.email)}">E-Mail schreiben</a>`:''}${c.linkedin?`<a class="link-card" target="_blank" href="${esc(c.linkedin)}">LinkedIn öffnen</a>`:''}${c.facebook?`<a class="link-card" target="_blank" href="${esc(c.facebook)}">Facebook öffnen</a>`:''}${c.website?`<a class="link-card" target="_blank" href="${esc(c.website)}">Website öffnen</a>`:''}</div><p class="small">WhatsApp-Links werden ergänzt, sobald die Telefonnummern einheitlich gespeichert sind.</p></div>`}
+function crmAddCommunication(id){
+  const c=crmFindContact(id); if(!c)return;
+  const channel=document.getElementById('crm_comm_channel')?.value||'WhatsApp';
+  const text=document.getElementById('crm_comm_text')?.value.trim();
+  if(!text)return;
+  const entry={date:todayKey(),time:new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}),channel,text};
+  if(!Array.isArray(c.communication))c.communication=[];
+  c.communication.push(entry);
+  if(!Array.isArray(c.timeline))c.timeline=[];
+  c.timeline.push({date:entry.date,time:entry.time,type:channel,text});
+  c.updatedAt=new Date().toISOString();
+  save(); render();
+}
+function crmAddContactTask(id){
+  const c=crmFindContact(id); if(!c)return;
+  const title=document.getElementById('crm_task_title')?.value.trim();
+  const due=document.getElementById('crm_task_date')?.value||'';
+  const time=document.getElementById('crm_task_time')?.value||'';
+  const priority=document.getElementById('crm_task_priority')?.value||'A';
+  if(!title)return;
+  state.crm.tasks.push({id:crmId(),contactId:id,title,due,time,priority,done:false,owner:c.owner||currentPerson(),createdAt:new Date().toISOString()});
+  if(!Array.isArray(c.timeline))c.timeline=[];
+  c.timeline.push({date:todayKey(),time:new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}),type:'Aufgabe',text:`Aufgabe angelegt: ${title}`});
+  save(); render();
+}
+function crmToggleTask(taskId){const t=crmTasks().find(x=>x.id===taskId); if(t){t.done=!t.done; save(); render()}}
+function renderCrmTasksTab(c){
+  const tasks=crmTasks().filter(t=>t.contactId===c.id).sort((a,b)=>(a.done-b.done)||String(a.due||'').localeCompare(String(b.due||'')));
+  return `<div class="tab-content"><h4>Aufgaben</h4><div class="crm-toolbar"><input id="crm_task_title" placeholder="Aufgabe, z. B. Rückruf"><input id="crm_task_date" type="date"><input id="crm_task_time" type="time"><select id="crm_task_priority">${crmHtmlOptions(crmPriorities(),'A')}</select><button class="primary" onclick="crmAddContactTask('${esc(c.id)}')">Aufgabe hinzufügen</button></div><p><strong>Nächster Schritt:</strong> ${esc(c.nextStep||'Noch offen')}</p><p><strong>Wiedervorlage:</strong> ${esc(c.followDate||'kein Datum')} ${esc(c.followTime||'')}</p>${tasks.length?tasks.map(t=>`<label class="task-item ${t.done?'done':''}"><input type="checkbox" ${t.done?'checked':''} onchange="crmToggleTask('${esc(t.id)}')"><span>${esc(t.due||'ohne Datum')} ${t.time?'· '+esc(t.time):''} · Prio ${esc(t.priority||'A')} · ${esc(t.title||'')}</span></label>`).join(''):'<p class="small">Noch keine kontaktbezogenen Aufgaben.</p>'}</div>`
+}
+function renderCrmCommunication(c){
+  const comm=(c.communication||[]).slice().reverse();
+  return `<div class="tab-content"><h4>Kommunikation</h4><div class="link-grid">${c.phone?`<a class="link-card" href="tel:${esc(c.phone)}">Anrufen</a>`:''}${c.email?`<a class="link-card" href="mailto:${esc(c.email)}">E-Mail schreiben</a>`:''}${c.linkedin?`<a class="link-card" target="_blank" href="${esc(c.linkedin)}">LinkedIn öffnen</a>`:''}${c.facebook?`<a class="link-card" target="_blank" href="${esc(c.facebook)}">Facebook öffnen</a>`:''}${c.website?`<a class="link-card" target="_blank" href="${esc(c.website)}">Website öffnen</a>`:''}</div><div class="crm-toolbar"><select id="crm_comm_channel">${crmHtmlOptions(crmChannelOptions(),'WhatsApp')}</select><input id="crm_comm_text" placeholder="Kurze Gesprächsnotiz"><button class="primary" onclick="crmAddCommunication('${esc(c.id)}')">Eintragen</button></div>${comm.length?comm.map(e=>`<div class="timeline-item"><strong>${esc(e.date||'')}${e.time?' · '+esc(e.time):''}</strong> <span class="badge">${esc(e.channel||'')}</span><br>${esc(e.text||'')}</div>`).join(''):'<p class="small">Noch keine Kommunikation dokumentiert.</p>'}</div>`
+}
+function crmAddNote(id){
+  const c=crmFindContact(id); if(!c)return;
+  const text=document.getElementById('crm_note_new')?.value.trim();
+  if(!text)return;
+  if(!Array.isArray(c.noteEntries))c.noteEntries=[];
+  c.noteEntries.push({date:todayKey(),time:new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}),text});
+  if(!Array.isArray(c.timeline))c.timeline=[];
+  c.timeline.push({date:todayKey(),time:new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}),type:'Notiz',text});
+  c.updatedAt=new Date().toISOString();
+  save(); render();
+}
+function renderCrmNotes(c){
+  const notes=(c.noteEntries||[]).slice().reverse();
+  return `<div class="tab-content"><h4>Notizen</h4><div class="crm-toolbar"><input id="crm_note_new" placeholder="Neue Notiz"><button class="primary" onclick="crmAddNote('${esc(c.id)}')">Notiz hinzufügen</button></div>${c.notes?`<p class="note-box">${esc(c.notes)}</p>`:''}${notes.length?notes.map(n=>`<div class="timeline-item"><strong>${esc(n.date||'')}${n.time?' · '+esc(n.time):''}</strong><br>${esc(n.text||'')}</div>`).join(''):'<p class="small">Noch keine datierten Notizen vorhanden.</p>'}<button class="copy-btn" onclick="selectedContactTab='edit'; render()">Notizen bearbeiten</button></div>`;
+}
 function renderCrmTeamOverview(){
   const people=['Peter','Martina'];
   return `<div class="grid">${people.map(p=>{const list=crmContacts().filter(c=>(c.owner||'Peter')===p); const due=list.filter(c=>c.followDate&&c.followDate<=crmToday()&&crmActive(c)).length; return `<div><h4>${p}</h4><p>Kontakte: ${list.length}</p><p>Heute fällig: ${due}</p><p>Aktiv: ${list.filter(crmActive).length}</p></div>`}).join('')}</div>`;

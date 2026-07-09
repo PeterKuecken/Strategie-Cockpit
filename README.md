@@ -1,14 +1,20 @@
 # Recruiting-Cockpit Peter & Martina Kücken
 
-Version 1.2.4
+Version 1.3.0
 
-Diese Version basiert auf Version 1.2.3.
+Diese Version basiert auf Version 1.2.4.
 
-Änderungen:
+Neu:
 
-- App startet ohne automatisch geöffnetes Vertriebs-Cockpit.
-- Auswahlfelder Beruf, Branche und Zielgruppe werden A bis Z sortiert.
-- Sortierung greift auch auf mobilen Geräten durch neue Dateiversionierung.
+- Digitale Kontaktakte 2.0 mit Kontaktkopf.
+- Automatische Kontakt-ID mit PK und MK.
+- Priorität startet standardmäßig mit A.
+- Reiter: Übersicht, Kommunikation, Aufgaben, Zeitachse, Notizen, Dokumente, Bearbeiten.
+- Kontaktbezogene Kommunikationseinträge.
+- Kontaktbezogene Aufgaben.
+- Fortschrittsanzeige je Kontakt.
+- Landingpage-Prozess zeigt Folgefelder schrittweise an.
+- Suche berücksichtigt jetzt auch die Kontakt-ID.
 
 Upload-Hinweis:
 
