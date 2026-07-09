@@ -1,4 +1,24 @@
-# Changelog
+# Änderungsprotokoll
+
+## Version 1.2.2
+
+- Kontaktformular um Abschnitt Landingpage und Videos erweitert.
+- Landingpage gesehen Ja/Nein ergänzt.
+- Datum für Landingpage ergänzt.
+- Video 1, Video 2 und Video 3 Ja/Nein ergänzt.
+- Follow-up-System aktiviert Ja/Nein ergänzt.
+- Anzeige der Landingpage-Daten in der Kontaktakte ergänzt.
+- Zeitachsen-Eintrag bei Änderung des Landingpage-Status ergänzt.
+
+## Version 1.2.1
+
+- Kontaktsuche erweitert.
+- Suche berücksichtigt jetzt Vorname, Nachname, Firma, Ort, Telefon, E-Mail, LinkedIn, Facebook, Beruf, Branche und Zielgruppe.
+- Beruf als Dropdown ergänzt.
+- Branche als Dropdown ergänzt.
+- Zielgruppe als Dropdown ergänzt.
+- Freie Eingabe bleibt möglich, falls ein Wert nicht in der Liste enthalten ist.
+- Filter nach Beruf, Branche und Zielgruppe ergänzt.
 
 ## Version 1.2.0
 
@@ -10,25 +30,9 @@
 - Formular in Persönliche Daten, Online-Profile, Recruiting und Notizen gegliedert.
 - Wiedervorlagen werden im Dashboard priorisiert angezeigt.
 
-# Changelog
-
-## Version 1.1.0, 09.07.2026
-
-Neu:
+## Version 1.1.0
 
 - Menüpunkt 4. Recruiting ergänzt.
 - Impressum auf Punkt 5 verschoben.
 - Persönlicher Recruiting-Arbeitsbereich für Peter und Martina.
 - Kontaktverwaltung 2.0.
-- Kontaktakte mit Stammdaten, Social-Media-Feldern und Recruiting-Feldern.
-- Zuständigkeit Peter oder Martina.
-- Zweiter Ansprechpartner.
-- Status, Priorität, Quelle und Zielgruppe.
-- Wiedervorlage mit Datum, Uhrzeit und nächstem Schritt.
-- Suche über Name, Firma, Ort, Telefon, E-Mail und Zielgruppe.
-- Filter nach Zuständigkeit, Status, Quelle und Priorität.
-- Dublettenprüfung beim Speichern.
-- Zeitachse pro Kontakt.
-- Teamübersicht mit getrennten Zahlen für Peter und Martina.
-
-Bestehendes aus Version 1.0.1 bleibt erhalten.

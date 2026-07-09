@@ -1,19 +1,17 @@
-# Recruiting-Cockpit Peter & Martina Kücken
+# Recruiting-Cockpit Kücken
 
-Version 1.2.0
+Version 1.2.2
 
-Diese Version erweitert das Recruiting-Cockpit um ein echtes persönliches Arbeitsdashboard und eine übersichtlichere Kontaktakte.
+Diese Version basiert auf der funktionierenden Version 1.2.1.
 
-Upload-Hinweis: In GitHub nur den Inhalt dieser ZIP-Datei ins Hauptverzeichnis laden, nicht den Ordner selbst.
+Neu in 1.2.2:
 
-# Recruiting-Cockpit Peter & Martina Kücken
+- Landingpage-Status in der Kontaktakte ergänzt.
+- Datum für Landingpage gesehen ergänzt.
+- Video 1, Video 2 und Video 3 als Ja/Nein-Felder ergänzt.
+- Follow-up-System aktiviert als Ja/Nein-Feld ergänzt.
+- Landingpage-Daten werden in der Kontaktübersicht angezeigt.
+- Änderungen am Landingpage-Status werden in der Zeitachse dokumentiert.
 
-Version 1.1.0 vom 09.07.2026.
-
-Diese Version basiert auf der funktionierenden Version 1.0.1 und erweitert den bestehenden Stand um die Kontaktverwaltung 2.0.
-
-## Upload in GitHub
-
-Den Inhalt dieses Ordners in das bestehende GitHub-Projekt hochladen. Nicht den Ordner selbst hochladen.
-
-Die Datei `index.html` muss im Hauptverzeichnis liegen.
+Upload-Hinweis:
+Den Inhalt dieser ZIP-Datei ins Hauptverzeichnis des GitHub-Repositories hochladen. Nicht den Ordner selbst hochladen.
