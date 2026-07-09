@@ -1,7 +1,5 @@
-# Recruiting-Cockpit Kücken
+# Recruiting-Cockpit Kücken v1.4.0 RC5
 
-Version 1.4.0 RC4
+Korrekturversion für Smartphone-Ansichten.
 
-Diese Version ergänzt WhatsApp direkt in den Kontaktdaten und passt die Dashboard-Begrüßung automatisch an die Tageszeit an.
-
-Upload-Hinweis: Nur den Inhalt dieser ZIP in das GitHub-Hauptverzeichnis hochladen, nicht den Ordner selbst.
+Bitte den Inhalt dieser ZIP ins GitHub-Hauptverzeichnis hochladen. Danach auf dem Smartphone die Seite neu laden oder die PWA einmal schließen und erneut öffnen.
