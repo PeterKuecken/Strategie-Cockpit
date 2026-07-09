@@ -524,3 +524,12 @@ footer{padding:10px 22px;color:var(--muted);background:#fff;border-top:1px solid
 .priority-pill.prio-b{background:#fff0d6;color:#9a5b00}
 .priority-pill.prio-c{background:#e7f6ec;color:#24563a}
 @media(max-width:720px){.process-item{flex-direction:column}.process-item .copy-btn{width:100%}.process-card-head{align-items:flex-start;flex-direction:column}}
+
+
+/* Version 1.5.1 RC1: Recruiting-Assistent */
+.assistant-card{border-color:#b8d8ff;background:#f7fbff}
+.assistant-card .process-card-head h4{color:#0b5cad}
+.assistant-item{background:#ffffff}
+.assistant-actions{display:flex;flex-direction:column;gap:8px;min-width:170px}
+.contact-assistant{margin-top:14px;margin-bottom:14px}
+@media(max-width:720px){.assistant-actions{width:100%;min-width:0}.assistant-actions button{width:100%}}

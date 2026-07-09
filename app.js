@@ -9,7 +9,7 @@ const firebaseConfig = {
   appId: "1:523160644442:web:ff840ac629a9f62ebae163"
 };
 
-const APP_VERSION='1.5.0 RC1';
+const APP_VERSION='1.5.1 RC1';
 const APP_BUILD='09.07.2026';
 let firebaseApp=null;
 let auth=null;
@@ -839,7 +839,7 @@ function round(n){return Math.round(Number(n||0))}
 
 
 
-/* Recruiting CRM Version 1.5.0 RC2 */
+/* Recruiting CRM Version 1.5.1 RC1 */
 function ensureCrm(){
   if(!state.crm)state.crm={contacts:[],tasks:[],dailyDone:{},counters:{PK:0,MK:0}};
   if(!Array.isArray(state.crm.contacts))state.crm.contacts=[];
@@ -1290,6 +1290,65 @@ function crmCreateSuggestedTask(contactId,text){
   c.updatedAt=new Date().toISOString();
   save(); render();
 }
+
+function crmAssistantRecommendation(c){
+  if(!c)return null;
+  if(!c.landingSeen)return {step:'landing',title:'Landingpage senden',task:'Landingpage senden',status:'Interesse',days:2,button:'Landingpage als gesendet markieren',hint:'Danach fragt das Cockpit in zwei Tagen nach Video 1.'};
+  if(c.landingSeen && !c.video1Seen)return {step:'video1check',title:'Nachfragen, ob Video 1 gesehen wurde',task:'Nachfragen, ob Video 1 angesehen wurde',status:'Nachfassen',days:1,button:'Video 1 als gesehen markieren',hint:'Wenn Video 1 gesehen wurde, folgt Video 2.'};
+  if(c.video1Seen && !c.video2Seen)return {step:'video2',title:'Video 2 senden',task:'Video 2 senden',status:'Nachfassen',days:2,button:'Video 2 als gesehen markieren',hint:'Danach prüfst du, ob Video 2 angesehen wurde.'};
+  if(c.video2Seen && !c.video3Seen)return {step:'video3',title:'Video 3 senden',task:'Video 3 senden',status:'Nachfassen',days:2,button:'Video 3 als gesehen markieren',hint:'Nach Video 3 folgt die Terminvereinbarung.'};
+  if(c.video3Seen && !c.followupActive)return {step:'followup',title:'Follow-up starten',task:'Follow-up starten',status:'Nachfassen',days:1,button:'Follow-up als gestartet markieren',hint:'Danach Telefon- oder Zoomtermin vereinbaren.'};
+  if(c.followupActive && !['Präsentation geplant','Präsentation erfolgt','Kunde','Geschäftspartner'].includes(c.status||''))return {step:'appointment',title:'Telefontermin oder Zoom vereinbaren',task:'Telefontermin oder Zoom vereinbaren',status:'Erstgespräch',days:1,button:'Terminphase markieren',hint:'Jetzt wird aus dem Interesse ein konkretes Gespräch.'};
+  if(!c.nextStep)return {step:'next',title:'Nächsten Schritt festlegen',task:'Nächsten Schritt festlegen',status:c.status||'Neu',days:1,button:'Aufgabe für morgen anlegen',hint:'Der Kontakt braucht einen klaren nächsten Schritt.'};
+  return {step:'review',title:c.nextStep||'Kontakt prüfen',task:c.nextStep||'Kontakt prüfen',status:c.status||'Neu',days:1,button:'Wiedervorlage anlegen',hint:'Prüfe den aktuellen Stand und entscheide bewusst weiter.'};
+}
+function crmAssistantItems(person){
+  return crmContacts().filter(c=>((c.owner||'Peter')===person || (c.support||'')===person) && crmActive(c)).map(c=>({c,rec:crmAssistantRecommendation(c)})).filter(x=>x.rec).sort((a,b)=>String(a.c.priority||'C').localeCompare(String(b.c.priority||'C')) || String(a.c.followDate||'9999').localeCompare(String(b.c.followDate||'9999')) || crmFullName(a.c).localeCompare(crmFullName(b.c),'de'));
+}
+function crmAssistantCreateTask(contactId,days){
+  const c=crmFindContact(contactId); if(!c)return;
+  const rec=crmAssistantRecommendation(c); if(!rec)return;
+  const due=crmDateAddKey(Number.isFinite(Number(days))?Number(days):rec.days);
+  if(!state.crm.tasks)state.crm.tasks=[];
+  state.crm.tasks.push({id:crmId(),contactId:c.id,title:rec.task,due,time:'09:00',priority:c.priority||'A',done:false,owner:c.owner||currentPerson(),createdAt:new Date().toISOString()});
+  c.nextStep=rec.task; c.followDate=due; c.followTime=c.followTime||'09:00'; c.updatedAt=new Date().toISOString();
+  if(!Array.isArray(c.timeline))c.timeline=[];
+  c.timeline.push({date:todayKey(),time:new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}),type:'Recruiting-Assistent',text:`Aufgabe angelegt: ${rec.task} · fällig am ${due}`});
+  save(); render();
+}
+function crmAssistantApply(contactId){
+  const c=crmFindContact(contactId); if(!c)return;
+  const rec=crmAssistantRecommendation(c); if(!rec)return;
+  const nowTime=new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+  if(!Array.isArray(c.timeline))c.timeline=[];
+  if(rec.step==='landing'){
+    c.landingSeen=true; c.landingDate=c.landingDate||todayKey(); c.status='Nachfassen'; c.nextStep='Nachfragen, ob Video 1 angesehen wurde'; c.followDate=crmDateAddKey(2); c.followTime=c.followTime||'09:00';
+  }else if(rec.step==='video1check'){
+    c.video1Seen=true; c.nextStep='Video 2 senden'; c.followDate=crmDateAddKey(1); c.followTime=c.followTime||'09:00';
+  }else if(rec.step==='video2'){
+    c.video2Seen=true; c.nextStep='Video 3 senden'; c.followDate=crmDateAddKey(2); c.followTime=c.followTime||'09:00';
+  }else if(rec.step==='video3'){
+    c.video3Seen=true; c.nextStep='Telefontermin oder Zoom vereinbaren'; c.followDate=crmDateAddKey(1); c.followTime=c.followTime||'09:00';
+  }else if(rec.step==='followup'){
+    c.followupActive=true; c.nextStep='Telefonat führen'; c.followDate=crmDateAddKey(1); c.followTime=c.followTime||'09:00';
+  }else if(rec.step==='appointment'){
+    c.status='Präsentation geplant'; c.nextStep='Termin vorbereiten'; c.followDate=crmDateAddKey(1); c.followTime=c.followTime||'09:00';
+  }else{
+    c.nextStep=rec.task; c.followDate=crmDateAddKey(rec.days||1); c.followTime=c.followTime||'09:00';
+  }
+  c.updatedAt=new Date().toISOString();
+  c.timeline.push({date:todayKey(),time:nowTime,type:'Recruiting-Assistent',text:`Schritt verarbeitet: ${rec.title}. Nächster Schritt: ${c.nextStep||'offen'}`});
+  save(); render();
+}
+function crmRenderAssistantList(person,limit=6){
+  const items=crmAssistantItems(person).slice(0,limit);
+  return `<div class="process-card assistant-card"><div class="process-card-head"><h4>Recruiting-Assistent</h4><span class="process-count">${items.length} Vorschläge</span></div>${items.length?`<div class="process-list">${items.map(({c,rec})=>`<div class="process-item assistant-item"><button class="process-main" onclick="crmOpenContact('${esc(c.id)}')"><strong>${esc(crmFullName(c))}</strong><span>${esc(c.contactCode||'')} · ${esc(c.company||c.job||'')} ${c.city?'· '+esc(c.city):''}</span><div class="process-task-line"><b>Empfohlener Schritt:</b> ${esc(rec.title)}</div><small>${esc(rec.hint)}</small></button><div class="assistant-actions"><button class="copy-btn" onclick="crmAssistantCreateTask('${esc(c.id)}',${Number(rec.days||1)})">Aufgabe anlegen</button><button class="primary" onclick="crmAssistantApply('${esc(c.id)}')">${esc(rec.button)}</button></div></div>`).join('')}</div>`:'<p class="small">Aktuell gibt es keine neuen Empfehlungen.</p>'}</div>`;
+}
+function crmRenderContactAssistant(c){
+  const rec=crmAssistantRecommendation(c);
+  if(!rec)return '';
+  return `<div class="process-card assistant-card contact-assistant"><div class="process-card-head"><h4>Nächste empfohlene Aktion</h4><span class="badge">Assistent</span></div><p><strong>${esc(rec.title)}</strong></p><p class="small">${esc(rec.hint)}</p><div class="quick-actions"><button class="copy-btn" onclick="crmAssistantCreateTask('${esc(c.id)}',${Number(rec.days||1)})">Aufgabe anlegen</button><button class="primary" onclick="crmAssistantApply('${esc(c.id)}')">${esc(rec.button)}</button></div></div>`;
+}
 function renderProcessManager(person){
   const all=crmProcessItems(person);
   const overdue=crmProcessBucket(all,'overdue');
@@ -1298,7 +1357,7 @@ function renderProcessManager(person){
   const newer=crmNewContacts(person);
   const m=crmMetricsFor(person);
   const suggestions=crmSuggestions(person);
-  return `<div class="card process-manager"><div class="section-title-row"><div><p class="eyebrow">Version 1.5.0 RC2</p><h3>Aufgaben- und Prozessmanager</h3></div><span class="badge">${all.length} offene Aufgaben</span></div>
+  return `<div class="card process-manager"><div class="section-title-row"><div><p class="eyebrow">Version 1.5.1 RC1</p><h3>Aufgaben- und Prozessmanager</h3></div><span class="badge">${all.length} offene Aufgaben</span></div>
     <div class="metric-grid"><div><strong>${m.contacts}</strong><span>Kontakte</span></div><div><strong>${m.tasks}</strong><span>Aufgaben</span></div><div><strong>${m.landing}</strong><span>Landingpages</span></div><div><strong>${m.v1}</strong><span>Video 1</span></div><div><strong>${m.v2}</strong><span>Video 2</span></div><div><strong>${m.v3}</strong><span>Video 3</span></div><div><strong>${m.partners}</strong><span>Partner</span></div></div>
     <div class="grid process-grid">
       ${crmRenderProcessList('Überfällig',overdue,'Keine überfälligen Aufgaben.','danger-zone')}
@@ -1306,6 +1365,7 @@ function renderProcessManager(person){
       ${crmRenderProcessList('Diese Woche',week,'Für diese Woche sind keine weiteren Aufgaben geplant.')}
       <div class="process-card"><h4>Neue Kontakte</h4>${newer.length?`<div class="process-list">${newer.slice(0,8).map(c=>`<button class="process-main" onclick="crmOpenContact('${esc(c.id)}')"><strong>${esc(crmFullName(c))}</strong><span>${esc(c.contactCode||'')} · ${esc(c.company||c.job||'')} ${c.city?'· '+esc(c.city):''}</span><small>Angelegt: ${esc(String(c.createdAt||'').slice(0,10)||'heute')} · Prio ${esc(c.priority||'A')}</small></button>`).join('')}</div>`:'<p class="small">Keine neuen Kontakte seit gestern.</p>'}</div>
     </div>
+    ${crmRenderAssistantList(person,8)}
     <div class="process-card"><h4>Automatische Vorschläge</h4>${suggestions.length?suggestions.map(s=>`<div class="process-item"><button class="process-main" onclick="crmOpenContact('${esc(s.c.id)}')"><strong>${esc(crmFullName(s.c))}</strong><span>${esc(s.c.contactCode||'')} · ${esc(s.c.company||s.c.job||'')}</span><small>${esc(s.text)}</small></button><button class="copy-btn" onclick="crmCreateSuggestedTask('${esc(s.c.id)}','${esc(s.text)}')">Aufgabe anlegen</button></div>`).join(''):'<p class="small">Aktuell keine automatischen Vorschläge.</p>'}</div>
   </div>`;
 }
@@ -1403,6 +1463,7 @@ function renderCrmDetail(id){
   const c=crmFindContact(id); if(!c)return renderCrmForm(null);
   return `<div class="card contact-file"><div class="contact-file-actions"><button class="copy-btn" onclick="crmCloseContact()">◀ Zur Kontaktübersicht</button><div><button class="copy-btn" onclick="selectedContactTab='edit'; render()">Bearbeiten</button><button class="copy-btn danger" onclick="crmDeleteContact('${esc(c.id)}')">Löschen</button></div></div><div class="contact-sticky-head"><div><p class="eyebrow">Kontaktakte</p><h3>${esc(crmFullName(c))}</h3><p class="contact-code-line">${esc(c.contactCode||'')}</p><p>${esc(c.company||'')} ${c.city?'· '+esc(c.city):''}</p></div><div class="contact-head-meta"><span class="badge">Prio ${esc(c.priority||'A')}</span><span class="badge">${esc(c.status||'Neu')}</span><p class="small">Zuständig: ${esc(c.owner||'Peter')}${c.support?' · Unterstützung: '+esc(c.support):''}</p><p class="small"><strong>Nächster Schritt:</strong> ${esc(c.nextStep||'offen')}</p><p class="small"><strong>Wiedervorlage:</strong> ${esc(c.followDate||'offen')} ${esc(c.followTime||'')}</p></div></div>
     ${renderCrmCommunicationBar(c)}
+    ${crmRenderContactAssistant(c)}
     <div class="tabs">${crmTabButton('overview','Übersicht')}${crmTabButton('communication','Kommunikation')}${crmTabButton('tasks','Aufgaben')}${crmTabButton('timeline','Zeitachse')}${crmTabButton('notes','Notizen')}${crmTabButton('documents','Dokumente')}${crmTabButton('edit','Bearbeiten')}</div>
     ${renderCrmProgress(c)}
     ${renderCrmTabContent(c)}
