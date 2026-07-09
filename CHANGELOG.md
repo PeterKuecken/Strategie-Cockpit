@@ -1,7 +1,14 @@
 # Changelog
 
-## v1.4.0 RC5
+## Version 1.5.0 RC1
 
-- Mobile Cache-Busting verbessert.
-- WhatsApp-Link und tageszeitabhängige Begrüßung werden auch auf Smartphone-Ansichten zuverlässig geladen.
-- Versionsparameter für CSS, Content und App-Skript auf RC5 gesetzt.
+- Aufgaben- und Prozessmanager ergänzt.
+- Dashboard zeigt Überfällig, Heute, Diese Woche und Neue Kontakte.
+- Aufgaben können direkt aus dem Dashboard erledigt werden.
+- Kontaktbezogene Aufgaben öffnen direkt die Kontaktakte.
+- Dashboard-Kennzahlen für Kontakte, Aufgaben, Landingpages, Videos und Geschäftspartner ergänzt.
+- Automatische Vorschläge für nächste Recruiting-Schritte ergänzt.
+
+## Basis
+
+Aufgebaut auf Version 1.4.0 RC5.

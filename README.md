@@ -1,5 +1,9 @@
-# Recruiting-Cockpit Kücken v1.4.0 RC5
+# Recruiting-Cockpit Peter & Martina Kücken
 
-Korrekturversion für Smartphone-Ansichten.
+Version 1.5.0 RC1
 
-Bitte den Inhalt dieser ZIP ins GitHub-Hauptverzeichnis hochladen. Danach auf dem Smartphone die Seite neu laden oder die PWA einmal schließen und erneut öffnen.
+Diese Version basiert auf der funktionierenden Version 1.4.0 RC5.
+
+Neu ist der Aufgaben- und Prozessmanager im persönlichen Dashboard.
+
+Upload-Hinweis: In GitHub immer nur den Inhalt dieser ZIP ins Hauptverzeichnis hochladen, nicht den Ordner selbst.

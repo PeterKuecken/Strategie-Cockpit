@@ -9,7 +9,7 @@ const firebaseConfig = {
   appId: "1:523160644442:web:ff840ac629a9f62ebae163"
 };
 
-const APP_VERSION='1.4.0 RC4';
+const APP_VERSION='1.5.0 RC1';
 const APP_BUILD='09.07.2026';
 let firebaseApp=null;
 let auth=null;
@@ -839,7 +839,7 @@ function round(n){return Math.round(Number(n||0))}
 
 
 
-/* Recruiting CRM Version 1.4.0 RC4 */
+/* Recruiting CRM Version 1.5.0 RC1 */
 function ensureCrm(){
   if(!state.crm)state.crm={contacts:[],tasks:[],dailyDone:{},counters:{PK:0,MK:0}};
   if(!Array.isArray(state.crm.contacts))state.crm.contacts=[];
@@ -1206,6 +1206,108 @@ function crmGreeting(person){
   if(h<18)return `Hallo ${name}.`;
   return `Guten Abend ${name}.`;
 }
+
+function crmDateAddKey(days){const d=new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate()+days); return d.toISOString().slice(0,10)}
+function crmTaskContact(task){return task.contactId ? crmFindContact(task.contactId) : null}
+function crmProcessItems(person){
+  ensureCrm();
+  const contacts=crmContacts().filter(c=>((c.owner||'Peter')===person || (c.support||'')===person));
+  const contactIds=new Set(contacts.map(c=>c.id));
+  const items=[];
+  crmTasks().forEach(t=>{
+    if(t.done)return;
+    const c=crmTaskContact(t);
+    if((t.owner||'Peter')!==person && !(c && contactIds.has(c.id)))return;
+    items.push({kind:'task',id:t.id,contactId:t.contactId||'',title:t.title||'Aufgabe',due:t.due||'',time:t.time||'',priority:t.priority||'A',contact:c});
+  });
+  contacts.forEach(c=>{
+    if(c.followDate && crmActive(c))items.push({kind:'follow',id:c.id,contactId:c.id,title:c.nextStep||'Wiedervorlage bearbeiten',due:c.followDate,time:c.followTime||'',priority:c.priority||'A',contact:c});
+  });
+  return items.sort((a,b)=>String(a.due||'9999').localeCompare(String(b.due||'9999')) || String(a.time||'').localeCompare(String(b.time||'')) || String(a.priority||'C').localeCompare(String(b.priority||'C')));
+}
+function crmProcessBucket(items,type){
+  const today=crmToday(); const week=crmDateAddKey(7);
+  if(type==='overdue')return items.filter(i=>i.due && i.due<today);
+  if(type==='today')return items.filter(i=>i.due===today || !i.due);
+  if(type==='week')return items.filter(i=>i.due && i.due>today && i.due<=week);
+  return items;
+}
+function crmCompleteProcessItem(kind,id){
+  ensureCrm();
+  if(kind==='task'){
+    const t=crmTasks().find(x=>x.id===id); if(t)t.done=true;
+  }else if(kind==='follow'){
+    const c=crmFindContact(id);
+    if(c){
+      if(!Array.isArray(c.timeline))c.timeline=[];
+      c.timeline.push({date:todayKey(),time:new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}),type:'Wiedervorlage',text:`Erledigt: ${c.nextStep||'Wiedervorlage'}`});
+      c.followDate=''; c.followTime=''; c.updatedAt=new Date().toISOString();
+    }
+  }
+  save(); render();
+}
+function crmRenderProcessList(title,items,emptyText,extraClass=''){
+  return `<div class="process-card ${extraClass}"><h4>${esc(title)}</h4>${items.length?`<div class="process-list">${items.map(i=>{const c=i.contact; return `<div class="process-item"><button class="process-main" onclick="crmOpenContact('${esc(i.contactId||'')}')"><strong>${c?esc(crmFullName(c)):esc(i.title)}</strong><span>${c?esc(c.contactCode||'')+' · '+esc(c.company||c.job||'')+' '+(c.city?'· '+esc(c.city):''):''}</span><small>${esc(i.due||'ohne Datum')}${i.time?' · '+esc(i.time):''} · Prio ${esc(i.priority||'A')} · ${esc(i.title)}</small></button><button class="copy-btn" onclick="crmCompleteProcessItem('${esc(i.kind)}','${esc(i.id)}')">Erledigt</button></div>`}).join('')}</div>`:`<p class="small">${esc(emptyText)}</p>`}</div>`;
+}
+function crmNewContacts(person){
+  const yesterday=crmDateAddKey(-1);
+  return crmContacts().filter(c=>crmPersonFilter(c) && (String(c.createdAt||'').slice(0,10)>=yesterday)).sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||'')));
+}
+function crmMetricsFor(person){
+  const list=crmContacts().filter(c=>((c.owner||'Peter')===person || (c.support||'')===person));
+  const active=list.filter(crmActive);
+  return {
+    contacts:list.length,
+    active:active.length,
+    tasks:crmProcessItems(person).length,
+    landing:list.filter(c=>c.landingSeen).length,
+    v1:list.filter(c=>c.video1Seen).length,
+    v2:list.filter(c=>c.video2Seen).length,
+    v3:list.filter(c=>c.video3Seen).length,
+    partners:list.filter(c=>c.status==='Geschäftspartner').length
+  };
+}
+function crmSuggestions(person){
+  const list=crmContacts().filter(c=>((c.owner||'Peter')===person || (c.support||'')===person) && crmActive(c));
+  const suggestions=[];
+  list.forEach(c=>{
+    if(c.landingSeen && !c.video1Seen)suggestions.push({c,text:'Nachfragen, ob Video 1 angesehen wurde'});
+    else if(c.video1Seen && !c.video2Seen)suggestions.push({c,text:'Video 2 senden'});
+    else if(c.video2Seen && !c.video3Seen)suggestions.push({c,text:'Video 3 senden'});
+    else if(c.video3Seen && !c.followupActive)suggestions.push({c,text:'Follow-up starten'});
+    else if(!c.nextStep)suggestions.push({c,text:'Nächsten Schritt festlegen'});
+  });
+  return suggestions.slice(0,8);
+}
+function crmCreateSuggestedTask(contactId,text){
+  const c=crmFindContact(contactId); if(!c)return;
+  const d=new Date(); d.setDate(d.getDate()+1);
+  if(!state.crm.tasks)state.crm.tasks=[];
+  state.crm.tasks.push({id:crmId(),contactId,title:text,due:d.toISOString().slice(0,10),time:'',priority:c.priority||'A',done:false,owner:c.owner||currentPerson(),createdAt:new Date().toISOString()});
+  c.nextStep=text;
+  c.updatedAt=new Date().toISOString();
+  save(); render();
+}
+function renderProcessManager(person){
+  const all=crmProcessItems(person);
+  const overdue=crmProcessBucket(all,'overdue');
+  const today=crmProcessBucket(all,'today');
+  const week=crmProcessBucket(all,'week');
+  const newer=crmNewContacts(person);
+  const m=crmMetricsFor(person);
+  const suggestions=crmSuggestions(person);
+  return `<div class="card process-manager"><div class="section-title-row"><div><p class="eyebrow">Version 1.5.0 RC1</p><h3>Aufgaben- und Prozessmanager</h3></div><span class="badge">${all.length} offene Aufgaben</span></div>
+    <div class="metric-grid"><div><strong>${m.contacts}</strong><span>Kontakte</span></div><div><strong>${m.tasks}</strong><span>Aufgaben</span></div><div><strong>${m.landing}</strong><span>Landingpages</span></div><div><strong>${m.v1}</strong><span>Video 1</span></div><div><strong>${m.v2}</strong><span>Video 2</span></div><div><strong>${m.v3}</strong><span>Video 3</span></div><div><strong>${m.partners}</strong><span>Partner</span></div></div>
+    <div class="grid process-grid">
+      ${crmRenderProcessList('Überfällig',overdue,'Keine überfälligen Aufgaben.','danger-zone')}
+      ${crmRenderProcessList('Heute',today,'Heute ist nichts fällig.')}
+      ${crmRenderProcessList('Diese Woche',week,'Für diese Woche sind keine weiteren Aufgaben geplant.')}
+      <div class="process-card"><h4>Neue Kontakte</h4>${newer.length?`<div class="process-list">${newer.slice(0,8).map(c=>`<button class="process-main" onclick="crmOpenContact('${esc(c.id)}')"><strong>${esc(crmFullName(c))}</strong><span>${esc(c.contactCode||'')} · ${esc(c.company||c.job||'')} ${c.city?'· '+esc(c.city):''}</span><small>Angelegt: ${esc(String(c.createdAt||'').slice(0,10)||'heute')} · Prio ${esc(c.priority||'A')}</small></button>`).join('')}</div>`:'<p class="small">Keine neuen Kontakte seit gestern.</p>'}</div>
+    </div>
+    <div class="process-card"><h4>Automatische Vorschläge</h4>${suggestions.length?suggestions.map(s=>`<div class="process-item"><button class="process-main" onclick="crmOpenContact('${esc(s.c.id)}')"><strong>${esc(crmFullName(s.c))}</strong><span>${esc(s.c.contactCode||'')} · ${esc(s.c.company||s.c.job||'')}</span><small>${esc(s.text)}</small></button><button class="copy-btn" onclick="crmCreateSuggestedTask('${esc(s.c.id)}','${esc(s.text)}')">Aufgabe anlegen</button></div>`).join(''):'<p class="small">Aktuell keine automatischen Vorschläge.</p>'}</div>
+  </div>`;
+}
+
 function renderCrmDashboard(person,my,dueToday,open,active){
   const done=crmDailyDone();
   const tasks=crmTodayTaskList(person,my,dueToday,open);
@@ -1217,6 +1319,7 @@ function renderCrmDashboard(person,my,dueToday,open,active){
     <div class="task-list">${tasks.map(t=>`<label class="task-item ${done[t[0]]?'done':''}"><input type="checkbox" ${done[t[0]]?'checked':''} onchange="crmToggleDailyTask('${esc(t[0])}')"><span>${esc(t[1])}</span></label>`).join('')}</div>
     <div class="quick-actions"><button class="primary" onclick="selectedContactId='__new'; selectedContactTab='overview'; render(); setTimeout(()=>document.getElementById('crmFormCard')?.scrollIntoView({behavior:'smooth'}),50)">Neuen Kontakt anlegen</button><button class="copy-btn" onclick="crmShowMyContacts()">Meine Kontakte anzeigen</button></div>
   </div>
+  ${renderProcessManager(person)}
   <div class="grid dashboard-numbers">
     <div class="card"><h3>Heute fällig</h3><div class="big-number">${dueToday.length}</div><p class="small">Wiedervorlagen bis heute.</p></div>
     <div class="card"><h3>Aktive Kontakte</h3><div class="big-number">${active.length}</div><p class="small">Deine laufenden Kontakte.</p></div>
