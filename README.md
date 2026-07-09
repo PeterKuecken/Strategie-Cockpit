@@ -1,10 +1,12 @@
-# Recruiting-Cockpit Kücken
+# Recruiting-Cockpit Kücken v1.3.4
 
-Version 1.3.3
+Vollständiges Release auf Basis v1.3.3.
 
-Release auf Basis der Version 1.3.2.
+Neu in v1.3.4:
+- Button „Zur Kontaktübersicht“ oben in der Kontaktakte.
+- Button „Kontakt schließen“ unten in der Kontaktakte.
+- Rückkehr zur alphabetischen Kontaktliste ohne automatisches Öffnen eines Kontakts.
+- Kontaktliste merkt sich den zuletzt geöffneten Kontakt und springt dorthin zurück.
+- Bearbeiten- und Löschen-Schaltflächen direkt im Kontaktkopf.
 
-Neu: Meine Kontakte springt direkt zur Adressdatenbank, Kontakte werden dort alphabetisch angezeigt, die erste Kontaktakte wird automatisch geöffnet, Kontakt-ID nutzt fünf Stellen, Kontaktkopf zeigt zuerst den Namen und darunter die ID.
-
-
-Änderung 1.3.3: Die Schaltfläche „Meine Kontakte anzeigen“ öffnet jetzt nur die Kontaktliste. Kein Kontakt wird automatisch geöffnet.
+Upload in GitHub: Nur den Inhalt der ZIP ins Hauptverzeichnis hochladen.

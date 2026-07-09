@@ -9,7 +9,7 @@ const firebaseConfig = {
   appId: "1:523160644442:web:ff840ac629a9f62ebae163"
 };
 
-const APP_VERSION='1.3.3';
+const APP_VERSION='1.3.4';
 const APP_BUILD='09.07.2026';
 let firebaseApp=null;
 let auth=null;
@@ -56,6 +56,7 @@ let selectedDate=todayKey();
 let selectedSalesDate=todayKey();
 let selectedContactId=null;
 let selectedContactTab='overview';
+let crmLastOpenedContactId=null;
 let crmFilters={q:'',owner:'Meine',status:'',source:'',priority:'',job:'',branch:'',targetGroup:''};
 let crmSortMode='updated';
 
@@ -1029,6 +1030,23 @@ function crmShowMyContacts(){
   render();
   setTimeout(()=>document.getElementById('crmContactsSection')?.scrollIntoView({behavior:'smooth',block:'start'}),60);
 }
+function crmOpenContact(id){
+  crmLastOpenedContactId=id;
+  selectedContactId=id;
+  selectedContactTab='overview';
+  render();
+  setTimeout(()=>document.querySelector('.contact-file')?.scrollIntoView({behavior:'smooth',block:'start'}),50);
+}
+function crmCloseContact(){
+  const last=crmLastOpenedContactId;
+  selectedContactId=null;
+  selectedContactTab='overview';
+  render();
+  setTimeout(()=>{
+    const target=last ? document.querySelector(`[data-contact-id=\"${last}\"]`) : null;
+    (target || document.getElementById('crmContactsSection'))?.scrollIntoView({behavior:'smooth',block:'center'});
+  },60);
+}
 function crmFocusForToday(person){
   const day=new Date().getDay();
   const peter=['Nachfassgespräche und offene Wiedervorlagen','Elektriker im Raum Kassel','Heizungsbauer und Sanitärbetriebe','Immobilienmakler und Unternehmer','WhatsApp-Gespräche vertiefen','Wochenabschluss und offene Kontakte','Ruhe, Sichtbarkeit und Planung'];
@@ -1086,7 +1104,7 @@ function renderCrmDashboard(person,my,dueToday,open,active){
     <div class="card"><h3>Aktive Kontakte</h3><div class="big-number">${active.length}</div><p class="small">Deine laufenden Kontakte.</p></div>
     <div class="card"><h3>Ohne nächsten Schritt</h3><div class="big-number">${open.length}</div><p class="small">Diese Kontakte brauchen eine klare Aufgabe.</p></div>
   </div>
-  ${dueToday.length?`<div class="card"><h3>Heute zuerst erledigen</h3><div class="focus-list">${dueToday.slice(0,8).map(c=>`<button class="focus-contact" onclick="selectedContactId='${esc(c.id)}'; selectedContactTab='overview'; render()"><strong>${esc(crmFullName(c))}</strong><span>${esc(c.contactCode||'')} · ${esc(c.company||c.job||'')} ${c.city?'· '+esc(c.city):''}</span><small>${esc(c.followDate||'')}${c.followTime?' · '+esc(c.followTime):''} · ${esc(c.nextStep||'Nachfassen')}</small></button>`).join('')}</div></div>`:''}`;
+  ${dueToday.length?`<div class="card"><h3>Heute zuerst erledigen</h3><div class="focus-list">${dueToday.slice(0,8).map(c=>`<button class="focus-contact" onclick="crmOpenContact('${esc(c.id)}')"><strong>${esc(crmFullName(c))}</strong><span>${esc(c.contactCode||'')} · ${esc(c.company||c.job||'')} ${c.city?'· '+esc(c.city):''}</span><small>${esc(c.followDate||'')}${c.followTime?' · '+esc(c.followTime):''} · ${esc(c.nextStep||'Nachfassen')}</small></button>`).join('')}</div></div>`:''}`;
 }
 function crmSetFilter(key,value){crmFilters[key]=value; render()}
 function renderCrmToolbar(){
@@ -1105,7 +1123,7 @@ function renderCrmToolbar(){
 function renderCrmContacts(){
   const list=crmFilteredContacts();
   if(!list.length)return `<p class="small">Noch keine Kontakte in dieser Ansicht.</p>`;
-  return `<div class="contact-list">${list.map(c=>`<button onclick="selectedContactId='${esc(c.id)}'; selectedContactTab='overview'; render()" class="contact-card ${selectedContactId===c.id?'active':''}"><div><strong>${esc(crmFullName(c))}</strong><span>${esc(c.contactCode||'')}</span><small>${esc(c.company||c.job||'')} ${c.city?'· '+esc(c.city):''} · ${esc(c.source||'')} · Prio ${esc(c.priority||'A')}</small></div><div><span class="badge">${esc(c.status||'Neu')}</span><small>${esc(c.followDate||'')}</small></div></button>`).join('')}</div>`;
+  return `<div class="contact-list">${list.map(c=>`<button data-contact-id="${esc(c.id)}" onclick="crmOpenContact('${esc(c.id)}')" class="contact-card ${selectedContactId===c.id?'active':''}"><div><strong>${esc(crmFullName(c))}</strong><span>${esc(c.contactCode||'')}</span><small>${esc(c.company||c.job||'')} ${c.city?'· '+esc(c.city):''} · ${esc(c.source||'')} · Prio ${esc(c.priority||'A')}</small></div><div><span class="badge">${esc(c.status||'Neu')}</span><small>${esc(c.followDate||'')}</small></div></button>`).join('')}</div>`;
 }
 function renderCrmEmptyState(){return `<div class="card empty-state"><h3>Kontaktakte</h3><p>Wähle einen Kontakt aus der Liste oder lege einen neuen Kontakt an.</p><button class="primary" onclick="selectedContactId='__new'; render()">Neuen Kontakt anlegen</button></div>`}
 function renderCrmForm(c){
@@ -1161,10 +1179,11 @@ function crmProgress(c){
 function renderCrmProgress(c){return `<div class="crm-progress-steps">${crmProgress(c).map(([label,done])=>`<span class="crm-step ${done?'done':''}">${esc(label)}</span>`).join('')}</div>`}
 function renderCrmDetail(id){
   const c=crmFindContact(id); if(!c)return renderCrmForm(null);
-  return `<div class="card contact-file"><div class="contact-sticky-head"><div><p class="eyebrow">Kontaktakte</p><h3>${esc(crmFullName(c))}</h3><p class="contact-code-line">${esc(c.contactCode||'')}</p><p>${esc(c.company||'')} ${c.city?'· '+esc(c.city):''}</p></div><div class="contact-head-meta"><span class="badge">Prio ${esc(c.priority||'A')}</span><span class="badge">${esc(c.status||'Neu')}</span><p class="small">Zuständig: ${esc(c.owner||'Peter')}${c.support?' · Unterstützung: '+esc(c.support):''}</p><p class="small"><strong>Nächster Schritt:</strong> ${esc(c.nextStep||'offen')}</p><p class="small"><strong>Wiedervorlage:</strong> ${esc(c.followDate||'offen')} ${esc(c.followTime||'')}</p></div></div>
+  return `<div class="card contact-file"><div class="contact-file-actions"><button class="copy-btn" onclick="crmCloseContact()">◀ Zur Kontaktübersicht</button><div><button class="copy-btn" onclick="selectedContactTab='edit'; render()">Bearbeiten</button><button class="copy-btn danger" onclick="crmDeleteContact('${esc(c.id)}')">Löschen</button></div></div><div class="contact-sticky-head"><div><p class="eyebrow">Kontaktakte</p><h3>${esc(crmFullName(c))}</h3><p class="contact-code-line">${esc(c.contactCode||'')}</p><p>${esc(c.company||'')} ${c.city?'· '+esc(c.city):''}</p></div><div class="contact-head-meta"><span class="badge">Prio ${esc(c.priority||'A')}</span><span class="badge">${esc(c.status||'Neu')}</span><p class="small">Zuständig: ${esc(c.owner||'Peter')}${c.support?' · Unterstützung: '+esc(c.support):''}</p><p class="small"><strong>Nächster Schritt:</strong> ${esc(c.nextStep||'offen')}</p><p class="small"><strong>Wiedervorlage:</strong> ${esc(c.followDate||'offen')} ${esc(c.followTime||'')}</p></div></div>
     ${renderCrmProgress(c)}
     <div class="tabs">${crmTabButton('overview','Übersicht')}${crmTabButton('communication','Kommunikation')}${crmTabButton('tasks','Aufgaben')}${crmTabButton('timeline','Zeitachse')}${crmTabButton('notes','Notizen')}${crmTabButton('documents','Dokumente')}${crmTabButton('edit','Bearbeiten')}</div>
     ${renderCrmTabContent(c)}
+    <div class="quick-actions contact-close-bottom"><button class="primary" onclick="crmCloseContact()">Kontakt schließen</button></div>
   </div>`;
 }
 function renderCrmTabContent(c){

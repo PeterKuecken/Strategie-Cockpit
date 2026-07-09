@@ -472,3 +472,11 @@ footer{padding:10px 22px;color:var(--muted);background:#fff;border-top:1px solid
 .crm-progress-steps{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 16px}.crm-step{border:1px solid var(--border);border-radius:999px;padding:8px 10px;background:#fff;color:var(--muted);font-size:13px}.crm-step.done{background:#e7f6ec;color:#24563a;border-color:#b7e1c2;font-weight:700}.crm-step.done:before{content:'✓ ';}
 .crm-form-nested{display:contents}.contact-card strong{display:block}.focus-contact small{display:block;color:var(--muted);margin-top:4px}.timeline-item .badge{margin-left:6px}.tab-content .crm-toolbar input,.tab-content .crm-toolbar select{min-width:160px}
 @media(max-width:800px){.contact-sticky-head{position:static;flex-direction:column}.contact-head-meta{text-align:left}.crm-progress-steps{gap:6px}.crm-step{font-size:12px;padding:7px 9px}.tab-content .crm-toolbar input,.tab-content .crm-toolbar select{min-width:100%}}
+
+
+/* v1.3.4 Kontaktakte Navigation */
+.contact-file-actions{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.contact-file-actions>div{display:flex;gap:8px;flex-wrap:wrap}
+.copy-btn.danger{border-color:#ffd0d0;background:#fff5f5;color:#9b1c1c}
+.contact-close-bottom{margin-top:18px;border-top:1px solid var(--line);padding-top:16px}
+@media(max-width:720px){.contact-file-actions{align-items:stretch}.contact-file-actions button{width:100%}.contact-file-actions>div{width:100%}.contact-file-actions>div button{flex:1}}
