@@ -1108,8 +1108,8 @@ function renderCrmDashboard(person,my,dueToday,open,active){
 }
 function crmSetFilter(key,value){crmFilters[key]=value; render()}
 function renderCrmToolbar(){
-  return `<div class="crm-toolbar">
-    <input id="crmSearch" class="crm-search-wide" type="search" value="${esc(crmFilters.q||'')}" placeholder="Kontakt suchen: ID, Name, Firma, Ort, Telefon, E-Mail, LinkedIn oder Facebook" oninput="crmSetFilter('q',this.value)">
+  return `<div class="crm-toolbar crm-toolbar-addressbook">
+    <button class="primary crm-new-contact-top" onclick="selectedContactId='__new'; selectedContactTab='overview'; render()">Neuer Kontakt</button>
     <select id="crmOwnerFilter" onchange="crmSetFilter('owner',this.value)">${crmHtmlOptions(['Meine','Alle','Peter','Martina'],crmFilters.owner||'Meine')}</select>
     <select id="crmStatusFilter" onchange="crmSetFilter('status',this.value)"><option value="">Alle Status</option>${crmHtmlOptions(crmStatusOptions(),crmFilters.status||'')}</select>
     <select id="crmSourceFilter" onchange="crmSetFilter('source',this.value)"><option value="">Alle Quellen</option>${crmHtmlOptions(crmSources(),crmFilters.source||'')}</select>
@@ -1117,7 +1117,7 @@ function renderCrmToolbar(){
     <select id="crmJobFilter" onchange="crmSetFilter('job',this.value)"><option value="">Alle Berufe</option>${crmHtmlOptions(crmJobOptions().filter(x=>x!=='Sonstiges'),crmFilters.job||'')}</select>
     <select id="crmBranchFilter" onchange="crmSetFilter('branch',this.value)"><option value="">Alle Branchen</option>${crmHtmlOptions(crmBranchOptions().filter(x=>x!=='Sonstige Branche'),crmFilters.branch||'')}</select>
     <select id="crmTargetFilter" onchange="crmSetFilter('targetGroup',this.value)"><option value="">Alle Zielgruppen</option>${crmHtmlOptions(crmTargetGroupOptions().filter(x=>!x.startsWith('Sonstige')),crmFilters.targetGroup||'')}</select>
-    <button class="primary" onclick="selectedContactId='__new'; selectedContactTab='overview'; render()">Neuer Kontakt</button>
+    <input id="crmSearch" class="crm-search-wide" type="search" value="${esc(crmFilters.q||'')}" placeholder="Kontakt suchen: ID, Name, Firma, Ort, Telefon, E-Mail, LinkedIn oder Facebook" oninput="crmSetFilter('q',this.value)">
   </div>`;
 }
 function renderCrmContacts(){

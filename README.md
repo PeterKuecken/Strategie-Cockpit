@@ -1,5 +1,3 @@
-# Recruiting-Cockpit v1.3.7
+# Recruiting-Cockpit v1.3.8
 
-Version 1.3.7 ordnet die Kontaktakte neu: Reiter direkt unter dem Kontaktkopf, Fortschritt darunter, ohne überflüssigen Schritt „Kontakt“.
-
-Upload: Inhalt der ZIP in das GitHub-Hauptverzeichnis hochladen. Nicht den Ordner selbst hochladen.
+Version 1.3.8 verbessert die Adressdatenbank: Neuer Kontakt steht direkt unter der Überschrift, danach folgen die Filter, danach die Suche und dann die Kontaktliste.
