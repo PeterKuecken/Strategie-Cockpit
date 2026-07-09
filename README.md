@@ -1,19 +1,10 @@
 # Recruiting-Cockpit Kücken
 
-Version 1.3.1
+Version 1.3.3
 
-Diese Version basiert auf Version 1.3.0.
+Release auf Basis der Version 1.3.2.
 
-## Schwerpunkt
+Neu: Meine Kontakte springt direkt zur Adressdatenbank, Kontakte werden dort alphabetisch angezeigt, die erste Kontaktakte wird automatisch geöffnet, Kontakt-ID nutzt fünf Stellen, Kontaktkopf zeigt zuerst den Namen und darunter die ID.
 
-Automatische Kontakt-ID mit PK/MK-Logik.
 
-## Enthalten
-
-- automatische Vergabe von PK-Nummern für Peter
-- automatische Vergabe von MK-Nummern für Martina
-- getrennte Hochzählung je Person
-- dauerhafte Speicherung der Kontakt-ID
-- Anzeige der Kontakt-ID in Liste und Kontaktakte
-- Suche über Kontakt-ID
-- Korrektur für Kontakte, die noch den Platzhaltertext enthielten
+Änderung 1.3.3: Die Schaltfläche „Meine Kontakte anzeigen“ öffnet jetzt nur die Kontaktliste. Kein Kontakt wird automatisch geöffnet.
