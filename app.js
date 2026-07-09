@@ -9,7 +9,7 @@ const firebaseConfig = {
   appId: "1:523160644442:web:ff840ac629a9f62ebae163"
 };
 
-const APP_VERSION='1.1.0';
+const APP_VERSION='1.2.0';
 const APP_BUILD='09.07.2026';
 let firebaseApp=null;
 let auth=null;
@@ -55,6 +55,7 @@ let selectedChapterIndex=null;
 let selectedDate=todayKey();
 let selectedSalesDate=todayKey();
 let selectedContactId=null;
+let selectedContactTab='overview';
 let crmFilters={q:'',owner:'Meine',status:'',source:'',priority:''};
 
 const publishSections=['linkedin52','facebook52','videos52','peter52','martina52'];
@@ -835,11 +836,13 @@ function showCopyNotice(msg){let n=document.getElementById('copyNotice'); if(!n)
 function round(n){return Math.round(Number(n||0))}
 
 
-/* Recruiting CRM Version 1.1.0 */
+
+/* Recruiting CRM Version 1.2.0 */
 function ensureCrm(){
-  if(!state.crm)state.crm={contacts:[],tasks:[]};
+  if(!state.crm)state.crm={contacts:[],tasks:[],dailyDone:{}};
   if(!Array.isArray(state.crm.contacts))state.crm.contacts=[];
   if(!Array.isArray(state.crm.tasks))state.crm.tasks=[];
+  if(!state.crm.dailyDone)state.crm.dailyDone={};
 }
 function currentPerson(){
   const email=(currentUser?.email || '').toLowerCase();
@@ -854,13 +857,13 @@ function crmSave(){ensureCrm(); save(); render()}
 function crmFindContact(id){return crmContacts().find(c=>c.id===id)}
 function crmFullName(c){return `${c.firstName||''} ${c.lastName||''}`.trim() || c.company || 'Unbenannter Kontakt'}
 function crmLastActivity(c){return (c.timeline||[]).slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''))[0]}
-function crmDue(c){return c.followDate || ''}
 function crmPersonFilter(c){return (c.owner || 'Peter')===currentPerson() || (c.support || '')===currentPerson()}
 function crmStatusOptions(){return ['Neu','Kontaktanfrage gesendet','Vernetzt','Erstgespräch','Interesse','Präsentation geplant','Präsentation erfolgt','Nachfassen','Kunde','Geschäftspartner','Kein Interesse','Archiv']}
 function crmSources(){return ['LinkedIn','Facebook','WhatsApp','Empfehlung','Veranstaltung','Kunde','Sonstiges']}
 function crmPriorities(){return ['A','B','C']}
 function crmHtmlOptions(items,selected){return items.map(x=>`<option value="${esc(x)}" ${x===(selected||'')?'selected':''}>${esc(x)}</option>`).join('')}
 function crmNormalize(v){return String(v||'').trim().toLowerCase().replace(/\s+/g,' ')}
+function crmActive(c){return !['Archiv','Kein Interesse','Kunde','Geschäftspartner'].includes(c.status)}
 function crmDuplicateWarning(data,id){
   const name=crmNormalize(`${data.firstName||''} ${data.lastName||''}`);
   const phone=crmNormalize(data.phone);
@@ -886,13 +889,14 @@ function crmSaveContact(id){
     const old=state.crm.contacts[idx];
     data.createdAt=old.createdAt||now; data.updatedAt=now; data.timeline=old.timeline||[];
     if(old.status!==data.status)data.timeline.push({date:todayKey(),type:'Status',text:`Status geändert: ${old.status||'ohne'} → ${data.status}`});
+    if(old.owner!==data.owner)data.timeline.push({date:todayKey(),type:'Zuständigkeit',text:`Zuständigkeit geändert: ${old.owner||'offen'} → ${data.owner}`});
     if(old.followDate!==data.followDate || old.nextStep!==data.nextStep)data.timeline.push({date:todayKey(),type:'Wiedervorlage',text:`Nächster Schritt: ${data.nextStep||'offen'}`});
     state.crm.contacts[idx]=data;
   }else{
     data.createdAt=now; data.updatedAt=now; data.timeline=[{date:todayKey(),type:'Anlage',text:'Kontakt angelegt'}];
     state.crm.contacts.unshift(data);
   }
-  selectedContactId=data.id; crmSave();
+  selectedContactId=data.id; selectedContactTab='overview'; crmSave();
 }
 function crmDeleteContact(id){
   const c=crmFindContact(id); if(!c)return;
@@ -930,24 +934,64 @@ function crmFilteredContacts(){
     return true;
   }).sort((a,b)=>(b.updatedAt||b.createdAt||'').localeCompare(a.updatedAt||a.createdAt||''));
 }
+function crmFocusForToday(person){
+  const day=new Date().getDay();
+  const peter=['Nachfassgespräche und offene Wiedervorlagen','Elektriker im Raum Kassel','Heizungsbauer und Sanitärbetriebe','Immobilienmakler und Unternehmer','WhatsApp-Gespräche vertiefen','Wochenabschluss und offene Kontakte','Ruhe, Sichtbarkeit und Planung'];
+  const martina=['Kundenpflege und Empfehlungen','Facebook-Kontakte pflegen','WhatsApp-Nachfassungen','Kundenerfahrungen und Status','Empfehlungsfragen stellen','Wochenabschluss und Beziehungspflege','Ruhe, Sichtbarkeit und Planung'];
+  return (person==='Martina'?martina:peter)[day];
+}
+function crmDailyDoneKey(){return `${crmToday()}_${currentPerson()}`}
+function crmDailyDone(){ensureCrm(); const k=crmDailyDoneKey(); if(!state.crm.dailyDone[k])state.crm.dailyDone[k]={}; return state.crm.dailyDone[k]}
+function crmToggleDailyTask(key){const d=crmDailyDone(); d[key]=!d[key]; save(); render()}
+function crmTodayTaskList(person,my,due,open){
+  const base=person==='Martina' ? [
+    ['focus','Tagesfokus prüfen und Zielgruppe festlegen'],
+    ['kontakte','3 passende Kontakte pflegen oder neu ansprechen'],
+    ['status','1 WhatsApp-Status oder Facebook-Impuls vorbereiten'],
+    ['follow','Offene Wiedervorlagen erledigen'],
+    ['notes','Gesprächsnotizen sauber eintragen']
+  ] : [
+    ['focus','Tagesfokus prüfen und Zielgruppe festlegen'],
+    ['research','5 passende Unternehmer oder Selbständige recherchieren'],
+    ['requests','3 Kontaktanfragen oder Erstnachrichten senden'],
+    ['follow','Offene Wiedervorlagen erledigen'],
+    ['notes','Gesprächsnotizen sauber eintragen']
+  ];
+  if(due.length)base.splice(1,0,['due',`${due.length} fällige Wiedervorlage${due.length===1?'':'n'} bearbeiten`]);
+  if(open.length)base.push(['open',`${open.length} Kontakt${open.length===1?'':'e'} ohne nächsten Schritt klären`]);
+  return base;
+}
 function renderRecruiting(s){
   ensureCrm();
   const person=currentPerson();
   const my=crmContacts().filter(crmPersonFilter);
-  const dueToday=my.filter(c=>c.followDate && c.followDate<=crmToday() && c.status!=='Archiv' && c.status!=='Kein Interesse');
-  const open=my.filter(c=>!c.nextStep && c.status!=='Archiv' && c.status!=='Kein Interesse');
-  const active=my.filter(c=>!['Archiv','Kein Interesse','Kunde','Geschäftspartner'].includes(c.status));
+  const dueToday=my.filter(c=>c.followDate && c.followDate<=crmToday() && crmActive(c));
+  const open=my.filter(c=>!c.nextStep && crmActive(c));
+  const active=my.filter(crmActive);
   const html=`
-    <div class="card"><h2>4. Recruiting</h2><p>Persönlicher Arbeitsbereich für ${esc(person)}. Gemeinsame Datenbank, getrennte Tagesaufgaben.</p></div>
-    <div class="grid">
-      <div class="card"><h3>Heute fällig</h3><div class="big-number">${dueToday.length}</div><p class="small">Wiedervorlagen bis heute.</p></div>
-      <div class="card"><h3>Aktive Kontakte</h3><div class="big-number">${active.length}</div><p class="small">Ohne Archiv, Absage, Kunde oder Partner.</p></div>
-      <div class="card"><h3>Ohne nächsten Schritt</h3><div class="big-number">${open.length}</div><p class="small">Diese Kontakte brauchen eine klare Aufgabe.</p></div>
-    </div>
-    <div class="card"><h3>Kontaktverwaltung 2.0</h3>${renderCrmToolbar()}${renderCrmContacts()}</div>
-    ${selectedContactId ? renderCrmDetail(selectedContactId) : renderCrmForm(null)}
+    ${renderCrmDashboard(person,my,dueToday,open,active)}
+    <div class="card section-card"><h3>Kontaktverwaltung</h3>${renderCrmToolbar()}${renderCrmContacts()}</div>
+    ${selectedContactId ? (selectedContactId==='__new' ? renderCrmForm(null) : renderCrmDetail(selectedContactId)) : renderCrmEmptyState()}
     <div class="card"><h3>Teamübersicht</h3>${renderCrmTeamOverview()}</div>`;
   view.innerHTML=html;
+}
+function renderCrmDashboard(person,my,dueToday,open,active){
+  const done=crmDailyDone();
+  const tasks=crmTodayTaskList(person,my,dueToday,open);
+  const doneCount=tasks.filter(t=>done[t[0]]).length;
+  const percent=tasks.length?Math.round(doneCount/tasks.length*100):0;
+  return `<div class="card hero-dashboard">
+    <div class="hero-head"><div><p class="eyebrow">Persönliches Dashboard</p><h2>Guten Morgen ${esc(person)}.</h2><p>Heute konzentrieren wir uns auf: <strong>${esc(crmFocusForToday(person))}</strong></p></div><div class="hero-score"><strong>${doneCount}/${tasks.length}</strong><span>Aufgaben erledigt</span></div></div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${percent}%"></div></div>
+    <div class="task-list">${tasks.map(t=>`<label class="task-item ${done[t[0]]?'done':''}"><input type="checkbox" ${done[t[0]]?'checked':''} onchange="crmToggleDailyTask('${esc(t[0])}')"><span>${esc(t[1])}</span></label>`).join('')}</div>
+    <div class="quick-actions"><button class="primary" onclick="selectedContactId='__new'; selectedContactTab='overview'; render(); setTimeout(()=>document.getElementById('crmFormCard')?.scrollIntoView({behavior:'smooth'}),50)">Neuen Kontakt anlegen</button><button class="copy-btn" onclick="crmFilters.owner='Meine'; crmFilters.status=''; crmFilters.source=''; crmFilters.priority=''; render()">Meine Kontakte anzeigen</button></div>
+  </div>
+  <div class="grid dashboard-numbers">
+    <div class="card"><h3>Heute fällig</h3><div class="big-number">${dueToday.length}</div><p class="small">Wiedervorlagen bis heute.</p></div>
+    <div class="card"><h3>Aktive Kontakte</h3><div class="big-number">${active.length}</div><p class="small">Deine laufenden Kontakte.</p></div>
+    <div class="card"><h3>Ohne nächsten Schritt</h3><div class="big-number">${open.length}</div><p class="small">Diese Kontakte brauchen eine klare Aufgabe.</p></div>
+  </div>
+  ${dueToday.length?`<div class="card"><h3>Heute zuerst erledigen</h3><div class="focus-list">${dueToday.slice(0,8).map(c=>`<button class="focus-contact" onclick="selectedContactId='${esc(c.id)}'; selectedContactTab='overview'; render()"><strong>${esc(crmFullName(c))}</strong><span>${esc(c.followDate||'')}${c.followTime?' · '+esc(c.followTime):''} · ${esc(c.nextStep||'Nachfassen')}</span></button>`).join('')}</div></div>`:''}`;
 }
 function crmSetFilter(key,value){crmFilters[key]=value; render()}
 function renderCrmToolbar(){
@@ -957,22 +1001,23 @@ function renderCrmToolbar(){
     <select id="crmStatusFilter" onchange="crmSetFilter('status',this.value)"><option value="">Alle Status</option>${crmHtmlOptions(crmStatusOptions(),crmFilters.status||'')}</select>
     <select id="crmSourceFilter" onchange="crmSetFilter('source',this.value)"><option value="">Alle Quellen</option>${crmHtmlOptions(crmSources(),crmFilters.source||'')}</select>
     <select id="crmPriorityFilter" onchange="crmSetFilter('priority',this.value)"><option value="">Alle Prioritäten</option>${crmHtmlOptions(crmPriorities(),crmFilters.priority||'')}</select>
-    <button class="primary" onclick="selectedContactId=null; render()">Neuer Kontakt</button>
+    <button class="primary" onclick="selectedContactId='__new'; selectedContactTab='overview'; render()">Neuer Kontakt</button>
   </div>`;
 }
 function renderCrmContacts(){
   const list=crmFilteredContacts();
   if(!list.length)return `<p class="small">Noch keine Kontakte in dieser Ansicht.</p>`;
-  return `<div class="table-wrap"><table class="history-table"><thead><tr><th>Name</th><th>Firma</th><th>Status</th><th>Zuständig</th><th>Quelle</th><th>Wiedervorlage</th></tr></thead><tbody>${list.map(c=>`<tr onclick="selectedContactId='${esc(c.id)}'; render()" class="click-row"><td>${esc(crmFullName(c))}<br><span class="small">${esc(c.city||'')}</span></td><td>${esc(c.company||'')}</td><td><span class="badge">${esc(c.status||'Neu')}</span></td><td>${esc(c.owner||'Peter')}${c.support?`<br><span class="small">Unterstützung: ${esc(c.support)}</span>`:''}</td><td>${esc(c.source||'')}</td><td>${esc(c.followDate||'')}${c.followTime?' '+esc(c.followTime):''}<br><span class="small">${esc(c.nextStep||'')}</span></td></tr>`).join('')}</tbody></table></div>`;
+  return `<div class="contact-list">${list.map(c=>`<button onclick="selectedContactId='${esc(c.id)}'; selectedContactTab='overview'; render()" class="contact-card ${selectedContactId===c.id?'active':''}"><div><strong>${esc(crmFullName(c))}</strong><span>${esc(c.company||c.job||'')}</span><small>${esc(c.city||'')} · ${esc(c.source||'')}</small></div><div><span class="badge">${esc(c.status||'Neu')}</span><small>${esc(c.followDate||'')}</small></div></button>`).join('')}</div>`;
 }
+function renderCrmEmptyState(){return `<div class="card empty-state"><h3>Kontaktakte</h3><p>Wähle einen Kontakt aus der Liste oder lege einen neuen Kontakt an.</p><button class="primary" onclick="selectedContactId='__new'; render()">Neuen Kontakt anlegen</button></div>`}
 function renderCrmForm(c){
   c=c||{owner:currentPerson(),status:'Neu',priority:'B',source:'LinkedIn'};
   const id=c.id||'';
   const input=(k,label,type='text')=>`<label>${label}<input id="crm_${k}" type="${type}" value="${esc(c[k]||'')}"></label>`;
-  return `<div class="card"><h3>${id?'Kontakt bearbeiten':'Neuen Kontakt anlegen'}</h3>
-    <div class="crm-form">
-      ${input('firstName','Vorname')}${input('lastName','Nachname')}${input('company','Firma')}${input('job','Beruf')}${input('branch','Branche')}${input('city','Ort')}${input('phone','Mobilnummer','tel')}${input('email','E-Mail','email')}${input('website','Website','url')}${input('linkedin','LinkedIn-Profil','url')}${input('facebook','Facebook-Profil','url')}${input('instagram','Instagram-Profil','url')}
-      <label class="check-inline"><input id="crm_whatsapp" type="checkbox" ${c.whatsapp?'checked':''}> WhatsApp vorhanden</label>
+  return `<div id="crmFormCard" class="card"><h3>${id?'Kontakt bearbeiten':'Neuen Kontakt anlegen'}</h3>
+    <div class="crm-form-group"><h4>Persönliche Daten</h4><div class="crm-form">${input('firstName','Vorname')}${input('lastName','Nachname')}${input('company','Firma')}${input('job','Beruf')}${input('branch','Branche')}${input('city','Ort')}${input('phone','Mobilnummer','tel')}${input('email','E-Mail','email')}${input('website','Website','url')}</div></div>
+    <div class="crm-form-group"><h4>Online-Profile</h4><div class="crm-form">${input('linkedin','LinkedIn-Profil','url')}${input('facebook','Facebook-Profil','url')}${input('instagram','Instagram-Profil','url')}<label class="check-inline"><input id="crm_whatsapp" type="checkbox" ${c.whatsapp?'checked':''}> WhatsApp vorhanden</label></div></div>
+    <div class="crm-form-group"><h4>Recruiting</h4><div class="crm-form">
       <label>Zuständig<select id="crm_owner">${crmHtmlOptions(['Peter','Martina'],c.owner||currentPerson())}</select></label>
       <label>Zweiter Ansprechpartner<select id="crm_support"><option value="">Keiner</option>${crmHtmlOptions(['Peter','Martina'],c.support||'')}</select></label>
       <label>Quelle<select id="crm_source">${crmHtmlOptions(crmSources(),c.source||'LinkedIn')}</select></label>
@@ -982,29 +1027,38 @@ function renderCrmForm(c){
       <label>Wiedervorlage Datum<input id="crm_followDate" type="date" value="${esc(c.followDate||'')}"></label>
       <label>Wiedervorlage Uhrzeit<input id="crm_followTime" type="time" value="${esc(c.followTime||'')}"></label>
       <label class="span2">Nächster Schritt<input id="crm_nextStep" value="${esc(c.nextStep||'')}"></label>
-      <label class="span2">Notizen<textarea id="crm_notes">${esc(c.notes||'')}</textarea></label>
-    </div>
+    </div></div>
+    <div class="crm-form-group"><h4>Notizen</h4><label>Notizen<textarea id="crm_notes">${esc(c.notes||'')}</textarea></label></div>
     <button class="primary" onclick="crmSaveContact('${esc(id)}')">Speichern</button>
     ${id?`<button class="copy-btn" onclick="crmDeleteContact('${esc(id)}')">Kontakt löschen</button>`:''}
+    <button class="copy-btn" onclick="selectedContactId=null; render()">Abbrechen</button>
   </div>`;
 }
+function crmTabButton(key,label){return `<button class="tab-btn ${selectedContactTab===key?'active':''}" onclick="selectedContactTab='${key}'; render()">${label}</button>`}
 function renderCrmDetail(id){
   const c=crmFindContact(id); if(!c)return renderCrmForm(null);
-  const timeline=(c.timeline||[]).slice().reverse();
-  return `<div class="card"><h3>Kontaktakte: ${esc(crmFullName(c))}</h3>
-    <div class="grid"><div><p><strong>Firma:</strong> ${esc(c.company||'')}</p><p><strong>Beruf:</strong> ${esc(c.job||'')}</p><p><strong>Ort:</strong> ${esc(c.city||'')}</p></div><div><p><strong>Status:</strong> ${esc(c.status||'Neu')}</p><p><strong>Zuständig:</strong> ${esc(c.owner||'Peter')}</p><p><strong>Nächster Schritt:</strong> ${esc(c.nextStep||'')}</p></div></div>
-    <button class="primary" onclick="selectedContactId='${esc(id)}'; document.getElementById('crmEditAnchor')?.scrollIntoView({behavior:'smooth'});">Bearbeiten</button>
-    <button class="copy-btn" onclick="selectedContactId=null; render()">Neuer Kontakt</button>
-  </div>
-  <div id="crmEditAnchor">${renderCrmForm(c)}</div>
-  <div class="card"><h3>Zeitachse</h3>
-    <div class="crm-toolbar"><select id="crm_timeline_type"><option>Notiz</option><option>Anruf</option><option>WhatsApp</option><option>LinkedIn</option><option>Facebook</option><option>Termin</option><option>Präsentation</option></select><input id="crm_timeline_text" placeholder="Aktivität oder Gesprächsnotiz"><button class="primary" onclick="crmAddTimeline('${esc(id)}')">Eintragen</button></div>
-    ${timeline.length?timeline.map(t=>`<div class="timeline-item"><strong>${esc(t.date||'')}</strong> <span class="badge">${esc(t.type||'Notiz')}</span><br>${esc(t.text||'')}</div>`).join(''):'<p class="small">Noch keine Aktivitäten.</p>'}
+  return `<div class="card contact-file"><div class="contact-file-head"><div><p class="eyebrow">Kontaktakte</p><h3>${esc(crmFullName(c))}</h3><p>${esc(c.company||'')} ${c.city?'· '+esc(c.city):''}</p></div><div><span class="badge">${esc(c.status||'Neu')}</span><p class="small">Zuständig: ${esc(c.owner||'Peter')}${c.support?' · Unterstützung: '+esc(c.support):''}</p></div></div>
+    <div class="tabs">${crmTabButton('overview','Übersicht')}${crmTabButton('timeline','Zeitachse')}${crmTabButton('tasks','Aufgaben')}${crmTabButton('communication','Kommunikation')}${crmTabButton('notes','Notizen')}${crmTabButton('edit','Bearbeiten')}</div>
+    ${renderCrmTabContent(c)}
   </div>`;
 }
+function renderCrmTabContent(c){
+  if(selectedContactTab==='edit')return renderCrmForm(c);
+  if(selectedContactTab==='timeline')return renderCrmTimeline(c);
+  if(selectedContactTab==='tasks')return renderCrmTasksTab(c);
+  if(selectedContactTab==='communication')return renderCrmCommunication(c);
+  if(selectedContactTab==='notes')return `<div class="tab-content"><h4>Notizen</h4><p class="note-box">${esc(c.notes||'Noch keine Notizen vorhanden.')}</p><button class="copy-btn" onclick="selectedContactTab='edit'; render()">Notizen bearbeiten</button></div>`;
+  return `<div class="tab-content"><div class="grid"><div><h4>Persönliche Daten</h4><p><strong>Firma:</strong> ${esc(c.company||'')}</p><p><strong>Beruf:</strong> ${esc(c.job||'')}</p><p><strong>Branche:</strong> ${esc(c.branch||'')}</p><p><strong>Ort:</strong> ${esc(c.city||'')}</p></div><div><h4>Nächster Schritt</h4><p><strong>Wiedervorlage:</strong> ${esc(c.followDate||'offen')} ${esc(c.followTime||'')}</p><p><strong>Aufgabe:</strong> ${esc(c.nextStep||'Noch kein nächster Schritt eingetragen.')}</p><p><strong>Quelle:</strong> ${esc(c.source||'')}</p><p><strong>Priorität:</strong> ${esc(c.priority||'')}</p></div></div><div class="quick-actions"><button class="primary" onclick="selectedContactTab='edit'; render()">Bearbeiten</button><button class="copy-btn" onclick="selectedContactTab='timeline'; render()">Aktivität eintragen</button></div></div>`;
+}
+function renderCrmTimeline(c){
+  const timeline=(c.timeline||[]).slice().reverse();
+  return `<div class="tab-content"><h4>Zeitachse</h4><div class="crm-toolbar"><select id="crm_timeline_type"><option>Notiz</option><option>Anruf</option><option>WhatsApp</option><option>LinkedIn</option><option>Facebook</option><option>Termin</option><option>Präsentation</option></select><input id="crm_timeline_text" placeholder="Aktivität oder Gesprächsnotiz"><button class="primary" onclick="crmAddTimeline('${esc(c.id)}')">Eintragen</button></div>${timeline.length?timeline.map(t=>`<div class="timeline-item"><strong>${esc(t.date||'')}</strong> <span class="badge">${esc(t.type||'Notiz')}</span><br>${esc(t.text||'')}</div>`).join(''):'<p class="small">Noch keine Aktivitäten.</p>'}</div>`;
+}
+function renderCrmTasksTab(c){return `<div class="tab-content"><h4>Aufgaben</h4><p><strong>Nächster Schritt:</strong> ${esc(c.nextStep||'Noch offen')}</p><p><strong>Wiedervorlage:</strong> ${esc(c.followDate||'kein Datum')} ${esc(c.followTime||'')}</p><button class="primary" onclick="selectedContactTab='edit'; render()">Aufgabe bearbeiten</button></div>`}
+function renderCrmCommunication(c){return `<div class="tab-content"><h4>Kommunikation</h4><div class="link-grid">${c.phone?`<a class="link-card" href="tel:${esc(c.phone)}">Anrufen</a>`:''}${c.email?`<a class="link-card" href="mailto:${esc(c.email)}">E-Mail schreiben</a>`:''}${c.linkedin?`<a class="link-card" target="_blank" href="${esc(c.linkedin)}">LinkedIn öffnen</a>`:''}${c.facebook?`<a class="link-card" target="_blank" href="${esc(c.facebook)}">Facebook öffnen</a>`:''}${c.website?`<a class="link-card" target="_blank" href="${esc(c.website)}">Website öffnen</a>`:''}</div><p class="small">WhatsApp-Links werden ergänzt, sobald die Telefonnummern einheitlich gespeichert sind.</p></div>`}
 function renderCrmTeamOverview(){
   const people=['Peter','Martina'];
-  return `<div class="grid">${people.map(p=>{const list=crmContacts().filter(c=>(c.owner||'Peter')===p); const due=list.filter(c=>c.followDate&&c.followDate<=crmToday()).length; return `<div><h4>${p}</h4><p>Kontakte: ${list.length}</p><p>Heute fällig: ${due}</p><p>Aktiv: ${list.filter(c=>!['Archiv','Kein Interesse','Kunde','Geschäftspartner'].includes(c.status)).length}</p></div>`}).join('')}</div>`;
+  return `<div class="grid">${people.map(p=>{const list=crmContacts().filter(c=>(c.owner||'Peter')===p); const due=list.filter(c=>c.followDate&&c.followDate<=crmToday()&&crmActive(c)).length; return `<div><h4>${p}</h4><p>Kontakte: ${list.length}</p><p>Heute fällig: ${due}</p><p>Aktiv: ${list.filter(crmActive).length}</p></div>`}).join('')}</div>`;
 }
 
 function renderSearch(q){

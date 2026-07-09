@@ -1,5 +1,17 @@
 # Changelog
 
+## Version 1.2.0
+
+- Persönliches Dashboard für Peter und Martina überarbeitet.
+- Tagesfokus ergänzt.
+- Aufgabenliste mit Erledigt-Funktion ergänzt.
+- Kontaktverwaltung optisch neu strukturiert.
+- Kontaktakte mit Tabs ergänzt: Übersicht, Zeitachse, Aufgaben, Kommunikation, Notizen, Bearbeiten.
+- Formular in Persönliche Daten, Online-Profile, Recruiting und Notizen gegliedert.
+- Wiedervorlagen werden im Dashboard priorisiert angezeigt.
+
+# Changelog
+
 ## Version 1.1.0, 09.07.2026
 
 Neu:
