@@ -1,0 +1,1098 @@
+
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCC6oG4f-GGqFoG785z_ePREt86Sugptd4",
+  authDomain: "kuecken-cockpit.firebaseapp.com",
+  projectId: "kuecken-cockpit",
+  storageBucket: "kuecken-cockpit.firebasestorage.app",
+  messagingSenderId: "523160644442",
+  appId: "1:523160644442:web:ff840ac629a9f62ebae163"
+};
+
+const APP_VERSION='1.1.0';
+const APP_BUILD='09.07.2026';
+let firebaseApp=null;
+let auth=null;
+let db=null;
+let currentUser=null;
+let cloudReady=false;
+let applyingRemote=false;
+let unsubscribeAppState=null;
+let saveTimer=null;
+let mediaStatus={};
+let cloudError='';
+
+try{
+  firebaseApp=firebase.initializeApp(firebaseConfig);
+  auth=firebase.auth();
+  db=firebase.firestore();
+}catch(e){
+  cloudError=e && e.message ? e.message : String(e);
+}
+
+const stateKey='kuecken_state_v18';
+const activityKey='kuecken_activity_v18';
+const salesKey='kuecken_sales_v18';
+const todayKey=()=>new Date().toISOString().slice(0,10);
+
+let state=JSON.parse(localStorage.getItem(stateKey)||'{}');
+let activity=JSON.parse(localStorage.getItem(activityKey)||'{}');
+let sales=JSON.parse(localStorage.getItem(salesKey)||'{}');
+mediaStatus=JSON.parse(localStorage.getItem('kuecken_media_status_v18')||'{}');
+if(!state.checks)state.checks={};
+if(!state.kpis)state.kpis={};
+if(!state.crm)state.crm={contacts:[],tasks:[]};
+if(!state.crm.contacts)state.crm.contacts=[];
+if(!state.crm.tasks)state.crm.tasks=[];
+
+const nav=document.getElementById('nav');
+const view=document.getElementById('view');
+const searchInput=document.getElementById('searchInput');
+
+let current='heute';
+let openNavGroupLabel='1. Vertriebs-Cockpit';
+let selectedChapterIndex=null;
+let selectedDate=todayKey();
+let selectedSalesDate=todayKey();
+let selectedContactId=null;
+let crmFilters={q:'',owner:'Meine',status:'',source:'',priority:''};
+
+const publishSections=['linkedin52','facebook52','videos52','peter52','martina52'];
+
+const activityConfig={
+  peter:[
+    {key:'whatsapp_kontakte', label:'WhatsApp Kontakte', target:5, channel:'WhatsApp'},
+    {key:'whatsapp_nachfassungen', label:'WhatsApp Nachfassungen', target:5, channel:'WhatsApp'},
+    {key:'facebook_kontakte', label:'Facebook Kontakte', target:5, channel:'Facebook'},
+    {key:'linkedin_kontakte', label:'LinkedIn Kontakte', target:5, channel:'LinkedIn'},
+    {key:'unternehmerkontakte', label:'Unternehmerkontakte', target:3, channel:'Unternehmer'},
+    {key:'empfehlungen', label:'Empfehlungen', target:3, channel:'Empfehlungen'},
+    {key:'beitraege', label:'Beiträge veröffentlicht', target:1, channel:'Sichtbarkeit'},
+    {key:'videos', label:'Videos veröffentlicht', target:1, channel:'Video'}
+  ],
+  martina:[
+    {key:'kontakte', label:'Kontakte', target:3, channel:'WhatsApp'},
+    {key:'kundenkontakte', label:'Kundenkontakte', target:3, channel:'Kunden'},
+    {key:'nachfassungen', label:'Nachfassungen', target:3, channel:'Nachfassen'},
+    {key:'facebook_aktivitaet', label:'Facebook Aktivität', target:1, channel:'Facebook'},
+    {key:'empfehlungen', label:'Empfehlungen', target:2, channel:'Empfehlungen'},
+    {key:'beitraege', label:'Beiträge veröffentlicht', target:1, channel:'Sichtbarkeit'},
+    {key:'videos', label:'Videos veröffentlicht', target:1, channel:'Video'}
+  ]
+};
+
+const fieldHelp={
+  peter:{
+    whatsapp_kontakte:["Jeden Tag neue Gespräche über WhatsApp starten.","Gehe dein Telefonbuch durch, aktiviere alte Kontakte, schreibe Empfehlungen an und starte persönliche Nachrichten."],
+    whatsapp_nachfassungen:["Bestehende Kontakte weiterentwickeln.","Öffne deine letzten Chats und fasse offene Gespräche mit einer konkreten Frage nach."],
+    facebook_kontakte:["Neue Gespräche über Facebook aufbauen.","Kommentiere bei passenden Kontakten und schreibe persönliche Nachrichten."],
+    linkedin_kontakte:["Unternehmer und Selbständige erreichen.","Suche Selbständige, Geschäftsführer und Inhaber im Raum Kassel plus 50 km und sende Kontaktanfragen."],
+    unternehmerkontakte:["Echte Unternehmergespräche anstoßen.","Wähle regionale Unternehmer aus und kontaktiere sie persönlich."],
+    empfehlungen:["Aktiv neue Namen und Kontakte erhalten.","Stelle konkrete Empfehlungsfragen. Frage: Wer fällt dir spontan ein?"],
+    beitraege:["Sichtbarkeit aufbauen.","Wähle einen Beitrag aus dem Jahresplan und veröffentliche ihn."],
+    videos:["Persönlichkeit sichtbar machen.","Nimm ein kurzes Video aus dem Video-Jahresplan auf."]
+  },
+  martina:{
+    kontakte:["Persönliche Gespräche starten.","Schreibe persönliche Kontakte an. Nutze Alltag, Interesse und Beziehung als Einstieg."],
+    kundenkontakte:["Bestandskunden pflegen und reaktivieren.","Wähle Kunden aus und frage nach Zufriedenheit, Nutzung und offenen Fragen."],
+    nachfassungen:["Offene Gespräche weiterführen.","Frage: Was ist aus deiner Sicht der nächste sinnvolle Schritt?"],
+    facebook_aktivitaet:["Sichtbarkeit und Beziehung über Facebook stärken.","Poste eine persönliche Beobachtung oder kommentiere bei passenden Kontakten."],
+    empfehlungen:["Neue Kontakte aus bestehenden Beziehungen erhalten.","Frage zufriedene Kunden oder Bekannte: Wer fällt dir spontan ein?"],
+    beitraege:["Regelmäßig sichtbar bleiben.","Veröffentliche einen kurzen Beitrag aus Alltag, Erfahrung oder Kundenpflege."],
+    videos:["Vertrauen durch persönliche Ansprache schaffen.","Nimm ein kurzes 60- bis 90-Sekunden-Video auf."]
+  }
+};
+
+const salesConfig={
+  peter:[
+    {key:'neue_kontakte', label:'Neue Kontakte', target:5},
+    {key:'gespraeche', label:'Gespräche', target:3},
+    {key:'nachfassungen', label:'Nachfassungen', target:5},
+    {key:'termine', label:'Termine vereinbart', target:2},
+    {key:'praesentationen', label:'Präsentationen', target:1},
+    {key:'empfehlungen', label:'Empfehlungen', target:3},
+    {key:'verkaeufe', label:'Verkäufe', target:0.3},
+    {key:'partner', label:'Neue Partner', target:0.1},
+    {key:'unternehmergespraeche', label:'Unternehmergespräche', target:1},
+    {key:'linkedin_kontakte', label:'LinkedIn-Kontakte', target:5},
+    {key:'facebook_kontakte', label:'Facebook-Kontakte', target:5},
+    {key:'whatsapp_kontakte', label:'WhatsApp-Kontakte', target:5},
+    {key:'beitraege', label:'Beiträge veröffentlicht', target:1},
+    {key:'videos', label:'Videos veröffentlicht', target:1}
+  ],
+  martina:[
+    {key:'kontakte', label:'Kontakte', target:3},
+    {key:'kundenkontakte', label:'Kundenkontakte', target:3},
+    {key:'nachfassungen', label:'Nachfassungen', target:3},
+    {key:'termine', label:'Termine vereinbart', target:1},
+    {key:'praesentationen', label:'Präsentationen', target:0.5},
+    {key:'empfehlungen', label:'Empfehlungen', target:2},
+    {key:'verkaeufe', label:'Verkäufe', target:0.2},
+    {key:'partner', label:'Neue Partner', target:0.05},
+    {key:'facebook_aktivitaet', label:'Facebook-Aktivitäten', target:1},
+    {key:'whatsapp_aktivitaet', label:'WhatsApp-Aktivitäten', target:3},
+    {key:'beitraege', label:'Beiträge veröffentlicht', target:1},
+    {key:'videos', label:'Videos veröffentlicht', target:0.5}
+  ]
+};
+
+const funnelKeys=[
+  ['kontakte','Kontakte'],
+  ['gespraeche','Gespräche'],
+  ['termine','Termine'],
+  ['praesentationen','Präsentationen'],
+  ['verkaeufe','Verkäufe'],
+  ['partner','Partner']
+];
+
+function save(){localStorage.setItem(stateKey,JSON.stringify(state)); scheduleCloudSave()}
+function saveActivity(){localStorage.setItem(activityKey,JSON.stringify(activity)); scheduleCloudSave()}
+function saveSales(){localStorage.setItem(salesKey,JSON.stringify(sales)); scheduleCloudSave()}
+function saveMediaStatus(){localStorage.setItem('kuecken_media_status_v18',JSON.stringify(mediaStatus)); scheduleCloudSave()}
+function scheduleCloudSave(){
+  if(applyingRemote || !currentUser || !db || !cloudReady)return;
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(writeCloudState,350);
+}
+async function writeCloudState(){
+  if(!currentUser || !db)return;
+  setSyncStatus('Speichert ...');
+  try{
+    await db.collection('app').doc('sharedState').set({
+      state, activity, sales, mediaStatus,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      updatedBy: currentUser.email || currentUser.uid
+    },{merge:true});
+    setSyncStatus('Synchronisiert');
+  }catch(e){
+    setSyncStatus('Speicherfehler');
+    console.error(e);
+  }
+}
+function setSyncStatus(text){const el=document.getElementById('syncStatus'); if(el)el.textContent=text}
+
+function sectionById(id){return window.APP_CONTENT.sections.find(s=>s.id===id)}
+function isPublishSection(id){return publishSections.includes(id)}
+function pct(actual,target){return target ? Math.round((Number(actual||0)/target)*100) : 100}
+function ampClass(percent){if(percent>=100)return 'traffic-green'; if(percent>=80)return 'traffic-yellow'; return 'traffic-red'}
+function targetClass(actual,target){return ampClass(pct(actual,target))}
+function statusText(actual,target){const p=pct(actual,target); if(p>=100)return 'Im Soll'; if(p>=80)return 'Fast im Soll'; return 'Unter Soll'}
+function esc(str){return String(str ?? '').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+function formatDate(date){const [y,m,d]=date.split('-'); return `${d}.${m}.${y}`}
+
+const yearPlanStart=new Date(2026,6,13); // Montag, 13.07.2026
+const dayNames=['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+function dateObjToKey(d){const y=d.getFullYear(); const m=String(d.getMonth()+1).padStart(2,'0'); const day=String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${day}`}
+function formatDateObj(d){return `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`}
+function addDays(d,days){const x=new Date(d.getFullYear(),d.getMonth(),d.getDate()); x.setDate(x.getDate()+days); return x}
+function isoWeekNumber(d){
+  const date=new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const dayNum=date.getUTCDay() || 7;
+  date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+  const yearStart=new Date(Date.UTC(date.getUTCFullYear(),0,1));
+  return Math.ceil((((date-yearStart)/86400000)+1)/7);
+}
+function weekMeta(idx){
+  const start=addDays(yearPlanStart, idx*7); const end=addDays(start,6);
+  const days=[]; for(let i=0;i<7;i++){const d=addDays(start,i); days.push({name:dayNames[d.getDay()], date:formatDateObj(d), key:dateObjToKey(d)});}
+  return {week:idx+1, kw:isoWeekNumber(start), start, end, range:`${formatDateObj(start)} bis ${formatDateObj(end)}`, days};
+}
+function renderWeekDateBox(idx){
+  const m=weekMeta(idx);
+  return `<div class="week-date-box"><div><strong>Woche ${m.week} von 52</strong></div><div>KW ${m.kw}</div><div>Zeitraum: ${m.range}</div><div class="week-days">${m.days.map(d=>`<span>${d.name}, ${d.date}</span>`).join('')}</div></div>`;
+}
+function currentPlanWeekIndex(){
+  const now=new Date(); const today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  const diff=Math.floor((today-yearPlanStart)/86400000);
+  if(diff<0)return 0;
+  const idx=Math.floor(diff/7);
+  return Math.max(0,Math.min(51,idx));
+}
+function openCurrentWeek(sectionId){current=sectionId; selectedChapterIndex=currentPlanWeekIndex(); searchInput.value=''; const g=activeNavGroup(); if(g)openNavGroupLabel=g.label; render(); setTimeout(()=>scrollToContent(),0)}
+function weeklyTemplateDatePrefix(t,idx){
+  const m=weekMeta(idx);
+  let text=String(t||'');
+  text=text.replace(/\bMontag\b(?!,)/,`Montag, ${m.days[0].date}`)
+           .replace(/\bDienstag\b(?!,)/,`Dienstag, ${m.days[1].date}`)
+           .replace(/\bMittwoch\b(?!,)/,`Mittwoch, ${m.days[2].date}`)
+           .replace(/\bDonnerstag\b(?!,)/,`Donnerstag, ${m.days[3].date}`)
+           .replace(/\bFreitag\b(?!,)/,`Freitag, ${m.days[4].date}`)
+           .replace(/\bSamstag\b(?!,)/,`Samstag, ${m.days[5].date}`)
+           .replace(/\bSonntag\b(?!,)/,`Sonntag, ${m.days[6].date}`);
+  const header=`Woche ${m.week} von 52\nKW ${m.kw}\nZeitraum: ${m.range}\n\n`;
+  return text.startsWith(`Woche ${m.week} von 52`) ? text : header+text;
+}
+
+function copyButtonLabel(platformLabel){
+  const label=String(platformLabel||'').toLowerCase();
+  if(label.includes('linkedin'))return 'LinkedIn-Beitrag kopieren';
+  if(label.includes('facebook') && label.includes('beitrag'))return 'Facebook-Beitrag kopieren';
+  if(label.includes('whatsapp'))return 'WhatsApp-Status kopieren';
+  if(label.includes('instagram') && label.includes('story'))return 'Instagram-Story kopieren';
+  if(label.includes('facebook') && label.includes('story'))return 'Facebook-Story kopieren';
+  if(label.includes('story'))return 'Story kopieren';
+  if(label.includes('short'))return 'Short kopieren';
+  if(label.includes('reel'))return 'Reel kopieren';
+  if(label.includes('video') || label.includes('youtube'))return 'Videoskript kopieren';
+  if(label.includes('status'))return 'Status kopieren';
+  return 'Beitrag kopieren';
+}
+
+function formatWeeklyTemplateHtml(t,idx,sectionId){
+  const txt=weeklyTemplateDatePrefix(t,idx);
+  const platformMap={
+    'LinkedIn':'LinkedIn – Beitrag',
+    'Facebook':'Facebook – Beitrag',
+    'WhatsApp':'WhatsApp – Status',
+    'Story':'Facebook/Instagram – Story',
+    'Video':'Video – Video',
+    'YouTube':'YouTube – Video',
+    'YouTube Short':'YouTube – Short',
+    'Short':'YouTube – Short',
+    'Instagram':'Instagram – Story'
+  };
+  const dayIndexByName={Montag:0,Dienstag:1,Mittwoch:2,Donnerstag:3,Freitag:4,Samstag:5,Sonntag:6};
+  let html='';
+  let currentPlatform='';
+  let currentPlatformLabel='';
+  let buffer=[];
+  let segmentCounter=0;
+  function flushSegment(){
+    if(!currentPlatformLabel && !buffer.length)return;
+    const clean=buffer.map(x=>String(x||'').trim()).filter(Boolean).join('\n');
+    if(currentPlatformLabel){
+      html+=`<div class="weekly-entry">`;
+      html+=`<div class="weekly-platform"><strong>${esc(currentPlatformLabel)}</strong></div>`;
+      if(clean){
+        const id=`copy-${esc(sectionId||'section')}-${idx}-${segmentCounter++}`;
+        html+=`<div class="weekly-copy-text" id="${id}">${clean.split('\n').map(x=>`<p class="weekly-text">${esc(x)}</p>`).join('')}</div>`;
+        const copyLabel=copyButtonLabel(currentPlatformLabel);
+        html+=`<button class="copy-btn small-copy block-copy" onclick="copyFromElement('${id}')">📋 ${esc(copyLabel)}</button>`;
+      }
+      html+=`</div>`;
+    }else if(clean){
+      html+=clean.split('\n').map(x=>`<p class="weekly-text">${esc(x)}</p>`).join('');
+    }
+    currentPlatform='';
+    currentPlatformLabel='';
+    buffer=[];
+  }
+  txt.split('\n').forEach(line=>{
+    const raw=String(line||'');
+    const trimmed=raw.trim();
+    if(!trimmed){return;}
+    const dayMatch=trimmed.match(/^(Montag|Dienstag|Mittwoch|Donnerstag|Freitag|Samstag|Sonntag),\s*\d{2}\.\d{2}\.\d{4}$/);
+    if(dayMatch){
+      flushSegment();
+      const dayIdx=dayIndexByName[dayMatch[1]];
+      html+=`<div class="weekly-day"><strong>${esc(trimmed)}</strong></div>`;
+      if(sectionId && isPublishSection(sectionId)){
+        html+=renderInlineDayMediaStatus(sectionId,idx,dayIdx);
+      }
+      return;
+    }
+    if(/^Woche\s+\d+\s+von\s+52$/.test(trimmed) || /^KW\s+\d+$/.test(trimmed) || /^Zeitraum:/.test(trimmed)){
+      flushSegment();
+      html+=`<div class="weekly-meta"><strong>${esc(trimmed)}</strong></div>`;
+      return;
+    }
+    const normalizedPlatform = trimmed
+      .replace(/^\*+|\*+$/g,'')
+      .replace(/<\/?strong>/g,'')
+      .replace(/[:：]$/,'')
+      .replace(/\s*[–-]\s*(Beitrag|Status|Story|Video|Short)$/i,'')
+      .trim();
+    if(platformMap[trimmed] || platformMap[normalizedPlatform]){
+      flushSegment();
+      currentPlatform=normalizedPlatform;
+      currentPlatformLabel=platformMap[trimmed] || platformMap[normalizedPlatform];
+      return;
+    }
+    buffer.push(trimmed);
+  });
+  flushSegment();
+  return html;
+}
+
+
+
+function scrollToContent(){
+  const content = document.querySelector('.content');
+  if(content){
+    content.scrollIntoView({behavior:'smooth', block:'start'});
+  }else{
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
+}
+
+function activeNavGroup(){
+  const groups=window.APP_CONTENT.navGroups||[];
+  return groups.find(g=>(g.sections||[]).includes(current)) || null;
+}
+function toggleNavGroup(label){
+  const groups=window.APP_CONTENT.navGroups||[];
+  const group=groups.find(g=>g.label===label);
+  if(!group)return;
+  if(openNavGroupLabel===label){
+    openNavGroupLabel=null;
+    renderNav();
+    return;
+  }
+  openNavGroupLabel=label;
+  const first=(group.sections||[])[0];
+  if(first && !(group.sections||[]).includes(current)){
+    current=first;
+    selectedChapterIndex=null;
+    searchInput.value='';
+    render();
+  }else{
+    renderNav();
+  }
+}
+function renderNav(){
+  nav.innerHTML='';
+  const groups=window.APP_CONTENT.navGroups||[];
+  if(!groups.length){
+    window.APP_CONTENT.sections.forEach(s=>{
+      const b=document.createElement('button');
+      b.className='nav-btn'+(s.id===current?' active':'');
+      b.textContent=s.navTitle || s.title;
+      b.onclick=()=>go(s.id);
+      nav.appendChild(b);
+    });
+    return;
+  }
+  const activeGroup=activeNavGroup();
+  groups.forEach(g=>{
+    const isActive=activeGroup&&activeGroup.label===g.label;
+    const isOpen=openNavGroupLabel===g.label;
+    const groupBtn=document.createElement('button');
+    groupBtn.className='nav-btn nav-group'+(isActive?' active':'');
+    groupBtn.textContent=g.label;
+    groupBtn.onclick=()=>toggleNavGroup(g.label);
+    nav.appendChild(groupBtn);
+    if(isOpen){
+      (g.sections||[]).forEach(id=>{
+        const s=sectionById(id); if(!s)return;
+        const b=document.createElement('button');
+        b.className='nav-btn nav-child'+(s.id===current?' active':'');
+        b.textContent=s.navTitle || s.title;
+        b.onclick=()=>go(s.id);
+        nav.appendChild(b);
+      });
+    }
+  });
+}
+
+function render(){
+  renderNav();
+  const q=searchInput.value.trim().toLowerCase();
+  if(q)return renderSearch(q);
+  const s=sectionById(current);
+  if(!s)return;
+  if(s.type==='dashboard')return renderDashboard(s);
+  if(s.type==='links')return renderLinks(s);
+  if(s.type==='sales_cockpit')return renderSalesCockpit(s);
+  if(s.type==='impressum')return renderImpressum(s);
+  if(s.type==='recruiting')return renderRecruiting(s);
+  if(s.type==='kpi')return renderSalesCockpit(s);
+  renderContent(s);
+}
+
+function go(id){
+  current=id; selectedChapterIndex=null; searchInput.value='';
+  const g=activeNavGroup(); if(g)openNavGroupLabel=g.label;
+  render();
+  setTimeout(()=>scrollToContent(),0);
+}
+
+/* Arbeitscockpit */
+function ensureActivityDate(date){
+  if(!activity[date])activity[date]={peter:{},martina:{}};
+  if(!activity[date].peter)activity[date].peter={};
+  if(!activity[date].martina)activity[date].martina={};
+}
+function toWholeNumber(value){
+  if(value === '' || value === null || value === undefined)return '';
+  const cleaned = String(value).split(/[.,]/)[0].replace(/\D/g,'');
+  if(cleaned === '')return '';
+  return Math.max(0, parseInt(cleaned, 10));
+}
+function sanitizeIntegerInput(input){
+  const old = input.value;
+  const cleaned = toWholeNumber(old);
+  input.value = cleaned === '' ? '' : String(cleaned);
+}
+function blockNonIntegerKeys(event){
+  const blocked = ['e','E','+','-','.',','];
+  if(blocked.includes(event.key)){event.preventDefault(); return false;}
+  return true;
+}
+function integerInput(attrs){
+  return `type="number" min="0" step="1" inputmode="numeric" pattern="[0-9]*" onkeydown="return blockNonIntegerKeys(event)" oninput="sanitizeIntegerInput(this)" ${attrs}`;
+}
+function setActivity(date,person,key,value){
+  ensureActivityDate(date);
+  activity[date][person][key]=toWholeNumber(value);
+  saveActivity(); render();
+}
+function personActivityStats(person,date){
+  ensureActivityDate(date);
+  let actual=0,target=0;
+  activityConfig[person].forEach(f=>{actual+=Number(activity[date][person][f.key]||0); target+=f.target});
+  return {actual,target,percent:pct(actual,target)};
+}
+function renderDashboard(s){
+  const date=selectedDate || todayKey();
+  view.innerHTML=`
+    <div class="card"><h2>${esc(s.title)}</h2><p>${esc(s.text)}</p></div>
+    <div class="card"><h3>Heute noch offen</h3>${renderOpenToday(date)}</div>
+    <div class="card">
+      <h3>Tageserfassung</h3>
+      <div class="date-row">
+        <label>Datum wählen:</label>
+        <input type="date" value="${date}" onchange="selectedDate=this.value; ensureActivityDate(this.value); render()">
+        <button class="copy-btn" onclick="selectedDate=todayKey(); ensureActivityDate(selectedDate); render()">Heute anzeigen</button>
+      </div>
+    </div>
+    <div class="grid">${renderPersonActivity('peter','Peter',date)}${renderPersonActivity('martina','Martina',date)}</div>
+    ${renderActivityResult(date)}
+    ${renderActivityPeriodSummaries()}
+    ${renderActivityHistory()}
+    ${renderProgressOverview()}
+  `;
+}
+function renderOpenToday(date){
+  ensureActivityDate(date);
+  let items=[];
+  ['peter','martina'].forEach(person=>{
+    activityConfig[person].forEach(f=>{
+      const actual=Number(activity[date][person][f.key]||0);
+      if(actual<f.target)items.push(`<li><strong>${person==='peter'?'Peter':'Martina'}:</strong> ${esc(f.label)} fehlen ${round(f.target-actual)}</li>`);
+    });
+  });
+  return items.length ? `<ul>${items.slice(0,10).join('')}</ul>` : `<p class="ok-text">Alles im Soll.</p>`;
+}
+function renderPersonActivity(person,title,date){
+  ensureActivityDate(date);
+  const st=personActivityStats(person,date);
+  return `<div class="card"><h3>${title}</h3><div class="score-badge ${ampClass(st.percent)}">Erfüllung: ${st.percent}%</div>
+    ${activityConfig[person].map(f=>{
+      const val=activity[date][person][f.key] ?? '';
+      const help=fieldHelp[person]?.[f.key] || ['',''];
+      return `<div class="activity-row ${targetClass(Number(val||0),f.target)}">
+        <div><strong>${esc(f.label)}</strong><small>Soll: ${f.target} · Bereich: ${esc(f.channel)}</small></div>
+        <input ${integerInput(`value="${val}" onchange="setActivity('${date}','${person}','${f.key}',this.value)"`)}>
+      </div>
+      <details class="field-help"><summary>Erklärung und nächster Schritt</summary>
+        <p><strong>Ziel:</strong> ${esc(help[0])}</p>
+        <p><strong>Empfehlung:</strong> ${esc(help[1])}</p>
+      </details>`;
+    }).join('')}</div>`;
+}
+function renderActivityResult(date){
+  return `<div class="card"><h3>Tätigkeitsergebnis für ${formatDate(date)}</h3><div class="grid">
+    ${renderActivityTable('peter','Peter',date)}${renderActivityTable('martina','Martina',date)}
+  </div></div>`;
+}
+function renderActivityTable(person,title,date){
+  ensureActivityDate(date);
+  return `<div><h4>${title}</h4><table class="mini-table">
+  <thead><tr><th>Bereich</th><th>Soll</th><th>Ist</th><th>Status</th></tr></thead><tbody>
+  ${activityConfig[person].map(f=>{
+    const actual=Number(activity[date][person][f.key]||0);
+    return `<tr class="${targetClass(actual,f.target)}"><td>${esc(f.label)}</td><td>${f.target}</td><td>${round(actual)}</td><td>${statusText(actual,f.target)}</td></tr>`;
+  }).join('')}</tbody></table></div>`;
+}
+function datesBy(type){
+  const all=Object.keys(activity).sort();
+  const now=new Date();
+  if(type==='week'){
+    const start=new Date(now); const day=(start.getDay()+6)%7; start.setDate(start.getDate()-day); start.setHours(0,0,0,0);
+    const end=new Date(start); end.setDate(end.getDate()+7);
+    return all.filter(d=>{const x=new Date(d+'T00:00:00'); return x>=start && x<end});
+  }
+  if(type==='month'){const ym=now.toISOString().slice(0,7); return all.filter(d=>d.startsWith(ym))}
+  if(type==='year'){const y=String(now.getFullYear()); return all.filter(d=>d.startsWith(y))}
+  return all;
+}
+function renderActivityPeriodSummaries(){
+  return `<div class="card"><h3>Arbeitscockpit Auswertung</h3><div class="grid">
+    ${renderActivityPeriodBox('Diese Woche',datesBy('week'))}
+    ${renderActivityPeriodBox('Dieser Monat',datesBy('month'))}
+    ${renderActivityPeriodBox('Dieses Jahr',datesBy('year'))}
+  </div></div>`;
+}
+function renderActivityPeriodBox(label,dates){
+  const p=sumActivity('peter',dates), m=sumActivity('martina',dates);
+  return `<div class="period-box"><h4>${label}</h4>
+    <p class="${ampClass(p.percent)}"><strong>Peter:</strong> ${p.percent}% · Ist ${round(p.actual)} von Soll ${round(p.target)}</p>
+    <p class="${ampClass(m.percent)}"><strong>Martina:</strong> ${m.percent}% · Ist ${round(m.actual)} von Soll ${round(m.target)}</p>
+  </div>`;
+}
+function sumActivity(person,dates){
+  let actual=0,target=0;
+  dates.forEach(d=>{ensureActivityDate(d); activityConfig[person].forEach(f=>{actual+=Number(activity[d][person][f.key]||0); target+=f.target})});
+  return {actual,target,percent:pct(actual,target)};
+}
+function renderActivityHistory(){
+  const dates=Object.keys(activity).sort().reverse();
+  if(!dates.length)return `<div class="card"><h3>Historie</h3><p>Noch keine Daten.</p></div>`;
+  return `<div class="card"><h3>Historie Arbeitscockpit</h3><div class="table-wrap"><table class="history-table">
+    <thead><tr><th>Datum</th><th>Peter</th><th>Martina</th><th>Gesamt</th></tr></thead><tbody>
+    ${dates.map(d=>{
+      const p=sumActivity('peter',[d]), m=sumActivity('martina',[d]);
+      const total=pct(p.actual+m.actual,p.target+m.target);
+      return `<tr><td><button class="link-button" onclick="selectedDate='${d}'; render(); scrollToContent()">${formatDate(d)}</button></td><td class="${ampClass(p.percent)}">${p.percent}%</td><td class="${ampClass(m.percent)}">${m.percent}%</td><td class="${ampClass(total)}">${total}%</td></tr>`;
+    }).join('')}</tbody></table></div></div>`;
+}
+
+/* Vertriebs-Cockpit */
+function ensureSalesDate(date){
+  if(!sales[date])sales[date]={peter:{},martina:{}};
+  if(!sales[date].peter)sales[date].peter={};
+  if(!sales[date].martina)sales[date].martina={};
+}
+function setSales(date,person,key,value){
+  ensureSalesDate(date);
+  sales[date][person][key]=toWholeNumber(value);
+  saveSales(); render();
+}
+function renderSalesCockpit(s){
+  const date=selectedSalesDate || todayKey();
+  ensureSalesDate(date);
+  view.innerHTML=`
+    <div class="card"><h2>${esc(s.title || '3. Vertriebs-Cockpit')}</h2><p>${esc(s.text || 'Steuerung vom Kontakt bis zum Partner.')}</p></div>
+    ${renderSalesForecast()}
+    <div class="card"><h3>Tages-Cockpit</h3><div class="date-row"><label>Datum wählen:</label><input type="date" value="${date}" onchange="selectedSalesDate=this.value; ensureSalesDate(this.value); render()"><button class="copy-btn" onclick="selectedSalesDate=todayKey(); render()">Heute anzeigen</button></div></div>
+    <div class="grid">${renderSalesPerson('peter','Peter',date)}${renderSalesPerson('martina','Martina',date)}</div>
+    ${renderSalesPeriods()}
+    ${renderFunnel()}
+    ${renderSalesHistory()}
+  `;
+}
+function renderSalesPerson(person,title,date){
+  ensureSalesDate(date);
+  const fields=salesConfig[person];
+  return `<div class="card"><h3>${title}</h3><table class="mini-table"><thead><tr><th>Kennzahl</th><th>Soll</th><th>Ist</th><th>Status</th></tr></thead><tbody>
+  ${fields.map(f=>{
+    const val=sales[date][person][f.key] ?? '';
+    const n=Number(val||0);
+    return `<tr class="${targetClass(n,f.target)}"><td>${esc(f.label)}</td><td>${round(f.target)}</td><td><input ${integerInput(`value="${val}" onchange="setSales('${date}','${person}','${f.key}',this.value)"`)}></td><td>${statusText(n,f.target)}</td></tr>`;
+  }).join('')}</tbody></table></div>`;
+}
+function salesDates(type){
+  const all=Object.keys(sales).sort();
+  const now=new Date();
+  if(type==='week'){
+    const start=new Date(now); const day=(start.getDay()+6)%7; start.setDate(start.getDate()-day); start.setHours(0,0,0,0);
+    const end=new Date(start); end.setDate(end.getDate()+7);
+    return all.filter(d=>{const x=new Date(d+'T00:00:00'); return x>=start && x<end});
+  }
+  if(type==='month'){const ym=now.toISOString().slice(0,7); return all.filter(d=>d.startsWith(ym))}
+  if(type==='year'){const y=String(now.getFullYear()); return all.filter(d=>d.startsWith(y))}
+  return all;
+}
+function sumSales(person,dates){
+  let res={};
+  salesConfig[person].forEach(f=>res[f.key]={label:f.label,target:0,actual:0});
+  dates.forEach(d=>{ensureSalesDate(d); salesConfig[person].forEach(f=>{res[f.key].target+=f.target; res[f.key].actual+=Number(sales[d][person][f.key]||0)})});
+  return res;
+}
+function renderSalesPeriods(){
+  return `<div class="card"><h3>Wochen-, Monats- und Jahresübersicht</h3>
+    ${renderSalesPeriod('Diese Woche',salesDates('week'))}
+    ${renderSalesPeriod('Dieser Monat',salesDates('month'))}
+    ${renderSalesPeriod('Dieses Jahr',salesDates('year'))}
+  </div>`;
+}
+function renderSalesPeriod(label,dates){
+  const p=sumSales('peter',dates), m=sumSales('martina',dates);
+  const keys=Object.keys({...p,...m});
+  return `<details class="period-box" open><summary><strong>${label}</strong></summary><table class="mini-table"><thead><tr><th>Kennzahl</th><th>Ist</th><th>Soll</th><th>Abweichung</th><th>Ampel</th></tr></thead><tbody>
+  ${keys.map(k=>{
+    const label=(p[k]?.label || m[k]?.label || k);
+    const actual=(p[k]?.actual||0)+(m[k]?.actual||0);
+    const target=(p[k]?.target||0)+(m[k]?.target||0);
+    const diff=actual-target;
+    return `<tr class="${ampClass(pct(actual,target))}"><td>${esc(label)}</td><td>${round(actual)}</td><td>${round(target)}</td><td>${round(diff)}</td><td>${pct(actual,target)}%</td></tr>`;
+  }).join('')}</tbody></table></details>`;
+}
+function funnelTotals(){
+  const dates=Object.keys(sales);
+  let result={kontakte:0,gespraeche:0,termine:0,praesentationen:0,verkaeufe:0,partner:0};
+  dates.forEach(d=>{
+    ensureSalesDate(d);
+    result.kontakte += Number(sales[d].peter.neue_kontakte||0) + Number(sales[d].martina.kontakte||0);
+    result.gespraeche += Number(sales[d].peter.gespraeche||0) + Number(sales[d].martina.gespraeche||0);
+    result.termine += Number(sales[d].peter.termine||0) + Number(sales[d].martina.termine||0);
+    result.praesentationen += Number(sales[d].peter.praesentationen||0) + Number(sales[d].martina.praesentationen||0);
+    result.verkaeufe += Number(sales[d].peter.verkaeufe||0) + Number(sales[d].martina.verkaeufe||0);
+    result.partner += Number(sales[d].peter.partner||0) + Number(sales[d].martina.partner||0);
+  });
+  return result;
+}
+function renderFunnel(){
+  const f=funnelTotals();
+  return `<div class="card"><h3>Aktivitäts-Trichter</h3><div class="funnel">
+    ${funnelKeys.map(([k,label],i)=>{
+      const prev=i>0 ? f[funnelKeys[i-1][0]] : null;
+      const rate=prev ? Math.round((f[k]/prev)*100) : 100;
+      return `<div class="funnel-step"><strong>${esc(label)}</strong><span>${round(f[k])}</span>${i>0?`<small>Quote aus vorheriger Stufe: ${rate}%</small>`:''}</div>`;
+    }).join('<div class="funnel-arrow">↓</div>')}
+  </div></div>`;
+}
+function renderSalesForecast(){
+  const dates=Object.keys(sales).sort();
+  const year=new Date().getFullYear();
+  const yDates=dates.filter(d=>d.startsWith(String(year)));
+  const dayOfYear=Math.max(1,Math.floor((new Date()-new Date(year,0,0))/86400000));
+  const factor=365/dayOfYear;
+  const f=funnelTotals();
+  return `<div class="card"><h3>Jahreshochrechnung</h3><p>Bei aktueller Aktivität erreicht ihr bis Jahresende voraussichtlich:</p>
+    <div class="grid">
+      ${funnelKeys.map(([k,label])=>`<div class="progress-card"><strong>${esc(label)}</strong><br><span class="big-number">${round(f[k]*factor)}</span></div>`).join('')}
+    </div>
+  </div>`;
+}
+function renderSalesHistory(){
+  const dates=Object.keys(sales).sort().reverse();
+  if(!dates.length)return `<div class="card"><h3>Historie Vertriebs-Cockpit</h3><p>Noch keine Werte.</p></div>`;
+  return `<div class="card"><h3>Historie Vertriebs-Cockpit</h3><div class="table-wrap"><table class="history-table"><thead><tr><th>Datum</th><th>Kontakte</th><th>Gespräche</th><th>Termine</th><th>Präsentationen</th><th>Verkäufe</th><th>Partner</th></tr></thead><tbody>
+  ${dates.map(d=>{
+    const row={
+      kontakte:Number(sales[d].peter?.neue_kontakte||0)+Number(sales[d].martina?.kontakte||0),
+      gespraeche:Number(sales[d].peter?.gespraeche||0)+Number(sales[d].martina?.gespraeche||0),
+      termine:Number(sales[d].peter?.termine||0)+Number(sales[d].martina?.termine||0),
+      praesentationen:Number(sales[d].peter?.praesentationen||0)+Number(sales[d].martina?.praesentationen||0),
+      verkaeufe:Number(sales[d].peter?.verkaeufe||0)+Number(sales[d].martina?.verkaeufe||0),
+      partner:Number(sales[d].peter?.partner||0)+Number(sales[d].martina?.partner||0)
+    };
+    return `<tr><td><button class="link-button" onclick="selectedSalesDate='${d}'; render(); scrollToContent()">${formatDate(d)}</button></td><td>${round(row.kontakte)}</td><td>${round(row.gespraeche)}</td><td>${round(row.termine)}</td><td>${round(row.praesentationen)}</td><td>${round(row.verkaeufe)}</td><td>${round(row.partner)}</td></tr>`;
+  }).join('')}</tbody></table></div></div>`;
+}
+
+/* Content */
+
+function renderImpressum(s){
+  const email=currentUser?.email || 'Nicht angemeldet';
+  const firebaseState=cloudError ? 'Fehler' : (cloudReady ? 'Verbunden' : 'Nicht verbunden');
+  const syncText=document.getElementById('syncStatus')?.textContent || 'Nicht bekannt';
+  const userName=email.includes('martina') ? 'Martina' : (email.includes('peter') ? 'Peter' : email);
+  view.innerHTML=`
+    <div class="card single-page">
+      <h2>Impressum</h2>
+      <p><strong>Recruiting-Cockpit</strong></p>
+      <p>Peter & Martina Kücken</p>
+      <div class="info-grid">
+        <div><strong>Version</strong><br>${esc(APP_VERSION)}</div>
+        <div><strong>Letzte Aktualisierung</strong><br>${esc(APP_BUILD)}</div>
+        <div><strong>Firebase</strong><br>${esc(firebaseState)}</div>
+        <div><strong>Synchronisierung</strong><br>${esc(syncText)}</div>
+        <div><strong>Angemeldet als</strong><br>${esc(userName)}</div>
+      </div>
+      <p class="muted">Diese Angaben dienen nur zur internen Kontrolle der App-Version und der Synchronisierung.</p>
+    </div>`;
+}
+
+function renderLinks(s){
+  let html=`<div class="card"><h2>${esc(s.title)}</h2><p>Direkter Einstieg in die wichtigsten Bereiche.</p></div>`;
+  if(s.groups&&s.groups.length){
+    s.groups.forEach(g=>{
+      html+=`<div class="card"><h3>${esc(g.title)}</h3><div class="link-grid">${(g.links||[]).map(l=>`<button class="link-card" onclick="go('${l.target}')">${esc(l.label)}</button>`).join('')}</div></div>`;
+    });
+  }else{
+    html+=`<div class="link-grid">${(s.links||[]).map(l=>`<button class="link-card" onclick="go('${l.target}')">${esc(l.label)}</button>`).join('')}</div>`;
+  }
+  view.innerHTML=html+renderProgressOverview();
+}
+function openChapter(idx){selectedChapterIndex=idx; render(); setTimeout(()=>scrollToContent(),0)}
+function backToOverview(){selectedChapterIndex=null; render(); setTimeout(()=>scrollToContent(),0)}
+function renderContent(s){
+  const chapters=s.chapters||[];
+  if(selectedChapterIndex!==null && chapters[selectedChapterIndex]) return renderSingleChapter(s,chapters[selectedChapterIndex],selectedChapterIndex);
+  const isWeekly=isPublishSection(s.id);
+  let html=`<div class="card"><h2>${esc(s.title)}</h2>${(s.tags||[]).map(t=>`<span class="badge">${esc(t)}</span>`).join('')}<p class="small">Wähle unten einen Eintrag. Er öffnet sich als eigene Seite.</p></div>`;
+  if(isWeekly)html+=renderProgressOverviewForSection(s.id)+`<div class="card"><button class="copy-btn" onclick="openCurrentWeek('${s.id}')">Heute öffnen</button></div>`;
+  html+=`<div class="${isWeekly?'week-list':'chapter-list'}">`;
+  chapters.forEach((c,idx)=>{
+    const status=isWeekly ? weekAggregateStatus(s.id,idx) : 'öffnen';
+    const progress=isWeekly ? weekMediaProgress(s.id,idx) : null;
+    html+=`<button class="${isWeekly?'week-row':'chapter-row'} ${isWeekly?statusClass(status):''}" onclick="openChapter(${idx})"><span>${isWeekly?`Woche ${idx+1}: `:''}${esc(c.title.replace(/^Woche\s*\d+[:.]?\s*/i,''))}</span><small>${isWeekly?`KW ${weekMeta(idx).kw} · ${weekMeta(idx).range} · ${progress.done}/${progress.total} erledigt`:esc(status)}</small></button>`;
+  });
+  html+=`</div>`;
+  view.innerHTML=html;
+}
+function renderSingleChapter(s,c,idx){
+  const weekly=isPublishSection(s.id);
+  let html=`<div class="card single-page"><button class="copy-btn" onclick="backToOverview()">Zurück zur Übersicht</button><h2>${esc(s.title)}</h2><h3>${weekly?`Woche ${idx+1}: `:''}${esc(c.title.replace(/^Woche\s*\d+[:.]?\s*/i,''))}</h3>${weekly?renderWeekDateBox(idx):''}`;
+  if(c.body)html+=`<div class="chapter-body">${esc(c.body)}</div>`;
+  (c.templates||[]).forEach((t,ti)=>{
+    const id=`single-${s.id}-${idx}-${ti}`;
+    const txt=weekly?weeklyTemplateDatePrefix(t,idx):t;
+    const body=weekly?formatWeeklyTemplateHtml(t,idx,s.id):esc(txt);
+    html+=`<div class="template ${weekly?'weekly-template':''}" id="${id}">${body}</div>`;
+    if(!weekly){
+      html+=`<button class="copy-btn" onclick="copyFromElement('${id}')">Text kopieren</button>`;
+    }
+  });
+  html+=`</div>`;
+  const prevLabel=isPublishSection(s.id)?'Vorherige Woche':'Vorheriger Eintrag';
+  const nextLabel=isPublishSection(s.id)?'Nächste Woche':'Nächster Eintrag';
+  const prev=idx>0?`<button class="copy-btn" onclick="openChapter(${idx-1})">${prevLabel}</button>`:'';
+  const next=idx<(s.chapters.length-1)?`<button class="copy-btn" onclick="openChapter(${idx+1})">${nextLabel}</button>`:'';
+  let status='';
+  view.innerHTML=html+`<div class="card">${prev}${next}</div>`;
+}
+function statusClass(status){if(status==='Veröffentlicht')return 'status-published'; if(status==='Geplant')return 'status-planned'; return 'status-open'}
+function setContentStatus(section,idx,value){if(!state.contentStatuses)state.contentStatuses={}; state.contentStatuses[`content_status_${section}_${idx}`]=value; save(); render()}
+
+function weeklyMediaForSection(sectionId){
+  if(sectionId==='peter52')return [
+    {key:'linkedin', label:'LinkedIn – Beitrag'},
+    {key:'facebook', label:'Facebook – Beitrag'},
+    {key:'whatsapp', label:'WhatsApp – Status'},
+    {key:'story', label:'Facebook/Instagram – Story'},
+    {key:'video', label:'Video – Video'}
+  ];
+  if(sectionId==='martina52')return [
+    {key:'linkedin', label:'LinkedIn – Beitrag'},
+    {key:'facebook', label:'Facebook – Beitrag'},
+    {key:'whatsapp', label:'WhatsApp – Status'},
+    {key:'story', label:'Facebook/Instagram – Story'}
+  ];
+  return [
+    {key:'linkedin', label:'LinkedIn – Beitrag'},
+    {key:'facebook', label:'Facebook – Beitrag'},
+    {key:'whatsapp', label:'WhatsApp – Status'},
+    {key:'story', label:'Facebook/Instagram – Story'},
+    {key:'video', label:'Video – Video'}
+  ];
+}
+function mediaStatusKey(section,idx,dayIdx,mediaKey){return `media_status_${section}_${idx}_${dayIdx}_${mediaKey}`}
+function getMediaStatus(section,idx,dayIdx,mediaKey){return mediaStatus[mediaStatusKey(section,idx,dayIdx,mediaKey)]||'Offen'}
+function toggleMediaStatus(section,idx,dayIdx,mediaKey){
+  const key=mediaStatusKey(section,idx,dayIdx,mediaKey);
+  const cur=mediaStatus[key]||'Offen';
+  mediaStatus[key]=cur==='Erledigt'?'Offen':'Erledigt';
+  saveMediaStatus();
+  render();
+}
+function weekMediaProgress(section,idx){
+  const media=weeklyMediaForSection(section);
+  const total=7*media.length;
+  let done=0;
+  for(let d=0; d<7; d++){media.forEach(m=>{if(getMediaStatus(section,idx,d,m.key)==='Erledigt')done++;});}
+  return {total,done,open:total-done,percent:total?Math.round(done/total*100):0};
+}
+function weekAggregateStatus(section,idx){
+  const p=weekMediaProgress(section,idx);
+  if(p.done>=p.total)return 'Veröffentlicht';
+  if(p.done>0)return 'Geplant';
+  return 'Offen';
+}
+function renderInlineDayMediaStatus(section,idx,dayIdx){
+  const media=weeklyMediaForSection(section);
+  const done=media.filter(md=>getMediaStatus(section,idx,dayIdx,md.key)==='Erledigt').length;
+  const cls=done===media.length?'day-complete':(done>0?'day-started':'day-open');
+  return `<div class="inline-day-status ${cls}"><div class="inline-status-title"><strong>Status</strong><span>${done} von ${media.length} erledigt</span></div><div class="media-buttons">${media.map(md=>{
+    const st=getMediaStatus(section,idx,dayIdx,md.key);
+    return `<button class="media-pill ${st==='Erledigt'?'done':'open'}" onclick="toggleMediaStatus('${section}',${idx},${dayIdx},'${md.key}')"><strong>${esc(md.label)}</strong><span>${st}</span></button>`;
+  }).join('')}</div></div>`;
+}
+function renderMediaStatusPanel(section,idx){
+  const media=weeklyMediaForSection(section);
+  const m=weekMeta(idx);
+  const p=weekMediaProgress(section,idx);
+  return `<div class="media-status-panel"><h3>Status pro Tag und Medium</h3><p class="small">${p.done} von ${p.total} erledigt. Offen: ${p.open}.</p>${m.days.map((d,di)=>{
+    const dayDone=media.filter(md=>getMediaStatus(section,idx,di,md.key)==='Erledigt').length;
+    const dayClass=dayDone===media.length?'day-complete':(dayDone>0?'day-started':'day-open');
+    return `<div class="media-day ${dayClass}"><div class="media-day-title"><strong>${esc(d.name)}, ${esc(d.date)}</strong><span>${dayDone} von ${media.length} erledigt</span></div><div class="media-buttons">${media.map(md=>{
+      const st=getMediaStatus(section,idx,di,md.key);
+      return `<button class="media-pill ${st==='Erledigt'?'done':'open'}" onclick="toggleMediaStatus('${section}',${idx},${di},'${md.key}')"><strong>${esc(md.label)}</strong><span>${st}</span></button>`;
+    }).join('')}</div></div>`;
+  }).join('')}</div>`;
+}
+function getSectionProgress(sectionId){
+  const s=sectionById(sectionId); if(!s||!s.chapters)return {total:0,published:0,planned:0,open:0};
+  let total=s.chapters.length,published=0,planned=0,open=0;
+  s.chapters.forEach((c,idx)=>{const val=isPublishSection(sectionId)?weekAggregateStatus(sectionId,idx):(state.contentStatuses?.[`content_status_${sectionId}_${idx}`]||'Offen'); if(val==='Veröffentlicht')published++; else if(val==='Geplant')planned++; else open++});
+  return {total,published,planned,open};
+}
+function progressBar(sectionId,label){
+  const p=getSectionProgress(sectionId); const percent=p.total?Math.round((p.published/p.total)*100):0;
+  return `<div class="progress-card"><div class="progress-head"><strong>${esc(label)}</strong><span>${p.published} von ${p.total} veröffentlicht</span></div><div class="progress-bar"><div class="progress-fill" style="width:${percent}%"></div></div><div class="progress-meta">Geplant: ${p.planned} · Offen: ${p.open} · Fortschritt: ${percent}%</div></div>`;
+}
+function renderProgressOverview(){return `<div class="card"><h3>Fortschritt Jahrespläne</h3>${progressBar('peter52','Peter 52-Wochen-Jahresplan')}${progressBar('linkedin52','LinkedIn Jahresplan')}${progressBar('facebook52','Facebook Jahresplan')}${progressBar('videos52','Video Jahresplan')}${progressBar('martina52','Martina 52-Wochen-Programm')}</div>`}
+function renderProgressOverviewForSection(id){if(id==='peter52')return `<div class="card">${progressBar(id,'Peter 52-Wochen-Jahresplan')}</div>`; if(id==='linkedin52')return `<div class="card">${progressBar(id,'LinkedIn Jahresplan')}</div>`; if(id==='facebook52')return `<div class="card">${progressBar(id,'Facebook Jahresplan')}</div>`; if(id==='videos52')return `<div class="card">${progressBar(id,'Video Jahresplan')}</div>`; if(id==='martina52')return `<div class="card">${progressBar(id,'Martina 52-Wochen-Programm')}</div>`; return ''}
+
+async function copyFromElement(id){const el=document.getElementById(id); if(el) await copyText(el.innerText||el.textContent||'')}
+async function copyText(text){
+  try{if(navigator.clipboard && window.isSecureContext){await navigator.clipboard.writeText(text); showCopyNotice('Text kopiert.'); return}}catch(e){}
+  const ta=document.createElement('textarea'); ta.value=text; ta.style.position='fixed'; ta.style.top='-1000px'; document.body.appendChild(ta); ta.focus(); ta.select(); const ok=document.execCommand('copy'); document.body.removeChild(ta); showCopyNotice(ok?'Text kopiert.':'Bitte Text markieren und kopieren.');
+}
+function showCopyNotice(msg){let n=document.getElementById('copyNotice'); if(!n){n=document.createElement('div'); n.id='copyNotice'; n.className='copy-notice'; document.body.appendChild(n)} n.textContent=msg; n.classList.add('show'); setTimeout(()=>n.classList.remove('show'),1600)}
+function round(n){return Math.round(Number(n||0))}
+
+
+/* Recruiting CRM Version 1.1.0 */
+function ensureCrm(){
+  if(!state.crm)state.crm={contacts:[],tasks:[]};
+  if(!Array.isArray(state.crm.contacts))state.crm.contacts=[];
+  if(!Array.isArray(state.crm.tasks))state.crm.tasks=[];
+}
+function currentPerson(){
+  const email=(currentUser?.email || '').toLowerCase();
+  if(email.includes('martina'))return 'Martina';
+  return 'Peter';
+}
+function crmId(){return 'c_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,8)}
+function crmContacts(){ensureCrm(); return state.crm.contacts}
+function crmTasks(){ensureCrm(); return state.crm.tasks}
+function crmToday(){return todayKey()}
+function crmSave(){ensureCrm(); save(); render()}
+function crmFindContact(id){return crmContacts().find(c=>c.id===id)}
+function crmFullName(c){return `${c.firstName||''} ${c.lastName||''}`.trim() || c.company || 'Unbenannter Kontakt'}
+function crmLastActivity(c){return (c.timeline||[]).slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''))[0]}
+function crmDue(c){return c.followDate || ''}
+function crmPersonFilter(c){return (c.owner || 'Peter')===currentPerson() || (c.support || '')===currentPerson()}
+function crmStatusOptions(){return ['Neu','Kontaktanfrage gesendet','Vernetzt','Erstgespräch','Interesse','Präsentation geplant','Präsentation erfolgt','Nachfassen','Kunde','Geschäftspartner','Kein Interesse','Archiv']}
+function crmSources(){return ['LinkedIn','Facebook','WhatsApp','Empfehlung','Veranstaltung','Kunde','Sonstiges']}
+function crmPriorities(){return ['A','B','C']}
+function crmHtmlOptions(items,selected){return items.map(x=>`<option value="${esc(x)}" ${x===(selected||'')?'selected':''}>${esc(x)}</option>`).join('')}
+function crmNormalize(v){return String(v||'').trim().toLowerCase().replace(/\s+/g,' ')}
+function crmDuplicateWarning(data,id){
+  const name=crmNormalize(`${data.firstName||''} ${data.lastName||''}`);
+  const phone=crmNormalize(data.phone);
+  const email=crmNormalize(data.email);
+  const company=crmNormalize(data.company);
+  return crmContacts().find(c=>c.id!==id && ((name && name===crmNormalize(`${c.firstName||''} ${c.lastName||''}`)) || (phone && phone===crmNormalize(c.phone)) || (email && email===crmNormalize(c.email)) || (company && company===crmNormalize(c.company) && name))) || null;
+}
+function crmCollectForm(id){
+  const p='crm_';
+  const val=k=>document.getElementById(p+k)?.value?.trim()||'';
+  return {
+    id:id||crmId(), firstName:val('firstName'), lastName:val('lastName'), company:val('company'), job:val('job'), branch:val('branch'), city:val('city'), phone:val('phone'), email:val('email'), website:val('website'), linkedin:val('linkedin'), facebook:val('facebook'), instagram:val('instagram'), whatsapp:document.getElementById('crm_whatsapp')?.checked||false, owner:val('owner')||currentPerson(), support:val('support'), source:val('source'), targetGroup:val('targetGroup'), status:val('status')||'Neu', priority:val('priority')||'B', followDate:val('followDate'), followTime:val('followTime'), nextStep:val('nextStep'), notes:val('notes')
+  }
+}
+function crmSaveContact(id){
+  ensureCrm();
+  const data=crmCollectForm(id);
+  const dup=crmDuplicateWarning(data,id);
+  if(dup && !confirm(`Dieser Kontakt existiert vermutlich bereits: ${crmFullName(dup)}. Trotzdem speichern?`))return;
+  const now=new Date().toISOString();
+  const idx=state.crm.contacts.findIndex(c=>c.id===data.id);
+  if(idx>=0){
+    const old=state.crm.contacts[idx];
+    data.createdAt=old.createdAt||now; data.updatedAt=now; data.timeline=old.timeline||[];
+    if(old.status!==data.status)data.timeline.push({date:todayKey(),type:'Status',text:`Status geändert: ${old.status||'ohne'} → ${data.status}`});
+    if(old.followDate!==data.followDate || old.nextStep!==data.nextStep)data.timeline.push({date:todayKey(),type:'Wiedervorlage',text:`Nächster Schritt: ${data.nextStep||'offen'}`});
+    state.crm.contacts[idx]=data;
+  }else{
+    data.createdAt=now; data.updatedAt=now; data.timeline=[{date:todayKey(),type:'Anlage',text:'Kontakt angelegt'}];
+    state.crm.contacts.unshift(data);
+  }
+  selectedContactId=data.id; crmSave();
+}
+function crmDeleteContact(id){
+  const c=crmFindContact(id); if(!c)return;
+  if(!confirm(`Kontakt ${crmFullName(c)} wirklich löschen?`))return;
+  state.crm.contacts=crmContacts().filter(x=>x.id!==id); selectedContactId=null; crmSave();
+}
+function crmAddTimeline(id){
+  const c=crmFindContact(id); if(!c)return;
+  const text=document.getElementById('crm_timeline_text')?.value.trim();
+  const type=document.getElementById('crm_timeline_type')?.value || 'Notiz';
+  if(!text)return;
+  if(!c.timeline)c.timeline=[];
+  c.timeline.push({date:todayKey(),type,text});
+  c.updatedAt=new Date().toISOString();
+  save(); render();
+}
+function crmFilteredContacts(){
+  ensureCrm();
+  const q=crmNormalize(crmFilters.q||'');
+  const owner=crmFilters.owner||'Meine';
+  const status=crmFilters.status||'';
+  const source=crmFilters.source||'';
+  const prio=crmFilters.priority||'';
+  return crmContacts().filter(c=>{
+    if(owner==='Meine' && !crmPersonFilter(c))return false;
+    if(owner==='Peter' && (c.owner||'Peter')!=='Peter')return false;
+    if(owner==='Martina' && (c.owner||'Peter')!=='Martina')return false;
+    if(status && c.status!==status)return false;
+    if(source && c.source!==source)return false;
+    if(prio && c.priority!==prio)return false;
+    if(q){
+      const hay=crmNormalize([crmFullName(c),c.company,c.job,c.branch,c.city,c.phone,c.email,c.targetGroup,c.source,c.status].join(' '));
+      if(!hay.includes(q))return false;
+    }
+    return true;
+  }).sort((a,b)=>(b.updatedAt||b.createdAt||'').localeCompare(a.updatedAt||a.createdAt||''));
+}
+function renderRecruiting(s){
+  ensureCrm();
+  const person=currentPerson();
+  const my=crmContacts().filter(crmPersonFilter);
+  const dueToday=my.filter(c=>c.followDate && c.followDate<=crmToday() && c.status!=='Archiv' && c.status!=='Kein Interesse');
+  const open=my.filter(c=>!c.nextStep && c.status!=='Archiv' && c.status!=='Kein Interesse');
+  const active=my.filter(c=>!['Archiv','Kein Interesse','Kunde','Geschäftspartner'].includes(c.status));
+  const html=`
+    <div class="card"><h2>4. Recruiting</h2><p>Persönlicher Arbeitsbereich für ${esc(person)}. Gemeinsame Datenbank, getrennte Tagesaufgaben.</p></div>
+    <div class="grid">
+      <div class="card"><h3>Heute fällig</h3><div class="big-number">${dueToday.length}</div><p class="small">Wiedervorlagen bis heute.</p></div>
+      <div class="card"><h3>Aktive Kontakte</h3><div class="big-number">${active.length}</div><p class="small">Ohne Archiv, Absage, Kunde oder Partner.</p></div>
+      <div class="card"><h3>Ohne nächsten Schritt</h3><div class="big-number">${open.length}</div><p class="small">Diese Kontakte brauchen eine klare Aufgabe.</p></div>
+    </div>
+    <div class="card"><h3>Kontaktverwaltung 2.0</h3>${renderCrmToolbar()}${renderCrmContacts()}</div>
+    ${selectedContactId ? renderCrmDetail(selectedContactId) : renderCrmForm(null)}
+    <div class="card"><h3>Teamübersicht</h3>${renderCrmTeamOverview()}</div>`;
+  view.innerHTML=html;
+}
+function crmSetFilter(key,value){crmFilters[key]=value; render()}
+function renderCrmToolbar(){
+  return `<div class="crm-toolbar">
+    <input id="crmSearch" type="search" value="${esc(crmFilters.q||'')}" placeholder="Name, Firma, Ort, Telefon, E-Mail suchen" oninput="crmSetFilter('q',this.value)">
+    <select id="crmOwnerFilter" onchange="crmSetFilter('owner',this.value)">${crmHtmlOptions(['Meine','Alle','Peter','Martina'],crmFilters.owner||'Meine')}</select>
+    <select id="crmStatusFilter" onchange="crmSetFilter('status',this.value)"><option value="">Alle Status</option>${crmHtmlOptions(crmStatusOptions(),crmFilters.status||'')}</select>
+    <select id="crmSourceFilter" onchange="crmSetFilter('source',this.value)"><option value="">Alle Quellen</option>${crmHtmlOptions(crmSources(),crmFilters.source||'')}</select>
+    <select id="crmPriorityFilter" onchange="crmSetFilter('priority',this.value)"><option value="">Alle Prioritäten</option>${crmHtmlOptions(crmPriorities(),crmFilters.priority||'')}</select>
+    <button class="primary" onclick="selectedContactId=null; render()">Neuer Kontakt</button>
+  </div>`;
+}
+function renderCrmContacts(){
+  const list=crmFilteredContacts();
+  if(!list.length)return `<p class="small">Noch keine Kontakte in dieser Ansicht.</p>`;
+  return `<div class="table-wrap"><table class="history-table"><thead><tr><th>Name</th><th>Firma</th><th>Status</th><th>Zuständig</th><th>Quelle</th><th>Wiedervorlage</th></tr></thead><tbody>${list.map(c=>`<tr onclick="selectedContactId='${esc(c.id)}'; render()" class="click-row"><td>${esc(crmFullName(c))}<br><span class="small">${esc(c.city||'')}</span></td><td>${esc(c.company||'')}</td><td><span class="badge">${esc(c.status||'Neu')}</span></td><td>${esc(c.owner||'Peter')}${c.support?`<br><span class="small">Unterstützung: ${esc(c.support)}</span>`:''}</td><td>${esc(c.source||'')}</td><td>${esc(c.followDate||'')}${c.followTime?' '+esc(c.followTime):''}<br><span class="small">${esc(c.nextStep||'')}</span></td></tr>`).join('')}</tbody></table></div>`;
+}
+function renderCrmForm(c){
+  c=c||{owner:currentPerson(),status:'Neu',priority:'B',source:'LinkedIn'};
+  const id=c.id||'';
+  const input=(k,label,type='text')=>`<label>${label}<input id="crm_${k}" type="${type}" value="${esc(c[k]||'')}"></label>`;
+  return `<div class="card"><h3>${id?'Kontakt bearbeiten':'Neuen Kontakt anlegen'}</h3>
+    <div class="crm-form">
+      ${input('firstName','Vorname')}${input('lastName','Nachname')}${input('company','Firma')}${input('job','Beruf')}${input('branch','Branche')}${input('city','Ort')}${input('phone','Mobilnummer','tel')}${input('email','E-Mail','email')}${input('website','Website','url')}${input('linkedin','LinkedIn-Profil','url')}${input('facebook','Facebook-Profil','url')}${input('instagram','Instagram-Profil','url')}
+      <label class="check-inline"><input id="crm_whatsapp" type="checkbox" ${c.whatsapp?'checked':''}> WhatsApp vorhanden</label>
+      <label>Zuständig<select id="crm_owner">${crmHtmlOptions(['Peter','Martina'],c.owner||currentPerson())}</select></label>
+      <label>Zweiter Ansprechpartner<select id="crm_support"><option value="">Keiner</option>${crmHtmlOptions(['Peter','Martina'],c.support||'')}</select></label>
+      <label>Quelle<select id="crm_source">${crmHtmlOptions(crmSources(),c.source||'LinkedIn')}</select></label>
+      <label>Zielgruppe<input id="crm_targetGroup" value="${esc(c.targetGroup||'')}"></label>
+      <label>Status<select id="crm_status">${crmHtmlOptions(crmStatusOptions(),c.status||'Neu')}</select></label>
+      <label>Priorität<select id="crm_priority">${crmHtmlOptions(crmPriorities(),c.priority||'B')}</select></label>
+      <label>Wiedervorlage Datum<input id="crm_followDate" type="date" value="${esc(c.followDate||'')}"></label>
+      <label>Wiedervorlage Uhrzeit<input id="crm_followTime" type="time" value="${esc(c.followTime||'')}"></label>
+      <label class="span2">Nächster Schritt<input id="crm_nextStep" value="${esc(c.nextStep||'')}"></label>
+      <label class="span2">Notizen<textarea id="crm_notes">${esc(c.notes||'')}</textarea></label>
+    </div>
+    <button class="primary" onclick="crmSaveContact('${esc(id)}')">Speichern</button>
+    ${id?`<button class="copy-btn" onclick="crmDeleteContact('${esc(id)}')">Kontakt löschen</button>`:''}
+  </div>`;
+}
+function renderCrmDetail(id){
+  const c=crmFindContact(id); if(!c)return renderCrmForm(null);
+  const timeline=(c.timeline||[]).slice().reverse();
+  return `<div class="card"><h3>Kontaktakte: ${esc(crmFullName(c))}</h3>
+    <div class="grid"><div><p><strong>Firma:</strong> ${esc(c.company||'')}</p><p><strong>Beruf:</strong> ${esc(c.job||'')}</p><p><strong>Ort:</strong> ${esc(c.city||'')}</p></div><div><p><strong>Status:</strong> ${esc(c.status||'Neu')}</p><p><strong>Zuständig:</strong> ${esc(c.owner||'Peter')}</p><p><strong>Nächster Schritt:</strong> ${esc(c.nextStep||'')}</p></div></div>
+    <button class="primary" onclick="selectedContactId='${esc(id)}'; document.getElementById('crmEditAnchor')?.scrollIntoView({behavior:'smooth'});">Bearbeiten</button>
+    <button class="copy-btn" onclick="selectedContactId=null; render()">Neuer Kontakt</button>
+  </div>
+  <div id="crmEditAnchor">${renderCrmForm(c)}</div>
+  <div class="card"><h3>Zeitachse</h3>
+    <div class="crm-toolbar"><select id="crm_timeline_type"><option>Notiz</option><option>Anruf</option><option>WhatsApp</option><option>LinkedIn</option><option>Facebook</option><option>Termin</option><option>Präsentation</option></select><input id="crm_timeline_text" placeholder="Aktivität oder Gesprächsnotiz"><button class="primary" onclick="crmAddTimeline('${esc(id)}')">Eintragen</button></div>
+    ${timeline.length?timeline.map(t=>`<div class="timeline-item"><strong>${esc(t.date||'')}</strong> <span class="badge">${esc(t.type||'Notiz')}</span><br>${esc(t.text||'')}</div>`).join(''):'<p class="small">Noch keine Aktivitäten.</p>'}
+  </div>`;
+}
+function renderCrmTeamOverview(){
+  const people=['Peter','Martina'];
+  return `<div class="grid">${people.map(p=>{const list=crmContacts().filter(c=>(c.owner||'Peter')===p); const due=list.filter(c=>c.followDate&&c.followDate<=crmToday()).length; return `<div><h4>${p}</h4><p>Kontakte: ${list.length}</p><p>Heute fällig: ${due}</p><p>Aktiv: ${list.filter(c=>!['Archiv','Kein Interesse','Kunde','Geschäftspartner'].includes(c.status)).length}</p></div>`}).join('')}</div>`;
+}
+
+function renderSearch(q){
+  selectedChapterIndex=null; let hits=[];
+  window.APP_CONTENT.sections.forEach(s=>{(s.chapters||[]).forEach((c,idx)=>{if(JSON.stringify(c).toLowerCase().includes(q)||s.title.toLowerCase().includes(q))hits.push({section:s,chapter:c,idx})})});
+  let html=`<div class="card"><h2>Suche</h2><p>${hits.length} Treffer für „${esc(q)}“</p></div>`;
+  hits.slice(0,150).forEach(h=>{html+=`<div class="card"><h3>${esc(h.section.title)}: ${esc(h.chapter.title)}</h3><button class="copy-btn" onclick="current='${h.section.id}'; searchInput.value=''; selectedChapterIndex=${h.idx}; render(); scrollToContent();">Eintrag öffnen</button></div>`});
+  view.innerHTML=html;
+}
+
+function showLogin(){
+  document.getElementById('loginScreen')?.classList.remove('hidden');
+  document.getElementById('appLayout')?.classList.add('hidden');
+  document.getElementById('appFooter')?.classList.add('hidden');
+  document.getElementById('logoutBtn')?.classList.add('hidden');
+  document.getElementById('resetBtn')?.classList.add('hidden');
+  const u=document.getElementById('userInfo'); if(u){u.textContent=''; u.classList.add('hidden')}
+  setSyncStatus(cloudError ? 'Firebase-Fehler' : 'Nicht angemeldet');
+}
+function showApp(){
+  document.getElementById('loginScreen')?.classList.add('hidden');
+  document.getElementById('appLayout')?.classList.remove('hidden');
+  document.getElementById('appFooter')?.classList.remove('hidden');
+  document.getElementById('logoutBtn')?.classList.remove('hidden');
+  document.getElementById('resetBtn')?.classList.remove('hidden');
+  const u=document.getElementById('userInfo'); if(u){u.textContent=currentUser?.email || ''; u.classList.remove('hidden')}
+}
+async function login(){
+  const email=document.getElementById('loginEmail')?.value.trim();
+  const password=document.getElementById('loginPassword')?.value;
+  const err=document.getElementById('loginError'); if(err)err.textContent='';
+  if(!email || !password){if(err)err.textContent='Bitte E-Mail und Passwort eingeben.'; return;}
+  try{await auth.signInWithEmailAndPassword(email,password)}catch(e){if(err)err.textContent='Anmeldung fehlgeschlagen. Bitte E-Mail und Passwort prüfen.'; console.error(e)}
+}
+function subscribeCloudState(){
+  if(unsubscribeAppState)unsubscribeAppState();
+  setSyncStatus('Lädt ...');
+  unsubscribeAppState=db.collection('app').doc('sharedState').onSnapshot(async snap=>{
+    applyingRemote=true;
+    if(snap.exists){
+      const data=snap.data()||{};
+      state=data.state || state || {};
+      activity=data.activity || activity || {};
+      sales=data.sales || sales || {};
+      mediaStatus=data.mediaStatus || mediaStatus || {};
+      if(!state.checks)state.checks={};
+      if(!state.kpis)state.kpis={};
+      if(!state.crm)state.crm={contacts:[],tasks:[]};
+      if(!state.crm.contacts)state.crm.contacts=[];
+      if(!state.crm.tasks)state.crm.tasks=[];
+      localStorage.setItem(stateKey,JSON.stringify(state));
+      localStorage.setItem(activityKey,JSON.stringify(activity));
+      localStorage.setItem(salesKey,JSON.stringify(sales));
+      localStorage.setItem('kuecken_media_status_v18',JSON.stringify(mediaStatus));
+    }else{
+      await db.collection('app').doc('sharedState').set({state,activity,sales,mediaStatus,createdAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:currentUser.email||currentUser.uid},{merge:true});
+    }
+    applyingRemote=false;
+    cloudReady=true;
+    setSyncStatus('Synchronisiert');
+    ensureActivityDate(todayKey()); ensureSalesDate(todayKey()); render();
+  },err=>{
+    applyingRemote=false;
+    setSyncStatus('Sync-Fehler');
+    console.error(err);
+  });
+}
+
+document.getElementById('resetBtn').onclick=()=>{selectedDate=todayKey(); selectedSalesDate=todayKey(); render()}
+document.getElementById('loginBtn')?.addEventListener('click',login);
+document.getElementById('loginPassword')?.addEventListener('keydown',e=>{if(e.key==='Enter')login()});
+document.getElementById('logoutBtn')?.addEventListener('click',()=>auth.signOut());
+searchInput.addEventListener('input',()=>{selectedChapterIndex=null; render()});
+
+if(auth && db){
+  auth.onAuthStateChanged(user=>{
+    currentUser=user;
+    cloudReady=false;
+    if(user){showApp(); subscribeCloudState();}
+    else{
+      if(unsubscribeAppState)unsubscribeAppState();
+      unsubscribeAppState=null;
+      showLogin();
+    }
+  });
+}else{
+  showLogin();
+  const err=document.getElementById('loginError');
+  if(err)err.textContent='Firebase konnte nicht geladen werden. Bitte Internetverbindung prüfen.';
+}
+

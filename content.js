@@ -2998,6 +2998,21 @@ window.APP_CONTENT = {
           ]
         }
       ]
+    },
+    {
+      "id": "recruiting",
+      "title": "4. Recruiting",
+      "navTitle": "4. Recruiting",
+      "type": "recruiting",
+      "text": "Arbeitsbereich für Kontaktverwaltung, Wiedervorlagen, Aufgaben und gemeinsames Recruiting von Peter und Martina.",
+      "tags": [
+        "Recruiting",
+        "Kontakte",
+        "CRM",
+        "LinkedIn",
+        "Facebook",
+        "WhatsApp"
+      ]
     }
   ],
   "navGroups": [
@@ -3039,7 +3054,13 @@ window.APP_CONTENT = {
       ]
     },
     {
-      "label": "4. Impressum",
+      "label": "4. Recruiting",
+      "sections": [
+        "recruiting"
+      ]
+    },
+    {
+      "label": "5. Impressum",
       "sections": [
         "impressum"
       ]

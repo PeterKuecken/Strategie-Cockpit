@@ -1,112 +1,50 @@
-const STORAGE_KEY = "rk_recruiting_cockpit_v1";
-const todayISO = () => new Date().toISOString().slice(0,10);
-const uid = () => Math.random().toString(36).slice(2,10);
-
-const chapters = [
- {title:"Kapitel 1. Das Recruiting-System", text:`Ziel des Systems\n\nDu baust jede Woche neue Kontakte auf. Du führst Gespräche. Du vereinbarst Termine. Du gewinnst Kunden und Geschäftspartner.\n\nArbeitsweise\n\n1. Neue Kontakte suchen.\n2. Kontaktanfragen senden.\n3. Antworten bearbeiten.\n4. Gespräche führen.\n5. Termine vereinbaren.\n6. Nachfassen.\n7. Kennzahlen dokumentieren.\n\nLeitsatz\n\nWir verkaufen niemandem ein Geschäft. Wir lernen Menschen kennen, stellen Fragen und prüfen, ob eine Zusammenarbeit passt.`},
- {title:"Kapitel 2. Zielgruppenbibliothek", text:`Priorität A\n\nElektriker, Heizungsbauer, Sanitär, Dachdecker, Maler, Fliesenleger, Tischler, Gebäudereiniger, Immobilienmakler, Versicherungsmakler, Finanzberater, Unternehmer.\n\nPriorität B\n\nPhysiotherapeuten, Ergotherapeuten, Heilpraktiker, Optiker, Hörakustiker, IT-Dienstleister, Fotografen, Marketingberater, Küchenstudios, Bettenfachgeschäfte.\n\nAuswahlkriterien\n\nHat die Person Kundenkontakt? Denkt sie unternehmerisch? Ist sie offen für ein zweites Standbein?`},
- {title:"Kapitel 3. LinkedIn", text:`LinkedIn ist der Hauptkanal für Unternehmer, Selbstständige und Führungskräfte.\n\nTagesroutine\n\n1. Zielgruppe wählen.\n2. Personen suchen.\n3. Profile prüfen.\n4. Kontaktanfragen senden.\n5. Kontakt im Cockpit anlegen.\n\nSuchbegriffe\n\nGeschäftsführer Elektriker Kassel. Inhaber Malerbetrieb Kassel. Immobilienmakler Kassel. Versicherungsmakler Kassel. Selbstständig Kassel.`},
- {title:"Kapitel 4. Facebook", text:`Facebook dient dem Vertrauensaufbau. Menschen lernen dort zuerst deine Persönlichkeit kennen.\n\nNutze Facebook für persönliche Beiträge, Beziehungsaufbau, Messenger-Gespräche und den Übergang zu WhatsApp.\n\nPeter zeigt Erfahrung, Unternehmertum und Führung. Martina zeigt Persönlichkeit, Alltag, Familie, Kundenpflege und gesundes Wohnen.`},
- {title:"Kapitel 5. WhatsApp", text:`WhatsApp ist der persönliche Kommunikationskanal.\n\nNutze WhatsApp für kurze Nachrichten, Videos, Terminvereinbarungen, Status-Beiträge und Follow-ups.\n\nRegel\n\nNicht drängen. Nicht mit Informationen überladen. Immer einen konkreten nächsten Schritt vereinbaren.`},
- {title:"Kapitel 6. Nachrichtenbibliothek", text:`Kontaktanfrage LinkedIn\n\nHallo Herr Mustermann, Ihr Profil hat mein Interesse geweckt. Ich vernetze mich gerne mit Unternehmern und Selbstständigen aus der Region. Ich freue mich auf den Austausch.\n\nNach Annahme\n\nVielen Dank für die Vernetzung. Mich interessiert, wie Sie zu Ihrem heutigen Unternehmen gekommen sind.\n\nTerminübergang\n\nIch finde unser Gespräch spannend. Ein kurzes Telefonat von 15 Minuten ist oft einfacher als viele Nachrichten. Passt Ihnen das?`},
- {title:"Kapitel 7. Gesprächsleitfäden", text:`Gesprächsstruktur\n\n1. Persönlicher Einstieg.\n2. Person kennenlernen.\n3. Bedarf erkennen.\n4. Kurz vorstellen.\n5. Nächsten Schritt vereinbaren.\n\nRegel\n\nDer Gesprächspartner spricht 70 Prozent. Du sprichst 30 Prozent.`},
- {title:"Kapitel 8. Einwandbehandlung", text:`Drei-Schritt-Methode\n\n1. Verstehen.\n2. Nachfragen.\n3. Kurz antworten und wieder eine Frage stellen.\n\nBeispiel\n\nIch habe keine Zeit.\n\nAntwort: Das verstehe ich. Woran liegt es im Moment hauptsächlich?`},
- {title:"Kapitel 9. Tagessteuerung und Kennzahlen", text:`Täglich erfassen\n\nRecherchierte Kontakte, Kontaktanfragen, angenommene Kontakte, Antworten, WhatsApp-Kontakte, Telefonate, Termine, Präsentationen, Kunden, Geschäftspartner.\n\nWöchentlich prüfen\n\nWelche Zielgruppe bringt Antworten? Welche Nachricht funktioniert? Wo entstehen Termine?`},
- {title:"Kapitel 10. Das Recruiting-Cockpit", text:`Das Cockpit ist der tägliche Arbeitsplatz von Peter und Martina.\n\nEs zeigt persönliche Aufgaben, Kontakte, Wiedervorlagen, Termine, Zielgruppen, Nachrichten, Kennzahlen und Wissen.\n\nJeder sieht zuerst seine eigenen Aufgaben. Die gemeinsame Datenbank verhindert Doppelansprachen.`}
-];
-
-const initialState = {
-  currentUser: null,
-  route: "dashboard",
-  contacts: [
-    {id:uid(), first:"Thomas", last:"Schneider", company:"Schneider Elektrotechnik", profession:"Elektromeister", branch:"Handwerk", city:"Kassel", linkedin:"", facebook:"", phone:"", email:"", owner:"Peter", support:"Martina", status:"Warten auf Antwort", nextStep:"LinkedIn-Nachricht nachfassen", nextDate:todayISO(), notes:"Kontakt aus LinkedIn-Suche Elektriker Kassel.", timeline:[{date:todayISO(), text:"Kontakt angelegt. LinkedIn-Anfrage vorbereitet."}]},
-    {id:uid(), first:"Sabine", last:"Müller", company:"Müller Immobilien", profession:"Immobilienmaklerin", branch:"Immobilien", city:"Baunatal", linkedin:"", facebook:"", phone:"", email:"", owner:"Martina", support:"Peter", status:"Aktiver Kontakt", nextStep:"WhatsApp senden", nextDate:todayISO(), notes:"Persönlicher Austausch über Facebook.", timeline:[{date:todayISO(), text:"Kontakt angelegt. Martina betreut."}]}
-  ],
-  tasks: [
-    {id:uid(), owner:"Peter", title:"10 LinkedIn-Kontaktanfragen an Elektriker senden", due:todayISO(), priority:"Hoch", done:false, contactId:null},
-    {id:uid(), owner:"Peter", title:"Thomas Schneider nachfassen", due:todayISO(), priority:"Mittel", done:false, contactId:null},
-    {id:uid(), owner:"Martina", title:"Sabine Müller per WhatsApp antworten", due:todayISO(), priority:"Hoch", done:false, contactId:null},
-    {id:uid(), owner:"Martina", title:"3 Facebook-Kontakte aus der Region prüfen", due:todayISO(), priority:"Mittel", done:false, contactId:null}
-  ],
-  targetGroups: [
-    {id:uid(), name:"Elektriker", prio:"A", channel:"LinkedIn", terms:"Elektriker Kassel, Elektromeister Kassel, Geschäftsführer Elektrotechnik Kassel, Inhaber Elektrobetrieb Kassel"},
-    {id:uid(), name:"Immobilienmakler", prio:"A", channel:"LinkedIn, Facebook", terms:"Immobilienmakler Kassel, Immobilienbüro Kassel, Geschäftsführer Immobilien Kassel"},
-    {id:uid(), name:"Physiotherapeuten", prio:"B", channel:"Facebook, WhatsApp", terms:"Physiotherapie Kassel, Praxisinhaber Physiotherapie, Gesundheitsdienstleister Kassel"}
-  ]
-};
-
-let state = load();
-function load(){ try { return {...initialState, ...(JSON.parse(localStorage.getItem(STORAGE_KEY))||{})}; } catch(e){ return initialState; } }
-function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
-function setRoute(route){ state.route = route; save(); render(); }
-function setUser(user){ state.currentUser = user; state.route = "dashboard"; save(); render(); }
-function logout(){ state.currentUser = null; save(); render(); }
-function el(html){ return html; }
-function getUserTasks(user){ return state.tasks.filter(t=>t.owner===user); }
-function dueToday(t){ return t.due <= todayISO() && !t.done; }
-function ownerContacts(user){ return state.contacts.filter(c=>c.owner===user || c.support===user); }
-function statusBadge(status){
- const map={"Aktiver Kontakt":"green","Warten auf Antwort":"yellow","Termin vereinbart":"blue","Nachfassen":"orange","Kein Interesse":"red","Geschäftspartner":"green","Kunde":"blue"};
- return `<span class="badge ${map[status]||""}">${status}</span>`;
-}
-function priorityBadge(priority){ return `<span class="badge ${priority==="Hoch"?"red":priority==="Mittel"?"yellow":""}">${priority}</span>`; }
-
-function render(){
- if(!state.currentUser){ document.getElementById("app").innerHTML = loginView(); return; }
- document.getElementById("app").innerHTML = shell();
- attachEvents();
-}
-function loginView(){return `<main class="login"><section class="login-card"><h1>Recruiting-Cockpit</h1><p>Wähle deinen Arbeitsbereich. Peter und Martina sehen jeweils ihre eigenen Tagesaufgaben, Kontakte und Kennzahlen.</p><div class="login-grid"><button onclick="setUser('Peter')">Peter</button><button onclick="setUser('Martina')">Martina</button></div></section></main>`}
-function shell(){
- const nav=[['dashboard','Dashboard'],['contacts','Kontakte'],['tasks','Aufgaben'],['targets','Zielgruppen'],['communication','Kommunikation'],['knowledge','Wissen'],['analytics','Auswertung'],['team','Teamübersicht'],['settings','Einstellungen']];
- return `<div class="shell"><aside class="sidebar"><div class="logo">Recruiting</div><div class="user-pill">Angemeldet als<br><strong>${state.currentUser}</strong></div><nav class="nav">${nav.map(n=>`<button class="${state.route===n[0]?'active':''}" data-route="${n[0]}">${n[1]}</button>`).join('')}</nav><button class="ghost" onclick="logout()">Abmelden</button></aside><main class="content">${view()}</main></div>`;
-}
-function view(){
- const views={dashboard,contacts,tasks,targets,communication,knowledge,analytics,team,settings};
- return (views[state.route]||dashboard)();
-}
-function dashboard(){
- const user=state.currentUser, tasks=getUserTasks(user), open=tasks.filter(t=>!t.done), today=open.filter(dueToday), contacts=ownerContacts(user);
- const overdue=open.filter(t=>t.due < todayISO()).length;
- return `<div class="topbar"><div><h1>Guten Tag ${user}</h1><p class="muted">Dein persönlicher Arbeitsbereich für heute.</p></div><button onclick="setRoute('contacts')">Kontakt anlegen</button></div>
- <div class="grid four"><div class="card"><div class="muted">Offene Aufgaben</div><div class="metric">${open.length}</div></div><div class="card"><div class="muted">Heute fällig</div><div class="metric">${today.length}</div></div><div class="card"><div class="muted">Überfällig</div><div class="metric">${overdue}</div></div><div class="card"><div class="muted">Meine Kontakte</div><div class="metric">${contacts.length}</div></div></div>
- <div class="grid two" style="margin-top:16px"><section class="card"><h2>Heute zuerst erledigen</h2>${today.length?today.map(taskHtml).join(''):'<p class="muted">Für heute sind keine Aufgaben offen.</p>'}</section><section class="card"><h2>Tagesfokus</h2><p class="notice">Heute: Kontakte sauber dokumentieren und keine Doppelansprachen riskieren. Vor jeder Ansprache erst in der Kontaktliste suchen.</p><div class="actions"><button onclick="setRoute('targets')">Zielgruppen öffnen</button><button class="secondary" onclick="setRoute('knowledge')">Wissen öffnen</button></div></section></div>`;
-}
-function taskHtml(t){ return `<div class="task ${t.done?'done':''}"><input type="checkbox" ${t.done?'checked':''} onchange="toggleTask('${t.id}')"><div style="flex:1"><strong>${t.title}</strong><div class="small muted">Fällig: ${t.due} · ${priorityBadge(t.priority)}</div></div></div>`; }
-function toggleTask(id){ const t=state.tasks.find(x=>x.id===id); if(t){t.done=!t.done; save(); render();} }
-function contacts(){
- return `<div class="topbar"><div><h1>Kontakte</h1><p class="muted">Gemeinsame Datenbank. Jeder Kontakt hat eine klare Zuständigkeit.</p></div></div>${contactForm()}<section class="card" style="margin-top:16px"><h2>Kontakt suchen</h2><div class="searchbar"><input id="contactSearch" placeholder="Name, Firma, Ort oder Beruf suchen"><button class="secondary" onclick="filterContacts()">Suchen</button></div><div id="contactList">${contactTable(state.contacts)}</div></section>`;
-}
-function contactForm(){ return `<section class="card"><h2>Neuen Kontakt anlegen</h2><div class="form-grid"><div><label>Vorname</label><input id="first"></div><div><label>Nachname</label><input id="last"></div><div><label>Firma</label><input id="company"></div><div><label>Beruf</label><input id="profession"></div><div><label>Branche</label><input id="branch"></div><div><label>Ort</label><input id="city"></div><div><label>LinkedIn</label><input id="linkedin"></div><div><label>Facebook</label><input id="facebook"></div><div><label>Telefon</label><input id="phone"></div><div><label>E-Mail</label><input id="email"></div><div><label>Zuständig</label><select id="owner"><option>Peter</option><option>Martina</option></select></div><div><label>Unterstützung</label><select id="support"><option value="">Keine</option><option>Peter</option><option>Martina</option></select></div><div><label>Status</label><select id="status"><option>Aktiver Kontakt</option><option>Warten auf Antwort</option><option>Termin vereinbart</option><option>Nachfassen</option><option>Kunde</option><option>Geschäftspartner</option><option>Kein Interesse</option></select></div><div><label>Nächster Schritt</label><input id="nextStep"></div><div><label>Wiedervorlage</label><input type="date" id="nextDate" value="${todayISO()}"></div><div class="full"><label>Notizen</label><textarea id="notes"></textarea></div></div><div id="dupeNotice"></div><div class="actions"><button onclick="addContact()">Kontakt speichern</button></div></section>`; }
-function addContact(){
- const fields=['first','last','company','profession','branch','city','linkedin','facebook','phone','email','owner','support','status','nextStep','nextDate','notes'];
- const c={id:uid(), timeline:[{date:todayISO(), text:'Kontakt angelegt.'}]}; fields.forEach(f=>c[f]=document.getElementById(f).value.trim());
- const dupe=state.contacts.find(x=>(c.email && x.email===c.email)||(c.phone && x.phone===c.phone)||((x.first+x.last).toLowerCase()===(c.first+c.last).toLowerCase() && c.company && x.company.toLowerCase()===c.company.toLowerCase()));
- if(dupe){ document.getElementById('dupeNotice').innerHTML=`<p class="notice">Kontakt existiert bereits. Zuständig: ${dupe.owner}. Firma: ${dupe.company}.</p>`; return; }
- state.contacts.push(c); if(c.nextStep) state.tasks.push({id:uid(), owner:c.owner, title:c.nextStep, due:c.nextDate||todayISO(), priority:'Mittel', done:false, contactId:c.id}); save(); render();
-}
-function contactTable(list){ return `<div class="table-wrap"><table class="table"><thead><tr><th>Name</th><th>Firma</th><th>Beruf</th><th>Ort</th><th>Zuständig</th><th>Status</th><th>Nächster Schritt</th><th></th></tr></thead><tbody>${list.map(c=>`<tr><td>${c.first} ${c.last}</td><td>${c.company}</td><td>${c.profession}</td><td>${c.city}</td><td>${c.owner}${c.support?`<br><span class="small muted">Unterstützung: ${c.support}</span>`:''}</td><td>${statusBadge(c.status)}</td><td>${c.nextStep||''}<br><span class="small muted">${c.nextDate||''}</span></td><td><button class="secondary" onclick="openContact('${c.id}')">Öffnen</button></td></tr>`).join('')}</tbody></table></div>`; }
-function filterContacts(){ const q=document.getElementById('contactSearch').value.toLowerCase(); const list=state.contacts.filter(c=>Object.values(c).join(' ').toLowerCase().includes(q)); document.getElementById('contactList').innerHTML=contactTable(list); }
-function openContact(id){ const c=state.contacts.find(x=>x.id===id); if(!c) return; state.route='contact_'+id; save(); render(); }
-function contactDetail(id){ const c=state.contacts.find(x=>x.id===id); if(!c) return `<p>Kontakt nicht gefunden.</p>`; return `<div class="topbar"><div><h1>${c.first} ${c.last}</h1><p class="muted">${c.company} · ${c.profession} · ${c.city}</p></div><button class="secondary" onclick="setRoute('contacts')">Zurück</button></div><div class="grid two"><section class="card"><h2>Kontaktakte</h2><p>Status: ${statusBadge(c.status)}</p><p>Zuständig: ${c.owner}${c.support?` · Unterstützung: ${c.support}`:''}</p><p>Nächster Schritt: ${c.nextStep||'Nicht gesetzt'}</p><p>Wiedervorlage: ${c.nextDate||'Nicht gesetzt'}</p><p class="muted">${c.notes||''}</p><div class="actions"><button onclick="transferContact('${c.id}')">Zuständigkeit wechseln</button><button class="danger" onclick="deleteContact('${c.id}')">Löschen</button></div></section><section class="card"><h2>Zeitachse</h2><div class="timeline">${(c.timeline||[]).map(i=>`<div class="timeline-item"><strong>${i.date}</strong><span>${i.text}</span></div>`).join('')}</div><label>Neuer Verlaufseintrag</label><input id="timelineText"><div class="actions"><button onclick="addTimeline('${c.id}')">Eintrag speichern</button></div></section></div>`; }
-function transferContact(id){ const c=state.contacts.find(x=>x.id===id); c.owner=c.owner==='Peter'?'Martina':'Peter'; c.timeline.push({date:todayISO(), text:`Zuständigkeit übertragen an ${c.owner}.`}); save(); render(); }
-function deleteContact(id){ state.contacts=state.contacts.filter(c=>c.id!==id); state.tasks=state.tasks.filter(t=>t.contactId!==id); state.route='contacts'; save(); render(); }
-function addTimeline(id){ const c=state.contacts.find(x=>x.id===id); const text=document.getElementById('timelineText').value.trim(); if(text){ c.timeline.push({date:todayISO(), text}); save(); render(); } }
-function tasks(){ return `<div class="topbar"><div><h1>Aufgaben</h1><p class="muted">Du siehst deine Aufgaben. Die Teamübersicht zeigt alle Aufgaben.</p></div></div><section class="card"><h2>Neue Aufgabe</h2><div class="form-grid"><div><label>Titel</label><input id="taskTitle"></div><div><label>Zuständig</label><select id="taskOwner"><option>Peter</option><option>Martina</option></select></div><div><label>Fällig</label><input type="date" id="taskDue" value="${todayISO()}"></div><div><label>Priorität</label><select id="taskPrio"><option>Mittel</option><option>Hoch</option><option>Niedrig</option></select></div></div><div class="actions"><button onclick="addTask()">Aufgabe speichern</button></div></section><section class="card" style="margin-top:16px"><h2>Meine Aufgaben</h2>${getUserTasks(state.currentUser).map(taskHtml).join('')||'<p class="muted">Keine Aufgaben vorhanden.</p>'}</section>`; }
-function addTask(){ const title=document.getElementById('taskTitle').value.trim(); if(!title) return; state.tasks.push({id:uid(), owner:document.getElementById('taskOwner').value, title, due:document.getElementById('taskDue').value, priority:document.getElementById('taskPrio').value, done:false, contactId:null}); save(); render(); }
-function targets(){ return `<div class="topbar"><div><h1>Zielgruppen</h1><p class="muted">Suchbegriffe und Prioritäten für LinkedIn, Facebook und WhatsApp.</p></div></div><section class="card"><div class="table-wrap"><table class="table"><thead><tr><th>Zielgruppe</th><th>Priorität</th><th>Kanal</th><th>Suchbegriffe</th></tr></thead><tbody>${state.targetGroups.map(g=>`<tr><td>${g.name}</td><td><span class="badge ${g.prio==='A'?'green':'yellow'}">${g.prio}</span></td><td>${g.channel}</td><td>${g.terms}</td></tr>`).join('')}</tbody></table></div></section>`; }
-function communication(){ return `<div class="topbar"><div><h1>Kommunikation</h1><p class="muted">Vorlagen zum Kopieren.</p></div></div><div class="grid two">${['LinkedIn Kontaktanfrage|Hallo Herr Mustermann, Ihr Profil hat mein Interesse geweckt. Ich vernetze mich gerne mit Unternehmern und Selbstständigen aus der Region. Ich freue mich auf den Austausch.','LinkedIn nach Annahme|Vielen Dank für die Vernetzung. Mich interessiert, wie Sie zu Ihrem heutigen Unternehmen gekommen sind.','WhatsApp Einstieg|Hallo Herr Mustermann, schön, dass wir jetzt auch hier verbunden sind. Vielen Dank für den bisherigen Austausch.','Terminübergang|Ich finde unser Gespräch spannend. Ein kurzes Telefonat von 15 Minuten ist oft einfacher als viele Nachrichten. Passt Ihnen das?'].map((x,i)=>{const [t,b]=x.split('|'); return `<section class="card"><h2>${t}</h2><p>${b}</p><button class="secondary" onclick="copyText(${i})">Kopieren</button></section>`}).join('')}</div>`; }
-function copyText(i){ const texts=['Hallo Herr Mustermann, Ihr Profil hat mein Interesse geweckt. Ich vernetze mich gerne mit Unternehmern und Selbstständigen aus der Region. Ich freue mich auf den Austausch.','Vielen Dank für die Vernetzung. Mich interessiert, wie Sie zu Ihrem heutigen Unternehmen gekommen sind.','Hallo Herr Mustermann, schön, dass wir jetzt auch hier verbunden sind. Vielen Dank für den bisherigen Austausch.','Ich finde unser Gespräch spannend. Ein kurzes Telefonat von 15 Minuten ist oft einfacher als viele Nachrichten. Passt Ihnen das?']; navigator.clipboard.writeText(texts[i]); alert('Text kopiert.'); }
-function knowledge(){ return `<div class="topbar"><div><h1>Wissen</h1><p class="muted">Das integrierte Recruiting-Handbuch. Kein separates PDF nötig.</p></div></div><div class="knowledge-list">${chapters.map((c,i)=>`<section class="knowledge-item"><div class="between"><strong>${c.title}</strong><button class="secondary" onclick="openChapter(${i})">Öffnen</button></div></section>`).join('')}</div>`; }
-function openChapter(i){ state.route='chapter_'+i; save(); render(); }
-function chapterDetail(i){ const c=chapters[i]; return `<div class="topbar"><div><h1>${c.title}</h1><p class="muted">Wissensbereich</p></div><button class="secondary" onclick="setRoute('knowledge')">Zurück</button></div><section class="card"><div class="knowledge-content">${c.text}</div><div class="actions"><button onclick="setRoute('contacts')">Jetzt Kontakt anlegen</button><button class="secondary" onclick="setRoute('tasks')">Aufgabe erstellen</button></div></section>`; }
-function analytics(){ const user=state.currentUser; const mine=ownerContacts(user); return `<div class="topbar"><div><h1>Auswertung</h1><p class="muted">Persönliche Kennzahlen für ${user}.</p></div></div><div class="grid four"><div class="card"><div class="muted">Kontakte</div><div class="metric">${mine.length}</div></div><div class="card"><div class="muted">Aktiv</div><div class="metric">${mine.filter(c=>c.status==='Aktiver Kontakt').length}</div></div><div class="card"><div class="muted">Termine</div><div class="metric">${mine.filter(c=>c.status==='Termin vereinbart').length}</div></div><div class="card"><div class="muted">Partner</div><div class="metric">${mine.filter(c=>c.status==='Geschäftspartner').length}</div></div></div>`; }
-function team(){ return `<div class="topbar"><div><h1>Teamübersicht</h1><p class="muted">Gemeinsame Sicht auf Peter und Martina.</p></div></div><div class="grid four"><div class="card"><div class="muted">Alle Kontakte</div><div class="metric">${state.contacts.length}</div></div><div class="card"><div class="muted">Peter</div><div class="metric">${state.contacts.filter(c=>c.owner==='Peter').length}</div></div><div class="card"><div class="muted">Martina</div><div class="metric">${state.contacts.filter(c=>c.owner==='Martina').length}</div></div><div class="card"><div class="muted">Offene Aufgaben</div><div class="metric">${state.tasks.filter(t=>!t.done).length}</div></div></div><section class="card" style="margin-top:16px"><h2>Alle Kontakte</h2>${contactTable(state.contacts)}</section>`; }
-function settings(){ return `<div class="topbar"><div><h1>Einstellungen</h1><p class="muted">Version 1.0. Daten liegen lokal im Browser.</p></div></div><section class="card"><h2>Daten</h2><p>Diese erste Version speichert Daten lokal auf deinem Gerät. Für gemeinsame Nutzung auf Handy, Tablet und Desktop braucht die nächste Ausbaustufe eine gemeinsame Datenbank.</p><div class="actions"><button class="secondary" onclick="exportData()">Daten exportieren</button><button class="danger" onclick="resetData()">Testdaten zurücksetzen</button></div></section><section class="card" style="margin-top:16px"><h2>Impressum</h2><p>Peter Andreas Kücken · HYLA Vertriebsbüro</p></section>`; }
-function exportData(){ const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='recruiting-cockpit-daten.json'; a.click(); }
-function resetData(){ localStorage.removeItem(STORAGE_KEY); state=initialState; save(); render(); }
-function attachEvents(){ document.querySelectorAll('[data-route]').forEach(b=>b.addEventListener('click',()=>setRoute(b.dataset.route))); }
-const originalView=view;
-view=function(){ if(state.route.startsWith('contact_')) return contactDetail(state.route.replace('contact_','')); if(state.route.startsWith('chapter_')) return chapterDetail(Number(state.route.replace('chapter_',''))); return originalView(); }
-window.setUser=setUser; window.logout=logout; window.setRoute=setRoute; window.toggleTask=toggleTask; window.addContact=addContact; window.filterContacts=filterContacts; window.openContact=openContact; window.transferContact=transferContact; window.deleteContact=deleteContact; window.addTimeline=addTimeline; window.addTask=addTask; window.copyText=copyText; window.openChapter=openChapter; window.exportData=exportData; window.resetData=resetData;
-render();
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Recruiting-Cockpit Peter & Martina Kücken</title>
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#102a43">
+  <link rel="stylesheet" href="style.css?v=110">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <img class="brand-logo" src="favicon.png" alt="App-Logo">
+      <div><h1>Recruiting-Cockpit</h1><p>Peter & Martina Kücken</p></div>
+    </div>
+    <div class="top-actions"><span id="syncStatus" class="sync-status">Nicht angemeldet</span><span id="userInfo" class="user-info hidden"></span><button id="logoutBtn" class="ghost hidden">Abmelden</button><button id="resetBtn" class="ghost hidden">Heute zurücksetzen</button></div>
+  </header>
+  <section id="loginScreen" class="login-screen">
+    <div class="login-card">
+      <img class="login-logo" src="favicon.png" alt="App-Logo">
+      <h2>Recruiting-Cockpit</h2>
+      <p>Bitte melde dich mit deiner E-Mail-Adresse an.</p>
+      <label>E-Mail</label>
+      <input id="loginEmail" type="email" autocomplete="username" placeholder="peter@kuecken.eu">
+      <label>Passwort</label>
+      <input id="loginPassword" type="password" autocomplete="current-password" placeholder="Passwort">
+      <button id="loginBtn" class="login-btn">Anmelden</button>
+      <p id="loginError" class="login-error"></p>
+    </div>
+  </section>
+  <main class="layout hidden" id="appLayout">
+    <aside class="sidebar">
+      <input id="searchInput" type="search" placeholder="Suchen, z. B. Einwand, Video 12, LinkedIn">
+      <nav id="nav"></nav>
+    </aside>
+    <section class="content"><div id="view"></div></section>
+  </main>
+  <footer id="appFooter" class="hidden">© Peter & Martina Kücken</footer>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+  <script src="content.js?v=110"></script>
+  <script src="app.js?v=110"></script>
+</body>
+</html>
