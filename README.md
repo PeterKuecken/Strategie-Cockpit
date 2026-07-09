@@ -1,10 +1,10 @@
 # Recruiting-Cockpit Kücken
 
-Version 1.2.2
+Version 1.2.3
 
 Diese Version basiert auf der funktionierenden Version 1.2.1.
 
-Neu in 1.2.2:
+Neu in 1.2.3:
 
 - Landingpage-Status in der Kontaktakte ergänzt.
 - Datum für Landingpage gesehen ergänzt.
@@ -15,3 +15,6 @@ Neu in 1.2.2:
 
 Upload-Hinweis:
 Den Inhalt dieser ZIP-Datei ins Hauptverzeichnis des GitHub-Repositories hochladen. Nicht den Ordner selbst hochladen.
+
+
+Version 1.2.3: Auswahlfelder alphabetisch sortiert und Landingpage-Felder dynamisch eingeblendet.

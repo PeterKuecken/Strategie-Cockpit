@@ -837,7 +837,7 @@ function round(n){return Math.round(Number(n||0))}
 
 
 
-/* Recruiting CRM Version 1.2.2 */
+/* Recruiting CRM Version 1.2.3 */
 function ensureCrm(){
   if(!state.crm)state.crm={contacts:[],tasks:[],dailyDone:{}};
   if(!Array.isArray(state.crm.contacts))state.crm.contacts=[];
@@ -861,12 +861,13 @@ function crmPersonFilter(c){return (c.owner || 'Peter')===currentPerson() || (c.
 function crmStatusOptions(){return ['Neu','Kontaktanfrage gesendet','Vernetzt','Erstgespräch','Interesse','Präsentation geplant','Präsentation erfolgt','Nachfassen','Kunde','Geschäftspartner','Kein Interesse','Archiv']}
 function crmSources(){return ['LinkedIn','Facebook','WhatsApp','Empfehlung','Veranstaltung','Kunde','Sonstiges']}
 function crmPriorities(){return ['A','B','C']}
-function crmJobOptions(){return ['Elektriker','Elektromeister','Heizungsbauer','Sanitärinstallateur','Klima- und Lüftungsbauer','Dachdecker','Maler und Lackierer','Fliesenleger','Tischler','Schreiner','Fensterbauer','Bodenleger','Garten- und Landschaftsbauer','Gebäudereiniger','Schornsteinfeger','Küchenmonteur','Immobilienmakler','Versicherungsmakler','Finanzberater','Unternehmer','Geschäftsführer','Selbstständig','Berater','Physiotherapeut','Heilpraktiker','Apotheker','Optiker','Hotelier','Gastronom','Sonstiges']}
-function crmBranchOptions(){return ['Handwerk','Immobilien','Finanzen','Gesundheit','Dienstleistung','Gastronomie','Einzelhandel','Beratung','Marketing','IT','Hotellerie','Hausverwaltung','Sonstige Branche']}
-function crmTargetGroupOptions(){return ['Elektriker','Heizungsbauer','Sanitär','Dachdecker','Maler','Fliesenleger','Tischler','Gebäudereiniger','Immobilienmakler','Versicherungsmakler','Finanzberater','Unternehmer','Selbstständige','Gesundheitsberufe','Kundenempfehlung','Sonstige Zielgruppe']}
+function crmJobOptions(){return ['Apotheker','Berater','Bodenleger','Dachdecker','Elektriker','Elektromeister','Fensterbauer','Finanzberater','Fliesenleger','Garten- und Landschaftsbauer','Gastronom','Gebäudereiniger','Geschäftsführer','Heilpraktiker','Heizungsbauer','Hotelier','Immobilienmakler','Klima- und Lüftungsbauer','Küchenmonteur','Maler und Lackierer','Optiker','Physiotherapeut','Sanitärinstallateur','Schornsteinfeger','Schreiner','Selbstständig','Tischler','Unternehmer','Versicherungsmakler','Sonstiges']}
+function crmBranchOptions(){return ['Beratung','Dienstleistung','Einzelhandel','Finanzen','Gastronomie','Gesundheit','Handwerk','Hausverwaltung','Hotellerie','Immobilien','IT','Marketing','Sonstige Branche']}
+function crmTargetGroupOptions(){return ['Dachdecker','Elektriker','Finanzberater','Fliesenleger','Gebäudereiniger','Gesundheitsberufe','Heizungsbauer','Immobilienmakler','Kundenempfehlung','Maler','Sanitär','Selbstständige','Tischler','Unternehmer','Versicherungsmakler','Sonstige Zielgruppe']}
 function crmSelectedFromOptions(value,items,otherLabel){return items.includes(value||'') ? (value||'') : ((value||'') ? otherLabel : '')}
 function crmOtherValue(value,items){return (value && !items.includes(value)) ? value : ''}
 function crmSelectWithOther(key,label,items,value,otherLabel){const selected=crmSelectedFromOptions(value,items,otherLabel); const other=crmOtherValue(value,items); return `<label>${label}<select id="crm_${key}Select">${crmHtmlOptions(items,selected)}</select></label><label>${label} frei eintragen<input id="crm_${key}Other" value="${esc(other)}" placeholder="Nur nutzen, wenn nicht in der Liste"></label>`}
+function crmToggleLandingDetails(){const seen=document.getElementById('crm_landingSeen')?.checked; const details=document.getElementById('crm_landingDetails'); if(details)details.style.display=seen?'contents':'none';}
 function crmHtmlOptions(items,selected){return items.map(x=>`<option value="${esc(x)}" ${x===(selected||'')?'selected':''}>${esc(x)}</option>`).join('')}
 function crmNormalize(v){return String(v||'').trim().toLowerCase().replace(/\s+/g,' ')}
 function crmActive(c){return !['Archiv','Kein Interesse','Kunde','Geschäftspartner'].includes(c.status)}
@@ -881,7 +882,7 @@ function crmCollectForm(id){
   const p='crm_';
   const val=k=>document.getElementById(p+k)?.value?.trim()||'';
   return {
-    id:id||crmId(), firstName:val('firstName'), lastName:val('lastName'), company:val('company'), job:(val('jobOther')||val('jobSelect')||val('job')), branch:(val('branchOther')||val('branchSelect')||val('branch')), city:val('city'), phone:val('phone'), email:val('email'), website:val('website'), linkedin:val('linkedin'), facebook:val('facebook'), instagram:val('instagram'), whatsapp:document.getElementById('crm_whatsapp')?.checked||false, owner:val('owner')||currentPerson(), support:val('support'), source:val('source'), targetGroup:(val('targetGroupOther')||val('targetGroupSelect')||val('targetGroup')), status:val('status')||'Neu', priority:val('priority')||'B', followDate:val('followDate'), followTime:val('followTime'), nextStep:val('nextStep'), landingSeen:document.getElementById('crm_landingSeen')?.checked||false, landingDate:val('landingDate'), video1Seen:document.getElementById('crm_video1Seen')?.checked||false, video2Seen:document.getElementById('crm_video2Seen')?.checked||false, video3Seen:document.getElementById('crm_video3Seen')?.checked||false, followupActive:document.getElementById('crm_followupActive')?.checked||false, notes:val('notes')
+    id:id||crmId(), firstName:val('firstName'), lastName:val('lastName'), company:val('company'), job:(val('jobOther')||val('jobSelect')||val('job')), branch:(val('branchOther')||val('branchSelect')||val('branch')), city:val('city'), phone:val('phone'), email:val('email'), website:val('website'), linkedin:val('linkedin'), facebook:val('facebook'), instagram:val('instagram'), whatsapp:document.getElementById('crm_whatsapp')?.checked||false, owner:val('owner')||currentPerson(), support:val('support'), source:val('source'), targetGroup:(val('targetGroupOther')||val('targetGroupSelect')||val('targetGroup')), status:val('status')||'Neu', priority:val('priority')||'B', followDate:val('followDate'), followTime:val('followTime'), nextStep:val('nextStep'), landingSeen:document.getElementById('crm_landingSeen')?.checked||false, landingDate:(document.getElementById('crm_landingSeen')?.checked?val('landingDate'):''), video1Seen:(document.getElementById('crm_landingSeen')?.checked && (document.getElementById('crm_video1Seen')?.checked||false)), video2Seen:(document.getElementById('crm_landingSeen')?.checked && (document.getElementById('crm_video2Seen')?.checked||false)), video3Seen:(document.getElementById('crm_landingSeen')?.checked && (document.getElementById('crm_video3Seen')?.checked||false)), followupActive:(document.getElementById('crm_landingSeen')?.checked && (document.getElementById('crm_followupActive')?.checked||false)), notes:val('notes')
   }
 }
 function crmSaveContact(id){
@@ -1044,13 +1045,15 @@ function renderCrmForm(c){
       <label>Wiedervorlage Uhrzeit<input id="crm_followTime" type="time" value="${esc(c.followTime||'')}"></label>
       <label class="span2">Nächster Schritt<input id="crm_nextStep" value="${esc(c.nextStep||'')}"></label>
     </div></div>
-    <div class="crm-form-group"><h4>Landingpage und Videos</h4><div class="crm-form">
-      <label class="check-inline"><input id="crm_landingSeen" type="checkbox" ${c.landingSeen?'checked':''}> Landingpage gesehen</label>
-      <label>Datum Landingpage<input id="crm_landingDate" type="date" value="${esc(c.landingDate||'')}"></label>
-      <label class="check-inline"><input id="crm_video1Seen" type="checkbox" ${c.video1Seen?'checked':''}> Video 1 gesehen</label>
-      <label class="check-inline"><input id="crm_video2Seen" type="checkbox" ${c.video2Seen?'checked':''}> Video 2 gesehen</label>
-      <label class="check-inline"><input id="crm_video3Seen" type="checkbox" ${c.video3Seen?'checked':''}> Video 3 gesehen</label>
-      <label class="check-inline"><input id="crm_followupActive" type="checkbox" ${c.followupActive?'checked':''}> Follow-up-System aktiviert</label>
+    <div class="crm-form-group"><h4>Landingpage</h4><div class="crm-form">
+      <label class="check-inline"><input id="crm_landingSeen" type="checkbox" ${c.landingSeen?'checked':''} onchange="crmToggleLandingDetails()"> Landingpage gesehen</label>
+      <div id="crm_landingDetails" style="display:${c.landingSeen?'contents':'none'}" class="crm-form-nested">
+        <label>Datum<input id="crm_landingDate" type="date" value="${esc(c.landingDate||'')}"></label>
+        <label class="check-inline"><input id="crm_video1Seen" type="checkbox" ${c.video1Seen?'checked':''}> Video 1 gesehen</label>
+        <label class="check-inline"><input id="crm_video2Seen" type="checkbox" ${c.video2Seen?'checked':''}> Video 2 gesehen</label>
+        <label class="check-inline"><input id="crm_video3Seen" type="checkbox" ${c.video3Seen?'checked':''}> Video 3 gesehen</label>
+        <label class="check-inline"><input id="crm_followupActive" type="checkbox" ${c.followupActive?'checked':''}> Follow-up-System aktiviert</label>
+      </div>
     </div></div>
     <div class="crm-form-group"><h4>Notizen</h4><label>Notizen<textarea id="crm_notes">${esc(c.notes||'')}</textarea></label></div>
     <button class="primary" onclick="crmSaveContact('${esc(id)}')">Speichern</button>
@@ -1072,7 +1075,7 @@ function renderCrmTabContent(c){
   if(selectedContactTab==='tasks')return renderCrmTasksTab(c);
   if(selectedContactTab==='communication')return renderCrmCommunication(c);
   if(selectedContactTab==='notes')return `<div class="tab-content"><h4>Notizen</h4><p class="note-box">${esc(c.notes||'Noch keine Notizen vorhanden.')}</p><button class="copy-btn" onclick="selectedContactTab='edit'; render()">Notizen bearbeiten</button></div>`;
-  return `<div class="tab-content"><div class="grid"><div><h4>Persönliche Daten</h4><p><strong>Firma:</strong> ${esc(c.company||'')}</p><p><strong>Beruf:</strong> ${esc(c.job||'')}</p><p><strong>Branche:</strong> ${esc(c.branch||'')}</p><p><strong>Ort:</strong> ${esc(c.city||'')}</p></div><div><h4>Nächster Schritt</h4><p><strong>Wiedervorlage:</strong> ${esc(c.followDate||'offen')} ${esc(c.followTime||'')}</p><p><strong>Aufgabe:</strong> ${esc(c.nextStep||'Noch kein nächster Schritt eingetragen.')}</p><p><strong>Quelle:</strong> ${esc(c.source||'')}</p><p><strong>Priorität:</strong> ${esc(c.priority||'')}</p></div><div><h4>Landingpage</h4><p><strong>Gesehen:</strong> ${c.landingSeen?'Ja':'Nein'} ${c.landingDate?'am '+esc(c.landingDate):''}</p><p><strong>Video 1:</strong> ${c.video1Seen?'Ja':'Nein'}</p><p><strong>Video 2:</strong> ${c.video2Seen?'Ja':'Nein'}</p><p><strong>Video 3:</strong> ${c.video3Seen?'Ja':'Nein'}</p><p><strong>Follow-up aktiv:</strong> ${c.followupActive?'Ja':'Nein'}</p></div></div><div class="quick-actions"><button class="primary" onclick="selectedContactTab='edit'; render()">Bearbeiten</button><button class="copy-btn" onclick="selectedContactTab='timeline'; render()">Aktivität eintragen</button></div></div>`;
+  return `<div class="tab-content"><div class="grid"><div><h4>Persönliche Daten</h4><p><strong>Firma:</strong> ${esc(c.company||'')}</p><p><strong>Beruf:</strong> ${esc(c.job||'')}</p><p><strong>Branche:</strong> ${esc(c.branch||'')}</p><p><strong>Ort:</strong> ${esc(c.city||'')}</p></div><div><h4>Nächster Schritt</h4><p><strong>Wiedervorlage:</strong> ${esc(c.followDate||'offen')} ${esc(c.followTime||'')}</p><p><strong>Aufgabe:</strong> ${esc(c.nextStep||'Noch kein nächster Schritt eingetragen.')}</p><p><strong>Quelle:</strong> ${esc(c.source||'')}</p><p><strong>Priorität:</strong> ${esc(c.priority||'')}</p></div><div><h4>Landingpage</h4><p><strong>Gesehen:</strong> ${c.landingSeen?'Ja':'Nein'} ${c.landingDate?'am '+esc(c.landingDate):''}</p>${c.landingSeen?`<p><strong>Video 1:</strong> ${c.video1Seen?'Ja':'Nein'}</p><p><strong>Video 2:</strong> ${c.video2Seen?'Ja':'Nein'}</p><p><strong>Video 3:</strong> ${c.video3Seen?'Ja':'Nein'}</p><p><strong>Follow-up aktiv:</strong> ${c.followupActive?'Ja':'Nein'}</p>`:''}</div></div><div class="quick-actions"><button class="primary" onclick="selectedContactTab='edit'; render()">Bearbeiten</button><button class="copy-btn" onclick="selectedContactTab='timeline'; render()">Aktivität eintragen</button></div></div>`;
 }
 function renderCrmTimeline(c){
   const timeline=(c.timeline||[]).slice().reverse();

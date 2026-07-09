@@ -1,6 +1,6 @@
 # Änderungsprotokoll
 
-## Version 1.2.2
+## Version 1.2.3
 
 - Kontaktformular um Abschnitt Landingpage und Videos erweitert.
 - Landingpage gesehen Ja/Nein ergänzt.
@@ -36,3 +36,9 @@
 - Impressum auf Punkt 5 verschoben.
 - Persönlicher Recruiting-Arbeitsbereich für Peter und Martina.
 - Kontaktverwaltung 2.0.
+
+
+## Version 1.2.3
+- Auswahlfelder für Beruf, Branche und Zielgruppe alphabetisch sortiert.
+- Bereich „Landingpage“ vereinfacht.
+- Video- und Follow-up-Felder erscheinen erst nach Aktivierung von „Landingpage gesehen“.
