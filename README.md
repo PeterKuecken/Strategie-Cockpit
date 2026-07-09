@@ -1,3 +1,5 @@
-# Recruiting-Cockpit v1.3.8
+# Recruiting-Cockpit Peter & Martina Kücken
 
-Version 1.3.8 verbessert die Adressdatenbank: Neuer Kontakt steht direkt unter der Überschrift, danach folgen die Filter, danach die Suche und dann die Kontaktliste.
+Version 1.3.9 RC1
+
+Neu: Kommunikationsmodul in der Kontaktakte mit WhatsApp Business, Outlook, Telefon, Kommunikationsprotokoll, Vorlagen und Wiedervorlagen-Vorschlag.

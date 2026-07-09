@@ -482,3 +482,11 @@ footer{padding:10px 22px;color:var(--muted);background:#fff;border-top:1px solid
 @media(max-width:720px){.contact-file-actions{align-items:stretch}.contact-file-actions button{width:100%}.contact-file-actions>div{width:100%}.contact-file-actions>div button{flex:1}}
 
 .field-hint{display:block;font-size:.78rem;color:#6b7280;margin:.15rem 0 .35rem;}
+
+/* Version 1.3.9 RC1 Kommunikation */
+.comm-panel{margin:16px 0;padding:14px;border:1px solid var(--border,#d8e2ef);border-radius:14px;background:#f8fbff}
+.comm-recommendation{margin-bottom:12px;font-size:.95rem}
+.comm-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:end}
+.comm-actions label{min-width:180px;display:flex;flex-direction:column;gap:5px;font-size:.85rem;color:var(--muted,#52606d)}
+.comm-actions select{min-height:40px}
+@media (max-width:700px){.comm-actions{display:grid;grid-template-columns:1fr}.comm-actions label,.comm-actions button,.comm-actions a{width:100%}}

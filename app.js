@@ -839,7 +839,7 @@ function round(n){return Math.round(Number(n||0))}
 
 
 
-/* Recruiting CRM Version 1.3.3 */
+/* Recruiting CRM Version 1.3.9 RC1 */
 function ensureCrm(){
   if(!state.crm)state.crm={contacts:[],tasks:[],dailyDone:{},counters:{PK:0,MK:0}};
   if(!Array.isArray(state.crm.contacts))state.crm.contacts=[];
@@ -904,6 +904,98 @@ function crmSources(){return ['LinkedIn','Facebook','WhatsApp','Empfehlung','Ver
 function crmPriorities(){return ['A','B','C']}
 function crmNextStepOptions(){return ['LinkedIn-Anfrage senden','Facebook-Nachricht senden','WhatsApp senden','Telefonat führen','Landingpage senden','Video 1 senden','Video 2 senden','Video 3 senden','Zoom vereinbaren','Präsentation durchführen','Nachfassen','Kunde betreuen','Geschäftspartner begleiten','Sonstiges']}
 function crmChannelOptions(){return ['LinkedIn','Facebook','WhatsApp','Telefon','Zoom','Persönlich','E-Mail','Sonstiges']}
+function crmCommTemplates(channel){
+  if(channel==='WhatsApp')return {
+    first:{label:'Erstkontakt',step:'Erstkontakt',text:(c)=>`Hallo ${c.firstName||crmFullName(c)}, danke für den angenehmen Kontakt. Ich freue mich auf den weiteren Austausch.`},
+    landing:{label:'Landingpage senden',step:'Landingpage senden',text:(c)=>`Hallo ${c.firstName||crmFullName(c)}, hier ist wie besprochen der Link zu unserer kurzen Info-Seite. Schau dir das in Ruhe an. Danach interessiert mich deine ehrliche Einschätzung.`},
+    video1:{label:'Video 1',step:'Video 1 senden',text:(c)=>`Hallo ${c.firstName||crmFullName(c)}, ich wollte kurz nachfragen, ob du Video 1 schon anschauen konntest.`},
+    video2:{label:'Video 2',step:'Video 2 senden',text:(c)=>`Hallo ${c.firstName||crmFullName(c)}, wenn Video 1 für dich gepasst hat, wäre jetzt Video 2 der nächste sinnvolle Schritt.`},
+    video3:{label:'Video 3',step:'Video 3 senden',text:(c)=>`Hallo ${c.firstName||crmFullName(c)}, Video 3 rundet die Informationen ab. Danach können wir gemeinsam ein kurzes Gespräch führen.`},
+    followup:{label:'Follow-up',step:'Nachfassen',text:(c)=>`Hallo ${c.firstName||crmFullName(c)}, ich wollte kurz hören, wie dein Eindruck nach den Informationen ist.`},
+    appointment:{label:'Terminbestätigung',step:'Termin bestätigen',text:(c)=>`Hallo ${c.firstName||crmFullName(c)}, ich bestätige dir hiermit unseren Termin. Ich freue mich auf das Gespräch.`},
+    reminder:{label:'Erinnerung',step:'Erinnerung senden',text:(c)=>`Hallo ${c.firstName||crmFullName(c)}, kurze Erinnerung an unseren vereinbarten nächsten Schritt.`},
+    free:{label:'Freie Nachricht',step:'Freie Nachricht',text:(c)=>''}
+  };
+  return {
+    first:{label:'Erstkontakt',subject:'Unser Austausch',step:'Erstkontakt',text:(c)=>`Hallo ${c.firstName||crmFullName(c)},\n\nvielen Dank für den angenehmen Kontakt. Ich freue mich auf den weiteren Austausch.\n\nViele Grüße\n${currentPerson()}`},
+    landing:{label:'Landingpage senden',subject:'Informationen wie besprochen',step:'Landingpage senden',text:(c)=>`Hallo ${c.firstName||crmFullName(c)},\n\nwie besprochen sende ich dir hier die Informationen zu. Schau dir alles in Ruhe an. Danach interessiert mich deine ehrliche Einschätzung.\n\nViele Grüße\n${currentPerson()}`},
+    appointment:{label:'Terminbestätigung',subject:'Unser Termin',step:'Termin bestätigen',text:(c)=>`Hallo ${c.firstName||crmFullName(c)},\n\nhiermit bestätige ich unseren Termin. Ich freue mich auf das Gespräch.\n\nViele Grüße\n${currentPerson()}`},
+    followup:{label:'Follow-up',subject:'Kurze Nachfrage',step:'Nachfassen',text:(c)=>`Hallo ${c.firstName||crmFullName(c)},\n\nich wollte kurz nachfragen, wie dein aktueller Eindruck ist.\n\nViele Grüße\n${currentPerson()}`},
+    thanks:{label:'Dankeschön',subject:'Vielen Dank',step:'Dank senden',text:(c)=>`Hallo ${c.firstName||crmFullName(c)},\n\nvielen Dank für deine Zeit und den angenehmen Austausch.\n\nViele Grüße\n${currentPerson()}`},
+    free:{label:'Freie E-Mail',subject:'',step:'Freie E-Mail',text:(c)=>''}
+  };
+}
+function crmCleanPhone(phone){return String(phone||'').replace(/[^0-9+]/g,'').replace(/^00/,'+').replace(/\+/g,'')}
+function crmTemplateSelect(channel){const templates=crmCommTemplates(channel); return Object.entries(templates).map(([k,v])=>`<option value="${esc(k)}">${esc(v.label)}</option>`).join('')}
+function crmBuildCommunicationUrl(c,channel,key){
+  const t=crmCommTemplates(channel)[key]||crmCommTemplates(channel).free;
+  const text=typeof t.text==='function'?t.text(c):'';
+  if(channel==='WhatsApp'){
+    const num=crmCleanPhone(c.phone); if(!num)return '';
+    return `https://wa.me/${num}${text?'?text='+encodeURIComponent(text):''}`;
+  }
+  if(channel==='E-Mail'){
+    if(!c.email)return '';
+    const subject=encodeURIComponent(t.subject||''); const body=encodeURIComponent(text||'');
+    return `mailto:${encodeURIComponent(c.email)}?subject=${subject}&body=${body}`;
+  }
+  if(channel==='Telefon')return c.phone?`tel:${crmCleanPhone(c.phone)}`:'';
+  return '';
+}
+function crmAddCommunicationLog(c,channel,label){
+  const entry={date:todayKey(),time:new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}),channel,text:`${channel} geöffnet · Vorlage: ${label}`};
+  if(!Array.isArray(c.communication))c.communication=[]; c.communication.push(entry);
+  if(!Array.isArray(c.timeline))c.timeline=[]; c.timeline.push({date:entry.date,time:entry.time,type:channel,text:entry.text});
+  c.updatedAt=new Date().toISOString();
+}
+function crmSuggestFollowup(c,channel,key){
+  const t=crmCommTemplates(channel)[key]; if(!t)return;
+  if(key==='landing'){
+    c.status='Nachfassen'; c.nextStep='Nachfragen, ob Video 1 angesehen wurde';
+    c.landingSeen=true; if(!c.landingDate)c.landingDate=todayKey();
+  }else if(key==='video1'){c.nextStep='Video 2 senden';}
+  else if(key==='video2'){c.nextStep='Video 3 senden';}
+  else if(key==='video3'){c.nextStep='Telefontermin vereinbaren';}
+  else if(key==='followup'){c.nextStep='Telefonat führen';}
+  const ask=window.confirm('Wiedervorlage anlegen? OK = in zwei Tagen. Abbrechen = keine Wiedervorlage.');
+  if(ask){const d=new Date(); d.setDate(d.getDate()+2); c.followDate=d.toISOString().slice(0,10); c.followTime=c.followTime||'09:00';}
+}
+function crmOpenComm(id,channel){
+  const key=document.getElementById(`crm_template_${channel}`)?.value||'free';
+  const c=crmFindContact(id); if(!c)return;
+  const templates=crmCommTemplates(channel); const label=(templates[key]||templates.free).label;
+  const url=crmBuildCommunicationUrl(c,channel,key);
+  if(!url){alert(channel==='WhatsApp'?'Bitte erst eine Mobilnummer im Kontakt eintragen.':channel==='E-Mail'?'Bitte erst eine E-Mail-Adresse im Kontakt eintragen.':'Bitte erst eine Telefonnummer eintragen.'); return;}
+  crmAddCommunicationLog(c,channel,label); crmSuggestFollowup(c,channel,key); save();
+  window.location.href=url;
+  setTimeout(()=>render(),300);
+}
+function crmQuickLog(id,channel,label,nextStep){
+  const c=crmFindContact(id); if(!c)return;
+  crmAddCommunicationLog(c,channel,label);
+  if(nextStep)c.nextStep=nextStep;
+  if(label.includes('Landingpage')){c.status='Nachfassen'; c.landingSeen=true; if(!c.landingDate)c.landingDate=todayKey();}
+  save(); render();
+}
+function crmRecommendedAction(c){
+  if(!c.landingSeen)return 'Landingpage senden';
+  if(!c.video1Seen)return 'Nachfragen, ob Video 1 angesehen wurde';
+  if(!c.video2Seen)return 'Video 2 senden';
+  if(!c.video3Seen)return 'Video 3 senden';
+  if(!c.followupActive)return 'Follow-up starten';
+  if(!['Präsentation geplant','Präsentation erfolgt','Kunde','Geschäftspartner'].includes(c.status||''))return 'Telefontermin oder Zoom vereinbaren';
+  return c.nextStep||'Nächsten Schritt prüfen';
+}
+function renderCrmCommunicationBar(c){
+  return `<div class="comm-panel"><div class="comm-recommendation"><strong>Empfehlung:</strong> ${esc(crmRecommendedAction(c))}</div><div class="comm-actions">
+    <a class="copy-btn" href="${c.phone?'tel:'+esc(crmCleanPhone(c.phone)):'#'}" onclick="crmQuickLog('${esc(c.id)}','Telefon','Anruf gestartet','Nachfassen')">Anrufen</a>
+    <label>WhatsApp<select id="crm_template_WhatsApp">${crmTemplateSelect('WhatsApp')}</select></label><button class="primary" onclick="crmOpenComm('${esc(c.id)}','WhatsApp')">WhatsApp Business öffnen</button>
+    <label>E-Mail<select id="crm_template_E-Mail">${crmTemplateSelect('E-Mail')}</select></label><button class="primary" onclick="crmOpenComm('${esc(c.id)}','E-Mail')">Outlook öffnen</button>
+    <button class="copy-btn" onclick="selectedContactTab='tasks'; render()">Termin/Aufgabe</button>
+    <button class="copy-btn" onclick="crmQuickLog('${esc(c.id)}','Landingpage','Landingpage gesendet','Nachfragen, ob Video 1 angesehen wurde')">Landingpage gesendet</button>
+  </div></div>`;
+}
+
 function crmTaskOptions(){return ['LinkedIn-Nachricht','WhatsApp senden','Rückruf','Zoom vorbereiten','Präsentation','Landingpage senden','Video senden','Nachfassen','Sonstiges']}
 function crmSortAz(items,lastLabel){
   const collator=new Intl.Collator('de',{sensitivity:'base',numeric:true});
@@ -1180,6 +1272,7 @@ function renderCrmProgress(c){return `<div class="crm-progress-steps">${crmProgr
 function renderCrmDetail(id){
   const c=crmFindContact(id); if(!c)return renderCrmForm(null);
   return `<div class="card contact-file"><div class="contact-file-actions"><button class="copy-btn" onclick="crmCloseContact()">◀ Zur Kontaktübersicht</button><div><button class="copy-btn" onclick="selectedContactTab='edit'; render()">Bearbeiten</button><button class="copy-btn danger" onclick="crmDeleteContact('${esc(c.id)}')">Löschen</button></div></div><div class="contact-sticky-head"><div><p class="eyebrow">Kontaktakte</p><h3>${esc(crmFullName(c))}</h3><p class="contact-code-line">${esc(c.contactCode||'')}</p><p>${esc(c.company||'')} ${c.city?'· '+esc(c.city):''}</p></div><div class="contact-head-meta"><span class="badge">Prio ${esc(c.priority||'A')}</span><span class="badge">${esc(c.status||'Neu')}</span><p class="small">Zuständig: ${esc(c.owner||'Peter')}${c.support?' · Unterstützung: '+esc(c.support):''}</p><p class="small"><strong>Nächster Schritt:</strong> ${esc(c.nextStep||'offen')}</p><p class="small"><strong>Wiedervorlage:</strong> ${esc(c.followDate||'offen')} ${esc(c.followTime||'')}</p></div></div>
+    ${renderCrmCommunicationBar(c)}
     <div class="tabs">${crmTabButton('overview','Übersicht')}${crmTabButton('communication','Kommunikation')}${crmTabButton('tasks','Aufgaben')}${crmTabButton('timeline','Zeitachse')}${crmTabButton('notes','Notizen')}${crmTabButton('documents','Dokumente')}${crmTabButton('edit','Bearbeiten')}</div>
     ${renderCrmProgress(c)}
     ${renderCrmTabContent(c)}
@@ -1241,7 +1334,11 @@ function renderCrmTasksTab(c){
 }
 function renderCrmCommunication(c){
   const comm=(c.communication||[]).slice().reverse();
-  return `<div class="tab-content"><h4>Kommunikation</h4><div class="link-grid">${c.phone?`<a class="link-card" href="tel:${esc(c.phone)}">Anrufen</a>`:''}${c.email?`<a class="link-card" href="mailto:${esc(c.email)}">E-Mail schreiben</a>`:''}${c.linkedin?`<a class="link-card" target="_blank" href="${esc(c.linkedin)}">LinkedIn öffnen</a>`:''}${c.facebook?`<a class="link-card" target="_blank" href="${esc(c.facebook)}">Facebook öffnen</a>`:''}${c.website?`<a class="link-card" target="_blank" href="${esc(c.website)}">Website öffnen</a>`:''}</div><div class="crm-toolbar"><select id="crm_comm_channel">${crmHtmlOptions(crmChannelOptions(),'WhatsApp')}</select><input id="crm_comm_text" placeholder="Kurze Gesprächsnotiz"><button class="primary" onclick="crmAddCommunication('${esc(c.id)}')">Eintragen</button></div>${comm.length?comm.map(e=>`<div class="timeline-item"><strong>${esc(e.date||'')}${e.time?' · '+esc(e.time):''}</strong> <span class="badge">${esc(e.channel||'')}</span><br>${esc(e.text||'')}</div>`).join(''):'<p class="small">Noch keine Kommunikation dokumentiert.</p>'}</div>`
+  return `<div class="tab-content"><h4>Kommunikation</h4>
+    ${renderCrmCommunicationBar(c)}
+    <div class="crm-toolbar"><select id="crm_comm_channel">${crmHtmlOptions(crmChannelOptions(),'WhatsApp')}</select><input id="crm_comm_text" placeholder="Kurze Gesprächsnotiz"><button class="primary" onclick="crmAddCommunication('${esc(c.id)}')">Notiz eintragen</button></div>
+    ${comm.length?comm.map(e=>`<div class="timeline-item"><strong>${esc(e.date||'')}${e.time?' · '+esc(e.time):''}</strong> <span class="badge">${esc(e.channel||'')}</span><br>${esc(e.text||'')}</div>`).join(''):'<p class="small">Noch keine Kommunikation dokumentiert.</p>'}
+  </div>`
 }
 function crmAddNote(id){
   const c=crmFindContact(id); if(!c)return;
