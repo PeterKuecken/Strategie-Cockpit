@@ -1,5 +1,5 @@
-# Recruiting-Cockpit Peter & Martina Kücken
+# Recruiting-Cockpit Kücken
 
-Version 1.4.0 RC1
+Version 1.4.0 RC2
 
-Neu: Kontaktakte zeigt Kontaktdaten vollständig an. Ergänzt wurden Geburtsdatum, Adresse, Ländervorwahl und saubere WhatsApp-Telefonnummern mit internationalem Format.
+Kontaktübersicht mit direkt anklickbarer Website und direkt wählbarer Mobilfunknummer.

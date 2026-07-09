@@ -9,7 +9,7 @@ const firebaseConfig = {
   appId: "1:523160644442:web:ff840ac629a9f62ebae163"
 };
 
-const APP_VERSION='1.4.0 RC1';
+const APP_VERSION='1.4.0 RC2';
 const APP_BUILD='09.07.2026';
 let firebaseApp=null;
 let auth=null;
@@ -839,7 +839,7 @@ function round(n){return Math.round(Number(n||0))}
 
 
 
-/* Recruiting CRM Version 1.4.0 RC1 */
+/* Recruiting CRM Version 1.4.0 RC2 */
 function ensureCrm(){
   if(!state.crm)state.crm={contacts:[],tasks:[],dailyDone:{},counters:{PK:0,MK:0}};
   if(!Array.isArray(state.crm.contacts))state.crm.contacts=[];
@@ -939,6 +939,12 @@ function crmFullPhone(c){
 }
 function crmPhoneDisplay(c){const full=crmFullPhone(c); return full?`+${full}`:''}
 function crmPhoneLocalDisplay(c){return [c.phoneCountry||'+49', c.phone||''].filter(Boolean).join(' ')}
+function crmWebsiteHref(url){
+  const v=String(url||'').trim();
+  if(!v)return '';
+  if(/^https?:\/\//i.test(v))return v;
+  return 'https://'+v.replace(/^\/+/, '');
+}
 function crmTemplateSelect(channel){const templates=crmCommTemplates(channel); return Object.entries(templates).map(([k,v])=>`<option value="${esc(k)}">${esc(v.label)}</option>`).join('')}
 function crmBuildCommunicationUrl(c,channel,key){
   const t=crmCommTemplates(channel)[key]||crmCommTemplates(channel).free;
@@ -1299,7 +1305,7 @@ function renderCrmTabContent(c){
   if(selectedContactTab==='communication')return renderCrmCommunication(c);
   if(selectedContactTab==='notes')return renderCrmNotes(c);
   if(selectedContactTab==='documents')return `<div class="tab-content"><h4>Dokumente</h4><p class="small">Dieser Bereich ist vorbereitet. Dokumente, Angebote, Bilder und PDFs folgen in einer späteren Version.</p></div>`;
-  return `<div class="tab-content"><div class="grid"><div><h4>Kontaktdaten</h4><p><strong>Kontakt-ID:</strong> ${esc(c.contactCode||'')}</p><p><strong>Name:</strong> ${esc(crmFullName(c))}</p><p><strong>Firma:</strong> ${esc(c.company||'')}</p><p><strong>Geburtsdatum:</strong> ${esc(c.birthday||'')}</p><p><strong>Adresse:</strong><br>${esc(c.street||'')}${c.street?'<br>':''}${esc(c.postalCode||'')} ${esc(c.city||'')}</p><p><strong>Mobil:</strong> ${esc(crmPhoneDisplay(c)||crmPhoneLocalDisplay(c)||'')}</p><p><strong>E-Mail:</strong> ${c.email?`<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>`:''}</p><p><strong>Website:</strong> ${c.website?`<a href="${esc(c.website)}" target="_blank" rel="noopener">${esc(c.website)}</a>`:''}</p></div><div><h4>Beruf und Profile</h4><p><strong>Angelegt von:</strong> ${esc(c.createdBy||'')}</p><p><strong>Beruf:</strong> ${esc(c.job||'')}</p><p><strong>Branche:</strong> ${esc(c.branch||'')}</p><p><strong>Zielgruppe:</strong> ${esc(c.targetGroup||'')}</p><p><strong>LinkedIn:</strong> ${c.linkedin?`<a href="${esc(c.linkedin)}" target="_blank" rel="noopener">Profil öffnen</a>`:''}</p><p><strong>Facebook:</strong> ${c.facebook?`<a href="${esc(c.facebook)}" target="_blank" rel="noopener">Profil öffnen</a>`:''}</p><p><strong>Instagram:</strong> ${esc(c.instagram||'')}</p><p><strong>WhatsApp vorhanden:</strong> ${c.whatsapp?'Ja':'Nein'}</p></div><div><h4>Nächster Schritt</h4><p><strong>Wiedervorlage:</strong> ${esc(c.followDate||'offen')} ${esc(c.followTime||'')}</p><p><strong>Aufgabe:</strong> ${esc(c.nextStep||'Noch kein nächster Schritt eingetragen.')}</p><p><strong>Quelle:</strong> ${esc(c.source||'')}</p><p><strong>Priorität:</strong> ${esc(c.priority||'A')}</p><p><strong>Bewertung:</strong> Interesse ${esc(c.interest||'3')}/5 · Vertrauen ${esc(c.trust||'3')}/5 · Aktivität ${esc(c.activityLevel||'3')}/5</p></div><div><h4>Landingpage</h4><p><strong>Gesehen:</strong> ${c.landingSeen?'Ja':'Nein'} ${c.landingDate?'am '+esc(c.landingDate):''}</p>${c.landingSeen?`<p><strong>Video 1:</strong> ${c.video1Seen?'Ja':'Nein'}</p>${c.video1Seen?`<p><strong>Video 2:</strong> ${c.video2Seen?'Ja':'Nein'}</p>`:''}${c.video2Seen?`<p><strong>Video 3:</strong> ${c.video3Seen?'Ja':'Nein'}</p>`:''}${c.video3Seen?`<p><strong>Follow-up aktiv:</strong> ${c.followupActive?'Ja':'Nein'}</p>`:''}`:''}</div></div><div class="quick-actions"><button class="primary" onclick="selectedContactTab='edit'; render()">Bearbeiten</button><button class="copy-btn" onclick="selectedContactTab='communication'; render()">Kommunikation eintragen</button><button class="copy-btn" onclick="selectedContactTab='timeline'; render()">Zeitachse öffnen</button></div></div>`;
+  return `<div class="tab-content"><div class="grid"><div><h4>Kontaktdaten</h4><p><strong>Kontakt-ID:</strong> ${esc(c.contactCode||'')}</p><p><strong>Name:</strong> ${esc(crmFullName(c))}</p><p><strong>Firma:</strong> ${esc(c.company||'')}</p><p><strong>Geburtsdatum:</strong> ${esc(c.birthday||'')}</p><p><strong>Adresse:</strong><br>${esc(c.street||'')}${c.street?'<br>':''}${esc(c.postalCode||'')} ${esc(c.city||'')}</p><p><strong>Mobil:</strong> ${crmFullPhone(c)?`<a href="tel:+${esc(crmFullPhone(c))}" onclick="crmQuickLog('${esc(c.id)}','Telefon','Anruf aus Übersicht gestartet','Nachfassen')">${esc(crmPhoneDisplay(c))}</a>`:esc(crmPhoneLocalDisplay(c)||'')}</p><p><strong>E-Mail:</strong> ${c.email?`<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>`:''}</p><p><strong>Website:</strong> ${c.website?`<a href="${esc(crmWebsiteHref(c.website))}" target="_blank" rel="noopener">${esc(c.website)}</a>`:''}</p></div><div><h4>Beruf und Profile</h4><p><strong>Angelegt von:</strong> ${esc(c.createdBy||'')}</p><p><strong>Beruf:</strong> ${esc(c.job||'')}</p><p><strong>Branche:</strong> ${esc(c.branch||'')}</p><p><strong>Zielgruppe:</strong> ${esc(c.targetGroup||'')}</p><p><strong>LinkedIn:</strong> ${c.linkedin?`<a href="${esc(c.linkedin)}" target="_blank" rel="noopener">Profil öffnen</a>`:''}</p><p><strong>Facebook:</strong> ${c.facebook?`<a href="${esc(c.facebook)}" target="_blank" rel="noopener">Profil öffnen</a>`:''}</p><p><strong>Instagram:</strong> ${esc(c.instagram||'')}</p><p><strong>WhatsApp vorhanden:</strong> ${c.whatsapp?'Ja':'Nein'}</p></div><div><h4>Nächster Schritt</h4><p><strong>Wiedervorlage:</strong> ${esc(c.followDate||'offen')} ${esc(c.followTime||'')}</p><p><strong>Aufgabe:</strong> ${esc(c.nextStep||'Noch kein nächster Schritt eingetragen.')}</p><p><strong>Quelle:</strong> ${esc(c.source||'')}</p><p><strong>Priorität:</strong> ${esc(c.priority||'A')}</p><p><strong>Bewertung:</strong> Interesse ${esc(c.interest||'3')}/5 · Vertrauen ${esc(c.trust||'3')}/5 · Aktivität ${esc(c.activityLevel||'3')}/5</p></div><div><h4>Landingpage</h4><p><strong>Gesehen:</strong> ${c.landingSeen?'Ja':'Nein'} ${c.landingDate?'am '+esc(c.landingDate):''}</p>${c.landingSeen?`<p><strong>Video 1:</strong> ${c.video1Seen?'Ja':'Nein'}</p>${c.video1Seen?`<p><strong>Video 2:</strong> ${c.video2Seen?'Ja':'Nein'}</p>`:''}${c.video2Seen?`<p><strong>Video 3:</strong> ${c.video3Seen?'Ja':'Nein'}</p>`:''}${c.video3Seen?`<p><strong>Follow-up aktiv:</strong> ${c.followupActive?'Ja':'Nein'}</p>`:''}`:''}</div></div><div class="quick-actions"><button class="primary" onclick="selectedContactTab='edit'; render()">Bearbeiten</button><button class="copy-btn" onclick="selectedContactTab='communication'; render()">Kommunikation eintragen</button><button class="copy-btn" onclick="selectedContactTab='timeline'; render()">Zeitachse öffnen</button></div></div>`;
 }
 
 function crmAddTimeline(id){
