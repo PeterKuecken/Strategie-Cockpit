@@ -9,7 +9,7 @@ const firebaseConfig = {
   appId: "1:523160644442:web:ff840ac629a9f62ebae163"
 };
 
-const APP_VERSION='1.2.2';
+const APP_VERSION='1.2.4';
 const APP_BUILD='09.07.2026';
 let firebaseApp=null;
 let auth=null;
@@ -50,7 +50,7 @@ const view=document.getElementById('view');
 const searchInput=document.getElementById('searchInput');
 
 let current='heute';
-let openNavGroupLabel='1. Vertriebs-Cockpit';
+let openNavGroupLabel=null;
 let selectedChapterIndex=null;
 let selectedDate=todayKey();
 let selectedSalesDate=todayKey();
@@ -861,9 +861,15 @@ function crmPersonFilter(c){return (c.owner || 'Peter')===currentPerson() || (c.
 function crmStatusOptions(){return ['Neu','Kontaktanfrage gesendet','Vernetzt','Erstgespräch','Interesse','Präsentation geplant','Präsentation erfolgt','Nachfassen','Kunde','Geschäftspartner','Kein Interesse','Archiv']}
 function crmSources(){return ['LinkedIn','Facebook','WhatsApp','Empfehlung','Veranstaltung','Kunde','Sonstiges']}
 function crmPriorities(){return ['A','B','C']}
-function crmJobOptions(){return ['Apotheker','Berater','Bodenleger','Dachdecker','Elektriker','Elektromeister','Fensterbauer','Finanzberater','Fliesenleger','Garten- und Landschaftsbauer','Gastronom','Gebäudereiniger','Geschäftsführer','Heilpraktiker','Heizungsbauer','Hotelier','Immobilienmakler','Klima- und Lüftungsbauer','Küchenmonteur','Maler und Lackierer','Optiker','Physiotherapeut','Sanitärinstallateur','Schornsteinfeger','Schreiner','Selbstständig','Tischler','Unternehmer','Versicherungsmakler','Sonstiges']}
-function crmBranchOptions(){return ['Beratung','Dienstleistung','Einzelhandel','Finanzen','Gastronomie','Gesundheit','Handwerk','Hausverwaltung','Hotellerie','Immobilien','IT','Marketing','Sonstige Branche']}
-function crmTargetGroupOptions(){return ['Dachdecker','Elektriker','Finanzberater','Fliesenleger','Gebäudereiniger','Gesundheitsberufe','Heizungsbauer','Immobilienmakler','Kundenempfehlung','Maler','Sanitär','Selbstständige','Tischler','Unternehmer','Versicherungsmakler','Sonstige Zielgruppe']}
+function crmSortAz(items,lastLabel){
+  const collator=new Intl.Collator('de',{sensitivity:'base',numeric:true});
+  const base=(items||[]).filter(x=>x!==lastLabel).sort((a,b)=>collator.compare(a,b));
+  if(lastLabel && (items||[]).includes(lastLabel))base.push(lastLabel);
+  return base;
+}
+function crmJobOptions(){return crmSortAz(['Apotheker','Berater','Bodenleger','Dachdecker','Elektriker','Elektromeister','Fensterbauer','Finanzberater','Fliesenleger','Garten- und Landschaftsbauer','Gastronom','Gebäudereiniger','Geschäftsführer','Heilpraktiker','Heizungsbauer','Hotelier','Immobilienmakler','Klima- und Lüftungsbauer','Küchenmonteur','Maler und Lackierer','Optiker','Physiotherapeut','Sanitärinstallateur','Schornsteinfeger','Schreiner','Selbstständig','Tischler','Unternehmer','Versicherungsmakler','Sonstiges'],'Sonstiges')}
+function crmBranchOptions(){return crmSortAz(['Beratung','Dienstleistung','Einzelhandel','Finanzen','Gastronomie','Gesundheit','Handwerk','Hausverwaltung','Hotellerie','Immobilien','IT','Marketing','Sonstige Branche'],'Sonstige Branche')}
+function crmTargetGroupOptions(){return crmSortAz(['Dachdecker','Elektriker','Finanzberater','Fliesenleger','Gebäudereiniger','Gesundheitsberufe','Heizungsbauer','Immobilienmakler','Kundenempfehlung','Maler','Sanitär','Selbstständige','Tischler','Unternehmer','Versicherungsmakler','Sonstige Zielgruppe'],'Sonstige Zielgruppe')}
 function crmSelectedFromOptions(value,items,otherLabel){return items.includes(value||'') ? (value||'') : ((value||'') ? otherLabel : '')}
 function crmOtherValue(value,items){return (value && !items.includes(value)) ? value : ''}
 function crmSelectWithOther(key,label,items,value,otherLabel){const selected=crmSelectedFromOptions(value,items,otherLabel); const other=crmOtherValue(value,items); return `<label>${label}<select id="crm_${key}Select">${crmHtmlOptions(items,selected)}</select></label><label>${label} frei eintragen<input id="crm_${key}Other" value="${esc(other)}" placeholder="Nur nutzen, wenn nicht in der Liste"></label>`}
