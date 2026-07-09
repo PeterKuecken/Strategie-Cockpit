@@ -490,3 +490,14 @@ footer{padding:10px 22px;color:var(--muted);background:#fff;border-top:1px solid
 .comm-actions label{min-width:180px;display:flex;flex-direction:column;gap:5px;font-size:.85rem;color:var(--muted,#52606d)}
 .comm-actions select{min-height:40px}
 @media (max-width:700px){.comm-actions{display:grid;grid-template-columns:1fr}.comm-actions label,.comm-actions button,.comm-actions a{width:100%}}
+
+/* Version 1.4.0 RC3: strukturierte Kontaktübersicht */
+.contact-status-strip{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 16px}
+.contact-status-strip span{background:#edf2f7;border:1px solid var(--border);border-radius:999px;padding:8px 11px;color:var(--blue);font-weight:700;font-size:13px}
+.info-card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-top:10px}
+.info-card{background:#fff;border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:0 2px 8px rgba(16,42,67,.05)}
+.info-card h4{margin:0 0 10px;color:var(--blue);border-bottom:1px solid var(--border);padding-bottom:8px}
+.info-card p{margin:8px 0;line-height:1.45}
+.info-card-wide{grid-column:1/-1}
+.info-card-wide .quick-actions{margin-top:6px}
+@media(max-width:720px){.info-card-grid{grid-template-columns:1fr}.contact-status-strip span{width:100%;box-sizing:border-box}}

@@ -1,5 +1,5 @@
 # Recruiting-Cockpit Kücken
 
-Version 1.4.0 RC2
+Version 1.4.0 RC3
 
-Kontaktübersicht mit direkt anklickbarer Website und direkt wählbarer Mobilfunknummer.
+Diese Version strukturiert die Kontaktakte in klare Karten und entfernt das überflüssige Feld "Angelegt von" aus der Übersicht.

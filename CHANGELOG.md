@@ -1,9 +1,11 @@
 # Changelog
 
-## Version 1.4.0 RC2
+## Version 1.4.0 RC3
+- Feld "Angelegt von" aus der Kontaktakte entfernt.
+- Übersicht der Kontaktakte in klare Karten gegliedert: Kontaktdaten, Beruf und Profile, Recruiting, Landingpage, Kommunikation.
+- Kompakte Statusleiste ergänzt: Kontakt-ID, Priorität, Status und nächster Schritt.
+- Kontaktübersicht optisch besser lesbar auf Desktop und Smartphone.
 
-- Website-Link in der Kontaktübersicht direkt anklickbar gemacht.
-- Website-Adressen ohne https:// werden automatisch korrekt geöffnet.
-- Mobilfunknummer in der Kontaktübersicht direkt wählbar gemacht.
-- Telefonaktion wird im Kommunikationsverlauf protokolliert.
-- Basis: Version 1.4.0 RC1.
+## Version 1.4.0 RC2
+- Webseite in der Kontaktübersicht direkt anklickbar.
+- Mobilfunknummer in der Kontaktübersicht direkt wählbar.
