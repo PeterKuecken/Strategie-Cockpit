@@ -9,7 +9,7 @@ const firebaseConfig = {
   appId: "1:523160644442:web:ff840ac629a9f62ebae163"
 };
 
-const APP_VERSION='1.6.3';
+const APP_VERSION='1.7.1';
 const LANDINGPAGE_URL='https://www.ichmachdicherfolgreich.de';
 const APP_BUILD='10.07.2026';
 let firebaseApp=null;

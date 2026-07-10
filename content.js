@@ -3033,15 +3033,20 @@ window.APP_CONTENT = {
   ],
   "navGroups": [
     {
-      "label": "1. Vertriebs-Cockpit",
+      "label": "Dashboard",
       "sections": [
         "heute",
-        "schnellzugriff",
-        "kennzahlen"
+        "schnellzugriff"
       ]
     },
     {
-      "label": "2. Peter",
+      "label": "Kontakte",
+      "sections": [
+        "recruiting"
+      ]
+    },
+    {
+      "label": "Peter",
       "sections": [
         "whatsapp_lib",
         "linkedin_lib",
@@ -3058,7 +3063,7 @@ window.APP_CONTENT = {
       ]
     },
     {
-      "label": "3. Martina",
+      "label": "Martina",
       "sections": [
         "martina_home",
         "martina_band1",
@@ -3070,22 +3075,21 @@ window.APP_CONTENT = {
       ]
     },
     {
-      "label": "4. Recruiting",
-      "sections": [
-        "recruiting"
-      ]
-    },
-    {
-      "label": "5. Wissensbereich",
+      "label": "Recruiting-Bibliothek",
       "sections": [
         "wissen"
       ]
     },
     {
-      "label": "6. Impressum",
+      "label": "Auswertungen",
+      "sections": [
+        "kennzahlen"
+      ]
+    },
+    {
+      "label": "Einstellungen",
       "sections": [
         "impressum"
       ]
     }
-  ]
-};
+  ]};

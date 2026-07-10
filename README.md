@@ -1,6 +1,6 @@
 # Recruiting-Cockpit Peter & Martina Kücken
 
-Vollständige Version 1.6.3.
+Vollständige Version 1.7.1.
 
 ## Neue Prozesslogik
 

@@ -1,3 +1,11 @@
+# Version 1.7.1 – 10.07.2026
+
+- Vollständige Inhalte und Funktionen aus Master-Version 1.6.3 übernommen.
+- Hauptnavigation neu geordnet: Dashboard, Kontakte, Peter, Martina, Recruiting-Bibliothek, Auswertungen, Einstellungen.
+- Kontakte bleiben als vollständiger Recruiting- und CRM-Bereich erhalten.
+- Alle Bibliotheken und 52-Wochen-Pläne bleiben vollständig enthalten.
+- Auswertungen und Impressum bleiben erhalten.
+
 # Änderungsprotokoll
 
 ## 1.6.3
