@@ -1,5 +1,5 @@
-# Recruiting-Cockpit Peter & Martina Kücken
+# Recruiting-Cockpit Peter und Martina Kücken
 
-Version 1.7.6
+Master-Version 1.7.7
 
-Vollständige Master-Version. Das Dashboard liest fällige Kontakte, Termine, Wiedervorlagen und Aufgaben direkt aus der Kontaktverwaltung. Es entstehen keine doppelten Eingaben.
+Neu: Automatisches Vertriebscockpit mit den Zeiträumen Heute, Diese Woche und Dieser Monat. Alle Kennzahlen stammen aus der Kontaktverwaltung. Jede Kennzahl öffnet die passenden Kontakte.

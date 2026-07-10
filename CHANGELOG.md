@@ -1,5 +1,16 @@
 # Änderungsprotokoll
 
+## Version 1.7.7
+- Vertriebscockpit im Dashboard automatisiert.
+- Zeiträume Heute, Diese Woche und Dieser Monat ergänzt.
+- Kennzahlen: neue Kontakte, Erstgespräche, Informationen versendet, Termine vereinbart, Präsentationen, neue Kunden und neue Geschäftspartner.
+- Klick auf jede Kennzahl öffnet die zugehörige Kontaktliste.
+- Daten stammen ausschließlich aus Kontaktakte und Zeitachse.
+- Keine doppelte Dateneingabe.
+- Desktop- und Smartphone-Darstellung angepasst.
+
+# Änderungsprotokoll
+
 ## Version 1.7.6
 - Tagesübersicht als dynamische Arbeitszentrale aufgebaut
 - Heute fällige Kontakte, überfällige Kontakte, heutige Termine und Wiedervorlagen für heute
