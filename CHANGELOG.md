@@ -1,3 +1,10 @@
+# Changelog
+
+## 1.6.2
+- Landingpage-Link `https://www.ichmachdicherfolgreich.de` fest in die Landingpage-Vorlagen eingebaut.
+- Automatische Abfrage für eine Wiedervorlage in zwei Tagen entfernt.
+- Versionsangaben aktualisiert.
+
 # Änderungsprotokoll
 
 ## Version 1.6.1 – 10.07.2026

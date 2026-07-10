@@ -9,7 +9,8 @@ const firebaseConfig = {
   appId: "1:523160644442:web:ff840ac629a9f62ebae163"
 };
 
-const APP_VERSION='1.6.0';
+const APP_VERSION='1.6.2';
+const LANDINGPAGE_URL='https://www.ichmachdicherfolgreich.de';
 const APP_BUILD='10.07.2026';
 let firebaseApp=null;
 let auth=null;
@@ -911,7 +912,11 @@ function crmChannelOptions(){return ['LinkedIn','Facebook','WhatsApp','Telefon',
 function crmCommTemplates(channel){
   if(channel==='WhatsApp')return {
     first:{label:'Erstkontakt',step:'Erstkontakt',text:(c)=>`Hallo ${c.firstName||crmFullName(c)}, danke für den angenehmen Kontakt. Ich freue mich auf den weiteren Austausch.`},
-    landing:{label:'Landingpage senden',step:'Landingpage senden',text:(c)=>`Hallo ${c.firstName||crmFullName(c)}, hier ist wie besprochen der Link zu unserer kurzen Info-Seite. Schau dir das in Ruhe an. Danach interessiert mich deine ehrliche Einschätzung.`},
+    landing:{label:'Landingpage senden',step:'Landingpage senden',text:(c)=>`Hallo ${c.firstName||crmFullName(c)}, hier ist wie besprochen der Link zu unserer kurzen Info-Seite:
+
+${LANDINGPAGE_URL}
+
+Schau dir das in Ruhe an. Danach interessiert mich deine ehrliche Einschätzung.`},
     video1:{label:'Video 1',step:'Video 1 senden',text:(c)=>`Hallo ${c.firstName||crmFullName(c)}, ich wollte kurz nachfragen, ob du Video 1 schon anschauen konntest.`},
     video2:{label:'Video 2',step:'Video 2 senden',text:(c)=>`Hallo ${c.firstName||crmFullName(c)}, wenn Video 1 für dich gepasst hat, wäre jetzt Video 2 der nächste sinnvolle Schritt.`},
     video3:{label:'Video 3',step:'Video 3 senden',text:(c)=>`Hallo ${c.firstName||crmFullName(c)}, Video 3 rundet die Informationen ab. Danach können wir gemeinsam ein kurzes Gespräch führen.`},
@@ -979,8 +984,6 @@ function crmSuggestFollowup(c,channel,key){
   else if(key==='video2'){c.nextStep='Video 3 senden';}
   else if(key==='video3'){c.nextStep='Telefontermin vereinbaren';}
   else if(key==='followup'){c.nextStep='Telefonat führen';}
-  const ask=window.confirm('Wiedervorlage anlegen? OK = in zwei Tagen. Abbrechen = keine Wiedervorlage.');
-  if(ask){const d=new Date(); d.setDate(d.getDate()+2); c.followDate=d.toISOString().slice(0,10); c.followTime=c.followTime||'09:00';}
 }
 function crmOpenComm(id,channel){
   const key=document.getElementById(`crm_template_${channel}`)?.value||'free';
@@ -1197,13 +1200,13 @@ const KNOWLEDGE_TEMPLATES=[
   {id:'fb-follow',category:'Facebook',title:'Messenger Nachfassen',keywords:'messenger follow-up nachfassen',text:'Hallo [Vorname], ich wollte kurz an unseren Austausch anknüpfen. Wie sieht deine aktuelle Situation aus?'},
   {id:'fb-appointment',category:'Facebook',title:'Terminvereinbarung',keywords:'termin telefon zoom',text:'Ich finde unseren Austausch interessant. Ein kurzes Telefonat ist oft leichter als viele Nachrichten. Wann passen dir etwa 15 Minuten?'},
   {id:'wa-first',category:'WhatsApp',title:'Erstkontakt',keywords:'erstkontakt erste nachricht',text:'Hallo [Vorname], schön, dass wir jetzt auch über WhatsApp verbunden sind. Danke für den angenehmen Austausch. Mich interessiert noch: Wie bist du zu deiner heutigen Tätigkeit gekommen?'},
-  {id:'wa-landing',category:'WhatsApp',title:'Landingpage senden',keywords:'landingpage informationen',text:'Hallo [Vorname], hier ist wie besprochen der Link zu unserer kurzen Info-Seite. Schau dir alles in Ruhe an. Danach interessiert mich deine ehrliche Einschätzung.'},
+  {id:'wa-landing',category:'WhatsApp',title:'Landingpage senden',keywords:'landingpage informationen',text:'Hallo [Vorname], hier ist wie besprochen der Link zu unserer kurzen Info-Seite:\n\nhttps://www.ichmachdicherfolgreich.de\n\nSchau dir alles in Ruhe an. Danach interessiert mich deine ehrliche Einschätzung.'},
   {id:'wa-video1',category:'WhatsApp',title:'Video 1',keywords:'video 1 nachfragen',text:'Hallo [Vorname], konntest du dir Video 1 bereits ansehen? Was war dein erster Eindruck?'},
   {id:'wa-video2',category:'WhatsApp',title:'Video 2',keywords:'video 2 senden',text:'Hallo [Vorname], wenn Video 1 für dich gepasst hat, ist Video 2 jetzt der nächste Schritt. Gib mir danach bitte kurz deine Einschätzung.'},
   {id:'wa-video3',category:'WhatsApp',title:'Video 3',keywords:'video 3 senden',text:'Hallo [Vorname], Video 3 rundet die Informationen ab. Danach können wir uns kurz austauschen und offene Fragen klären.'},
   {id:'wa-follow',category:'WhatsApp',title:'Follow-up',keywords:'follow-up nachfassen',text:'Hallo [Vorname], ich wollte kurz hören, wie dein Eindruck nach den Informationen ist. Welche Frage ist bei dir noch offen?'},
   {id:'mail-first',category:'E-Mail',title:'Erstkontakt',keywords:'erstkontakt erste mail',subject:'Unser Austausch',text:'Hallo [Vorname],\n\nvielen Dank für den angenehmen Kontakt. Ich freue mich auf den weiteren Austausch.\n\nViele Grüße\n[Absender]'},
-  {id:'mail-landing',category:'E-Mail',title:'Landingpage senden',keywords:'landingpage informationen',subject:'Informationen wie besprochen',text:'Hallo [Vorname],\n\nwie besprochen sende ich dir hier die Informationen. Schau dir alles in Ruhe an. Danach interessiert mich deine ehrliche Einschätzung.\n\nViele Grüße\n[Absender]'},
+  {id:'mail-landing',category:'E-Mail',title:'Landingpage senden',keywords:'landingpage informationen',subject:'Informationen wie besprochen',text:'Hallo [Vorname],\n\nwie besprochen sende ich dir hier die Informationen:\n\nhttps://www.ichmachdicherfolgreich.de\n\nSchau dir alles in Ruhe an. Danach interessiert mich deine ehrliche Einschätzung.\n\nViele Grüße\n[Absender]'},
   {id:'mail-appointment',category:'E-Mail',title:'Terminvereinbarung',keywords:'termin bestätigen vereinbaren',subject:'Unser Termin',text:'Hallo [Vorname],\n\nlass uns die offenen Punkte in einem kurzen Gespräch klären. Welche Zeit passt dir in den nächsten Tagen?\n\nViele Grüße\n[Absender]'},
   {id:'talk-phone',category:'Gespräch',title:'Telefonleitfaden',keywords:'telefon leitfaden gespräch',text:'1. Persönlich einsteigen.\n2. Nach der aktuellen Situation fragen.\n3. Ziele und Wünsche verstehen.\n4. Prüfen, ob Interesse an einer zusätzlichen Perspektive besteht.\n5. Einen klaren nächsten Schritt vereinbaren.'},
   {id:'talk-zoom',category:'Gespräch',title:'Zoom-Leitfaden',keywords:'zoom leitfaden präsentation',text:'1. Ziel und Dauer des Gesprächs klären.\n2. Bedarf kurz zusammenfassen.\n3. Firma, Produkt und Geschäft verständlich vorstellen.\n4. Fragen beantworten.\n5. Konkreten nächsten Schritt mit Datum festlegen.'}
@@ -1286,7 +1289,7 @@ function renderKnowledge(s){
   const q=(knowledgeQuery||'').trim().toLowerCase();
   const filtered=KNOWLEDGE_TEMPLATES.filter(t=>(knowledgeCategory==='Alle'||t.category===knowledgeCategory) && (!q||`${t.title} ${t.category} ${t.keywords} ${t.text}`.toLowerCase().includes(q)));
   const contact=selectedContactId?crmFindContact(selectedContactId):null;
-  view.innerHTML=`<div class="card knowledge-head"><p class="eyebrow">Version 1.6.0</p><h2>${esc(s.title)}</h2><p>${esc(s.text)}</p>${contact?`<p class="knowledge-contact">Aktueller Kontakt: <strong>${esc(crmFullName(contact))}</strong> · ${esc(contact.contactCode||'')}</p>`:''}<input class="knowledge-search" type="search" placeholder="Vorlage suchen, z. B. Landingpage oder Video 2" value="${esc(knowledgeQuery)}" oninput="knowledgeQuery=this.value; renderKnowledge(sectionById('wissen'))"></div>
+  view.innerHTML=`<div class="card knowledge-head"><p class="eyebrow">Version 1.6.2</p><h2>${esc(s.title)}</h2><p>${esc(s.text)}</p>${contact?`<p class="knowledge-contact">Aktueller Kontakt: <strong>${esc(crmFullName(contact))}</strong> · ${esc(contact.contactCode||'')}</p>`:''}<input class="knowledge-search" type="search" placeholder="Vorlage suchen, z. B. Landingpage oder Video 2" value="${esc(knowledgeQuery)}" oninput="knowledgeQuery=this.value; renderKnowledge(sectionById('wissen'))"></div>
   <div class="knowledge-categories">${cats.map(cat=>`<button class="${knowledgeCategory===cat?'primary':'copy-btn'}" onclick="knowledgeSetCategory('${esc(cat)}')">${esc(cat)}</button>`).join('')}</div>
   <div class="knowledge-grid">${filtered.length?filtered.map(t=>`<article class="knowledge-card"><span class="knowledge-label">${esc(t.category)}</span><h3>${esc(t.title)}</h3><div class="knowledge-text">${esc(knowledgeContactText(t,contact)).replaceAll('\n','<br>')}</div><div class="knowledge-actions"><button class="copy-btn" onclick="knowledgeCopy('${esc(t.id)}')">Kopieren</button><button class="primary" onclick="knowledgeSend('${esc(t.id)}')">Jetzt verwenden</button></div></article>`).join(''):'<div class="card"><p>Keine passende Vorlage gefunden.</p></div>'}</div>`;
 }
