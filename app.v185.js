@@ -665,8 +665,8 @@ function salesMetricContacts(metric,period){
     if(metric==='infoSent')return salesDateInRange(c.landingSentDate,range) || salesTimelineMatches(c,range,[/Landingpage.*gesendet/i,/Information.*versendet/i,/Link.*gesendet/i],["Landingpage"]);
     if(metric==='appointments')return salesTimelineMatches(c,range,[/→\s*Präsentation geplant/i,/Termin vereinbart/i,/Termin geplant/i],["Termin"]);
     if(metric==='presentations')return salesTimelineMatches(c,range,[/→\s*Präsentation erfolgt/i,/Präsentation durchgeführt/i,/Präsentation erfolgt/i],["Präsentation"]);
-    if(metric==='customers')return salesTimelineMatches(c,range,[/→\s*Kunde/i,/Status geändert:.*Kunde/i]) || (c.status==='Kunde' && salesDateInRange(updated,range));
-    if(metric==='partners')return salesTimelineMatches(c,range,[/→\s*Geschäftspartner/i,/Status geändert:.*Geschäftspartner/i]) || (c.status==='Geschäftspartner' && salesDateInRange(updated,range));
+    if(metric==='customers')return salesTimelineMatches(c,range,[/→\s*Kunde/i,/Status geändert:.*Kunde/i]) || false;
+    if(metric==='partners')return salesTimelineMatches(c,range,[/→\s*Geschäftspartner/i,/Status geändert:.*Geschäftspartner/i]) || (crmEnsurePhase(c)==='Geschäftspartner' && salesDateInRange(updated,range));
     return false;
   }).filter((c,i,a)=>a.findIndex(x=>x.id===c.id)===i);
 }
@@ -677,7 +677,7 @@ function salesDashboardSetPeriod(period){salesDashboardPeriod=period; render()}
 function salesDashboardSetMetric(metric){salesDashboardMetric=metric; render(); setTimeout(()=>document.getElementById('salesMetricList')?.scrollIntoView({behavior:'smooth',block:'start'}),40)}
 function renderSalesMetricList(list,metric,period){
   const range=salesDashboardRange(period); const title=salesDashboardMetricTitle(metric);
-  return `<div id="salesMetricList" class="card dashboard-work-list"><div class="section-title-row"><div><p class="eyebrow">Kontaktliste · ${esc(range.label)}</p><h3>${esc(title)} (${list.length})</h3></div><button class="copy-btn" onclick="current='recruiting'; render(); setTimeout(()=>document.getElementById('crmContactsSection')?.scrollIntoView({behavior:'smooth'}),50)">Alle Kontakte</button></div>${list.length?`<div class="dashboard-contact-list">${list.map(c=>`<div class="dashboard-contact-row"><button class="dashboard-contact-main" onclick="crmOpenContact('${esc(c.id)}')"><strong>${esc(crmFullName(c))}</strong><span>${esc(c.contactCode||'')} · ${esc(c.company||c.job||'')} ${c.city?'· '+esc(c.city):''}</span><small>Status: ${esc(c.status||'Neu')} · Zuständig: ${esc(c.owner||'Peter')}${c.nextStep?' · '+esc(c.nextStep):''}</small></button></div>`).join('')}</div>`:`<p class="ok-text">Für diesen Zeitraum sind keine passenden Kontakte dokumentiert.</p>`}</div>`;
+  return `<div id="salesMetricList" class="card dashboard-work-list"><div class="section-title-row"><div><p class="eyebrow">Kontaktliste · ${esc(range.label)}</p><h3>${esc(title)} (${list.length})</h3></div><button class="copy-btn" onclick="current='recruiting'; render(); setTimeout(()=>document.getElementById('crmContactsSection')?.scrollIntoView({behavior:'smooth'}),50)">Alle Kontakte</button></div>${list.length?`<div class="dashboard-contact-list">${list.map(c=>`<div class="dashboard-contact-row"><button class="dashboard-contact-main" onclick="crmOpenContact('${esc(c.id)}')"><strong>${esc(crmFullName(c))}</strong><span>${esc(c.contactCode||'')} · ${esc(c.company||c.job||'')} ${c.city?'· '+esc(c.city):''}</span><small>Status: ${esc(crmEnsurePhase(c))} · Zuständig: ${esc(c.owner||'Peter')}${c.nextStep?' · '+esc(c.nextStep):''}</small></button></div>`).join('')}</div>`:`<p class="ok-text">Für diesen Zeitraum sind keine passenden Kontakte dokumentiert.</p>`}</div>`;
 }
 function renderSalesCockpit(s){
   const metrics=[
@@ -1030,23 +1030,28 @@ function crmDisplayName(c){return `${c.contactCode?c.contactCode+' · ':''}${crm
 function crmShortLabel(c){return `${c.contactCode||''} ${crmFullName(c)} ${c.company||''} ${c.city||''}`.trim()}
 function crmLastActivity(c){return (c.timeline||[]).slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''))[0]}
 function crmPersonFilter(c){return (c.owner || 'Peter')===currentPerson() || (c.support || '')===currentPerson()}
-function crmPipelinePhases(){return ['Neuer Kontakt','Erstansprache','Interesse','Informationen versendet','Nachfassen','Termin vereinbart','Präsentation','Entscheidung','Kunde','Geschäftspartner','Kein Interesse','Archiv']}
+function crmPipelinePhases(){return ['Erstansprache','Interesse','Informationen versendet','Nachfassen','Termin vereinbart','Präsentation','Entscheidung','Geschäftspartner','Kein Interesse','Archiv']}
 function crmPhaseFromLegacy(c){
   const raw=String(c?.phase||c?.status||'').trim();
   if(crmPipelinePhases().includes(raw))return raw;
   const map={
-    'Neu':'Neuer Kontakt','Kontaktanfrage gesendet':'Erstansprache','Vernetzt':'Erstansprache','Erstgespräch':'Erstansprache',
+    'Neu':'Erstansprache','Neuer Kontakt':'Erstansprache','Kontaktanfrage gesendet':'Erstansprache','Vernetzt':'Erstansprache','Erstgespräch':'Erstansprache',
     'Interesse':'Interesse','Präsentation geplant':'Termin vereinbart','Präsentation erfolgt':'Präsentation','Nachfassen':'Nachfassen',
-    'Kunde':'Kunde','Geschäftspartner':'Geschäftspartner','Kein Interesse':'Kein Interesse','Archiv':'Archiv'
+    'Kunde':'Geschäftspartner','Geschäftspartner':'Geschäftspartner','Kein Interesse':'Kein Interesse','Archiv':'Archiv'
   };
   if(c?.landingSent||c?.landingSeen)return c?.followupActive?'Nachfassen':'Informationen versendet';
-  return map[raw]||'Neuer Kontakt';
+  return map[raw]||'Erstansprache';
 }
 function crmStatusFromPhase(phase){
-  const map={'Neuer Kontakt':'Neu','Erstansprache':'Erstgespräch','Interesse':'Interesse','Informationen versendet':'Nachfassen','Nachfassen':'Nachfassen','Termin vereinbart':'Präsentation geplant','Präsentation':'Präsentation erfolgt','Entscheidung':'Nachfassen','Kunde':'Kunde','Geschäftspartner':'Geschäftspartner','Kein Interesse':'Kein Interesse','Archiv':'Archiv'};
-  return map[phase]||'Neu';
+  return crmPipelinePhases().includes(phase) ? phase : 'Erstansprache';
 }
-function crmEnsurePhase(c){if(!c)return 'Neuer Kontakt'; const phase=crmPhaseFromLegacy(c); c.phase=phase; return phase}
+function crmEnsurePhase(c){
+  if(!c)return 'Erstansprache';
+  const phase=crmPhaseFromLegacy(c);
+  c.phase=phase;
+  c.status=phase;
+  return phase;
+}
 function crmStatusOptions(){return crmPipelinePhases()}
 function crmSources(){return ['LinkedIn','Facebook','WhatsApp','Empfehlung','Veranstaltung','Kunde','Sonstiges']}
 function crmPriorities(){return ['A','B','C']}
@@ -1123,7 +1128,7 @@ function crmAddCommunicationLog(c,channel,label){
 function crmSuggestFollowup(c,channel,key){
   const t=crmCommTemplates(channel)[key]; if(!t)return;
   if(key==='landing'){
-    c.status='Nachfassen'; c.landingSent=true; c.landingSentDate=c.landingSentDate||todayKey();
+    c.phase='Informationen versendet'; c.status='Informationen versendet'; c.landingSent=true; c.landingSentDate=c.landingSentDate||todayKey();
     c.nextStep='Prüfen, ob Landingpage angekommen ist';
   }else if(key==='video1'){
     c.nextStep='Landingpage-Fortschritt beobachten';
@@ -1147,7 +1152,7 @@ function crmQuickLog(id,channel,label,nextStep){
   const c=crmFindContact(id); if(!c)return;
   crmAddCommunicationLog(c,channel,label);
   if(nextStep)c.nextStep=nextStep;
-  if(label.includes('Landingpage')){c.status='Nachfassen'; c.landingSent=true; c.landingSentDate=c.landingSentDate||todayKey();}
+  if(label.includes('Landingpage')){c.phase='Informationen versendet'; c.status='Informationen versendet'; c.landingSent=true; c.landingSentDate=c.landingSentDate||todayKey();}
   save(); render();
 }
 function crmDaysSince(dateKey){
@@ -1164,7 +1169,7 @@ function crmRecommendedAction(c){
     return age>=2?'Bei teilweise angesehenen Videos freundlich nachfragen':'Landingpage-Fortschritt beobachten';
   }
   if(!c.followupActive)return 'Follow-up-Gespräch führen';
-  if(!['Präsentation geplant','Präsentation erfolgt','Kunde','Geschäftspartner'].includes(c.status||''))return 'Telefontermin oder Zoom vereinbaren';
+  if(!['Termin vereinbart','Präsentation','Entscheidung','Geschäftspartner'].includes(crmEnsurePhase(c)))return 'Telefontermin oder Zoom vereinbaren';
   return c.nextStep||'Nächsten Schritt prüfen';
 }
 function renderCrmCommunicationBar(c){
@@ -1202,7 +1207,7 @@ function crmToggleLandingDetails(){
 }
 function crmHtmlOptions(items,selected){return items.map(x=>`<option value="${esc(x)}" ${x===(selected||'')?'selected':''}>${esc(x)}</option>`).join('')}
 function crmNormalize(v){return String(v||'').trim().toLowerCase().replace(/\s+/g,' ')}
-function crmActive(c){return !['Archiv','Kein Interesse','Kunde','Geschäftspartner'].includes(c.status)}
+function crmActive(c){return !['Archiv','Kein Interesse','Geschäftspartner'].includes(crmEnsurePhase(c))}
 function crmDuplicateWarning(data,id){
   const name=crmNormalize(`${data.firstName||''} ${data.lastName||''}`);
   const phone=crmNormalize(crmFullPhone(data));
@@ -1218,9 +1223,9 @@ function crmCollectForm(id){
   const rawContactCode=val('contactCode');
   const cleanContactCode=crmCodeNumber(rawContactCode) ? rawContactCode : '';
   const tags=[...new Set(val('tags').split(',').map(x=>x.trim()).filter(Boolean))];
-  const phase=val('phase')||crmPhaseFromLegacy({status:val('status')||'Neu'});
+  const phase=val('phase')||crmPhaseFromLegacy({status:val('status')||'Erstansprache'});
   const data={
-    id:id||crmId(), contactCode:cleanContactCode, createdBy:val('createdBy')||currentPerson(), firstName:val('firstName'), lastName:val('lastName'), company:val('company'), birthday:val('birthday'), street:val('street'), postalCode:val('postalCode'), job:(val('jobOther')||val('jobSelect')||val('job')), branch:(val('branchOther')||val('branchSelect')||val('branch')), city:val('city'), phoneCountry:val('phoneCountry')||'+49', phone:val('phone'), email:val('email'), website:val('website'), linkedin:val('linkedin'), facebook:val('facebook'), instagram:val('instagram'), whatsapp:document.getElementById('crm_whatsapp')?.checked||false, owner:val('owner')||currentPerson(), support:val('support'), source:val('source'), targetGroup:(val('targetGroupOther')||val('targetGroupSelect')||val('targetGroup')), status:val('status')||'Neu', priority:val('priority')||'A', followDate:val('followDate'), followTime:'', nextStep:(nextStepOther||nextStepSelect||val('nextStep')), landingSent:document.getElementById('crm_landingSent')?.checked||false, landingSentDate:(document.getElementById('crm_landingSent')?.checked?val('landingSentDate'):''), landingSeen:document.getElementById('crm_landingSeen')?.checked||false, landingDate:(document.getElementById('crm_landingSeen')?.checked?val('landingDate'):''), video1Seen:(document.getElementById('crm_landingSeen')?.checked && (document.getElementById('crm_video1Seen')?.checked||false)), video2Seen:(document.getElementById('crm_landingSeen')?.checked && (document.getElementById('crm_video1Seen')?.checked||false) && (document.getElementById('crm_video2Seen')?.checked||false)), video3Seen:(document.getElementById('crm_landingSeen')?.checked && (document.getElementById('crm_video1Seen')?.checked||false) && (document.getElementById('crm_video2Seen')?.checked||false) && (document.getElementById('crm_video3Seen')?.checked||false)), followupActive:(document.getElementById('crm_landingSeen')?.checked && (document.getElementById('crm_video1Seen')?.checked||false) && (document.getElementById('crm_video2Seen')?.checked||false) && (document.getElementById('crm_video3Seen')?.checked||false) && (document.getElementById('crm_followupActive')?.checked||false)), interest:val('interest')||'3', trust:val('trust')||'3', activityLevel:val('activityLevel')||'3', tags, notes:val('notes'), phase
+    id:id||crmId(), contactCode:cleanContactCode, createdBy:val('createdBy')||currentPerson(), firstName:val('firstName'), lastName:val('lastName'), company:val('company'), birthday:val('birthday'), street:val('street'), postalCode:val('postalCode'), job:(val('jobOther')||val('jobSelect')||val('job')), branch:(val('branchOther')||val('branchSelect')||val('branch')), city:val('city'), phoneCountry:val('phoneCountry')||'+49', phone:val('phone'), email:val('email'), website:val('website'), linkedin:val('linkedin'), facebook:val('facebook'), instagram:val('instagram'), whatsapp:document.getElementById('crm_whatsapp')?.checked||false, owner:val('owner')||currentPerson(), support:val('support'), source:val('source'), targetGroup:(val('targetGroupOther')||val('targetGroupSelect')||val('targetGroup')), status:phase, priority:val('priority')||'A', followDate:val('followDate'), followTime:'', nextStep:(nextStepOther||nextStepSelect||val('nextStep')), landingSent:document.getElementById('crm_landingSent')?.checked||false, landingSentDate:(document.getElementById('crm_landingSent')?.checked?val('landingSentDate'):''), landingSeen:document.getElementById('crm_landingSeen')?.checked||false, landingDate:(document.getElementById('crm_landingSeen')?.checked?val('landingDate'):''), video1Seen:(document.getElementById('crm_landingSeen')?.checked && (document.getElementById('crm_video1Seen')?.checked||false)), video2Seen:(document.getElementById('crm_landingSeen')?.checked && (document.getElementById('crm_video1Seen')?.checked||false) && (document.getElementById('crm_video2Seen')?.checked||false)), video3Seen:(document.getElementById('crm_landingSeen')?.checked && (document.getElementById('crm_video1Seen')?.checked||false) && (document.getElementById('crm_video2Seen')?.checked||false) && (document.getElementById('crm_video3Seen')?.checked||false)), followupActive:(document.getElementById('crm_landingSeen')?.checked && (document.getElementById('crm_video1Seen')?.checked||false) && (document.getElementById('crm_video2Seen')?.checked||false) && (document.getElementById('crm_video3Seen')?.checked||false) && (document.getElementById('crm_followupActive')?.checked||false)), interest:val('interest')||'3', trust:val('trust')||'3', activityLevel:val('activityLevel')||'3', tags, notes:val('notes'), phase
   };
   data.status=crmStatusFromPhase(phase);
   return data;
@@ -1282,7 +1287,7 @@ function crmFilteredContacts(){
     if(owner==='Meine' && !crmPersonFilter(c))return false;
     if(owner==='Peter' && (c.owner||'Peter')!=='Peter')return false;
     if(owner==='Martina' && (c.owner||'Peter')!=='Martina')return false;
-    if(status && c.status!==status)return false;
+    if(status && crmEnsurePhase(c)!==status)return false;
     if(source && c.source!==source)return false;
     if(prio && c.priority!==prio)return false;
     if(job && c.job!==job)return false;
@@ -1290,7 +1295,7 @@ function crmFilteredContacts(){
     if(targetGroup && c.targetGroup!==targetGroup)return false;
     if(tag && !(Array.isArray(c.tags)&&c.tags.includes(tag)))return false;
     if(q){
-      const hay=crmNormalize([c.contactCode,crmFullName(c),c.firstName,c.lastName,c.company,c.job,c.branch,c.city,c.street,c.postalCode,c.birthday,crmFullPhone(c),c.phone,c.email,c.linkedin,c.facebook,c.targetGroup,c.source,c.status,(c.tags||[]).join(' ')].join(' '));
+      const hay=crmNormalize([c.contactCode,crmFullName(c),c.firstName,c.lastName,c.company,c.job,c.branch,c.city,c.street,c.postalCode,c.birthday,crmFullPhone(c),c.phone,c.email,c.linkedin,c.facebook,c.targetGroup,c.source,crmEnsurePhase(c),(c.tags||[]).join(' ')].join(' '));
       if(!hay.includes(q))return false;
     }
     return true;
@@ -1382,46 +1387,6 @@ const KNOWLEDGE_TEMPLATES=[
   {id:'talk-phone',category:'Gespräch',title:'Telefonleitfaden',keywords:'telefon leitfaden gespräch',text:'1. Persönlich einsteigen.\n2. Nach der aktuellen Situation fragen.\n3. Ziele und Wünsche verstehen.\n4. Prüfen, ob Interesse an einer zusätzlichen Perspektive besteht.\n5. Einen klaren nächsten Schritt vereinbaren.'},
   {id:'talk-zoom',category:'Gespräch',title:'Zoom-Leitfaden',keywords:'zoom leitfaden präsentation',text:'1. Ziel und Dauer des Gesprächs klären.\n2. Bedarf kurz zusammenfassen.\n3. Firma, Produkt und Geschäft verständlich vorstellen.\n4. Fragen beantworten.\n5. Konkreten nächsten Schritt mit Datum festlegen.'}
 ];
-
-const MARTINA_RECRUITING_TEMPLATES=[{"id":"mk-wa-first","owner":"Martina","phases":["Erstansprache"],"category":"WhatsApp","title":"Martina · Persönliche Erstansprache","keywords":"erstansprache persönlich martina","text":"Hallo [Vorname],\n\nich wollte mich kurz persönlich bei dir melden. Mir ist wichtig, Menschen erst einmal kennenzulernen und zu verstehen, was sie gerade beschäftigt.\n\nWie sieht deine berufliche Situation im Moment aus?\n\nLiebe Grüße\nMartina"},{"id":"mk-wa-interest","owner":"Martina","phases":["Interesse"],"category":"WhatsApp","title":"Martina · Interesse vertiefen","keywords":"interesse vertiefen martina","text":"Hallo [Vorname],\n\ndanke für unseren offenen Austausch. Ich habe das Gefühl, dass das Thema gut zu deiner aktuellen Situation passen kann.\n\nIch sende dir gern die Informationen, damit du dir in Ruhe ein eigenes Bild machen kannst.\n\nLiebe Grüße\nMartina"},{"id":"mk-wa-info","owner":"Martina","phases":["Informationen versendet"],"category":"WhatsApp","title":"Martina · Nach den Informationen","keywords":"informationen nachfassen martina","text":"Hallo [Vorname],\n\nich wollte kurz nachfragen, wie dein Eindruck nach den Informationen ist. Was hat dich besonders angesprochen und welche Frage ist noch offen?\n\nLiebe Grüße\nMartina"},{"id":"mk-wa-follow","owner":"Martina","phases":["Nachfassen"],"category":"WhatsApp","title":"Martina · Freundlich nachfassen","keywords":"nachfassen martina","text":"Hallo [Vorname],\n\nich greife unser Gespräch noch einmal auf. Mir ist wichtig, dass du ohne Druck entscheiden kannst. Wollen wir die offenen Punkte kurz gemeinsam besprechen?\n\nLiebe Grüße\nMartina"},{"id":"mk-wa-appointment","owner":"Martina","phases":["Termin vereinbart"],"category":"WhatsApp","title":"Martina · Termin bestätigen","keywords":"termin bestätigen martina","text":"Hallo [Vorname],\n\nnoch einmal kurz zur Bestätigung: Wir sprechen am vereinbarten Termin. Ich freue mich auf unser Gespräch. Plane bitte etwa 20 Minuten ein.\n\nLiebe Grüße\nMartina"},{"id":"mk-talk-presentation","owner":"Martina","phases":["Präsentation"],"category":"Gespräch","title":"Martina · Gesprächsleitfaden","keywords":"präsentation leitfaden martina","text":"1. Persönlich ankommen.\n2. Wünsche und aktuelle Situation zusammenfassen.\n3. Firma, Produkt und Verdienstmöglichkeit verständlich erklären.\n4. Fragen ruhig beantworten.\n5. Einen klaren nächsten Schritt vereinbaren."},{"id":"mk-wa-decision","owner":"Martina","phases":["Entscheidung"],"category":"WhatsApp","title":"Martina · Entscheidung klären","keywords":"entscheidung martina","text":"Hallo [Vorname],\n\nwir haben inzwischen alle wichtigen Punkte besprochen. Wie fühlt sich der Gedanke für dich an, den nächsten Schritt gemeinsam zu gehen?\n\nLiebe Grüße\nMartina"},{"id":"mk-onboarding","owner":"Martina","phases":["Geschäftspartner"],"category":"Gespräch","title":"Martina · Erste Schritte","keywords":"geschäftspartner onboarding martina","text":"1. Willkommen heißen.\n2. Persönliches Ziel festhalten.\n3. Erste Kontakte und Termine planen.\n4. Zugang zu den wichtigsten Unterlagen erklären.\n5. Nächsten Begleittermin festlegen."}];
-KNOWLEDGE_TEMPLATES.forEach(t=>{t.owner=t.owner||'Peter';});
-MARTINA_RECRUITING_TEMPLATES.forEach(t=>KNOWLEDGE_TEMPLATES.push(t));
-
-const PHASE_TEMPLATE_IDS={
-  Peter:{
-    'Erstansprache':['wa-first','li-first','talk-phone'],
-    'Interesse':['wa-landing','mail-landing','talk-phone'],
-    'Informationen versendet':['wa-video1','wa-follow'],
-    'Nachfassen':['wa-follow','li-follow','fb-follow'],
-    'Termin vereinbart':['mail-appointment','fb-appointment','talk-zoom'],
-    'Präsentation':['talk-zoom','talk-phone'],
-    'Entscheidung':['wa-follow','talk-phone'],
-    'Geschäftspartner':['talk-phone']
-  },
-  Martina:{
-    'Erstansprache':['mk-wa-first'],
-    'Interesse':['mk-wa-interest'],
-    'Informationen versendet':['mk-wa-info'],
-    'Nachfassen':['mk-wa-follow'],
-    'Termin vereinbart':['mk-wa-appointment'],
-    'Präsentation':['mk-talk-presentation'],
-    'Entscheidung':['mk-wa-decision'],
-    'Geschäftspartner':['mk-onboarding']
-  }
-};
-function crmPhaseTemplates(c){
-  const owner=(c.owner==='Martina')?'Martina':'Peter';
-  const phase=crmEnsurePhase(c);
-  const ids=(PHASE_TEMPLATE_IDS[owner]&&PHASE_TEMPLATE_IDS[owner][phase])||[];
-  return ids.map(knowledgeTemplate).filter(Boolean);
-}
-function renderCrmPhaseTemplates(c){
-  const list=crmPhaseTemplates(c);
-  if(!list.length)return '';
-  const owner=(c.owner==='Martina')?'Martina':'Peter';
-  return `<section class="process-card phase-template-card"><div class="process-card-head"><div><p class="eyebrow">Passende Vorlagen</p><h4>${owner}-Bibliothek · ${esc(crmEnsurePhase(c))}</h4></div><span class="badge">${list.length}</span></div><div class="phase-template-list">${list.map(t=>`<article class="phase-template-item"><div><span class="knowledge-label">${esc(t.category)}</span><strong>${esc(t.title)}</strong></div><div class="quick-actions"><button class="copy-btn" onclick="knowledgeCopy('${esc(t.id)}')">Kopieren</button><button class="primary" onclick="knowledgeSend('${esc(t.id)}')">Jetzt verwenden</button></div></article>`).join('')}</div></section>`;
-}
-
 function knowledgeContactText(t,c){
   const first=(c&&c.firstName)||((c&&crmFullName(c))||'').split(' ')[0]||'';
   return String(t.text||'').replaceAll('[Vorname]',first||'du').replaceAll('[Absender]',currentPerson());
@@ -1490,17 +1455,17 @@ async function knowledgeSend(id){
 }
 function knowledgeOpenForRecommendation(contactId){
   const c=crmFindContact(contactId); if(!c)return;
-  selectedContactId=c.id; selectedContactTab='overview'; current='recruiting'; render();
-  setTimeout(()=>document.querySelector('.phase-template-card')?.scrollIntoView({behavior:'smooth',block:'start'}),80);
+  const rec=crmAssistantRecommendation(c); selectedContactId=c.id;
+  knowledgeQuery=(rec&&rec.title)||c.nextStep||'';
+  knowledgeCategory='Alle'; current='wissen'; openNavGroupLabel='Recruiting-Bibliothek'; searchInput.value=''; render();
+  setTimeout(()=>scrollToContent(),0);
 }
-
 function renderKnowledge(s){
   const cats=['Alle','LinkedIn','Facebook','WhatsApp','E-Mail','Gespräch'];
   const q=(knowledgeQuery||'').trim().toLowerCase();
+  const filtered=KNOWLEDGE_TEMPLATES.filter(t=>(knowledgeCategory==='Alle'||t.category===knowledgeCategory) && (!q||`${t.title} ${t.category} ${t.keywords} ${t.text}`.toLowerCase().includes(q)));
   const contact=selectedContactId?crmFindContact(selectedContactId):null;
-  const owner=contact?((contact.owner==='Martina')?'Martina':'Peter'):currentPerson();
-  const filtered=KNOWLEDGE_TEMPLATES.filter(t=>(!t.owner||t.owner===owner) && (knowledgeCategory==='Alle'||t.category===knowledgeCategory) && (!q||`${t.title} ${t.category} ${t.keywords} ${t.text}`.toLowerCase().includes(q)));
-  view.innerHTML=`<div class="card knowledge-head"><p class="eyebrow">Version 1.8.5</p><h2>${esc(s.title)}</h2><p>${esc(s.text)}</p>${contact?`<p class="knowledge-contact">Aktueller Kontakt: <strong>${esc(crmFullName(contact))}</strong> · ${esc(contact.contactCode||'')}</p>`:''}<input class="knowledge-search" type="search" placeholder="Vorlage suchen, z. B. Landingpage oder Follow-up" value="${esc(knowledgeQuery)}" oninput="knowledgeQuery=this.value; renderKnowledge(sectionById('wissen'))"></div>
+  view.innerHTML=`<div class="card knowledge-head"><p class="eyebrow">Version 1.8.0</p><h2>${esc(s.title)}</h2><p>${esc(s.text)}</p>${contact?`<p class="knowledge-contact">Aktueller Kontakt: <strong>${esc(crmFullName(contact))}</strong> · ${esc(contact.contactCode||'')}</p>`:''}<input class="knowledge-search" type="search" placeholder="Vorlage suchen, z. B. Landingpage oder Follow-up" value="${esc(knowledgeQuery)}" oninput="knowledgeQuery=this.value; renderKnowledge(sectionById('wissen'))"></div>
   <div class="knowledge-categories">${cats.map(cat=>`<button class="${knowledgeCategory===cat?'primary':'copy-btn'}" onclick="knowledgeSetCategory('${esc(cat)}')">${esc(cat)}</button>`).join('')}</div>
   <div class="knowledge-grid">${filtered.length?filtered.map(t=>`<article class="knowledge-card"><span class="knowledge-label">${esc(t.category)}</span><h3>${esc(t.title)}</h3><div class="knowledge-text">${esc(knowledgeContactText(t,contact)).replaceAll('\n','<br>')}</div><div class="knowledge-actions"><button class="copy-btn" onclick="knowledgeCopy('${esc(t.id)}')">Kopieren</button><button class="primary" onclick="knowledgeSend('${esc(t.id)}')">Jetzt verwenden</button></div></article>`).join(''):'<div class="card"><p>Keine passende Vorlage gefunden.</p></div>'}</div>`;
 }
@@ -1589,7 +1554,7 @@ function crmMetricsFor(person){
     v1:list.filter(c=>c.video1Seen).length,
     v2:list.filter(c=>c.video2Seen).length,
     v3:list.filter(c=>c.video3Seen).length,
-    partners:list.filter(c=>c.status==='Geschäftspartner').length
+    partners:list.filter(c=>crmEnsurePhase(c)==='Geschäftspartner').length
   };
 }
 function crmSuggestions(person){
@@ -1619,7 +1584,6 @@ function crmAssistantRecommendation(c){
   const phase=crmEnsurePhase(c);
   if(['Kein Interesse','Archiv'].includes(phase))return null;
 
-  if(phase==='Neuer Kontakt')return {step:'firstcontact',title:'Erstansprache starten',task:'Erstansprache starten',nextPhase:'Erstansprache',days:1,button:'Erstansprache markieren',hint:'Wähle den passenden Kontaktweg und beginne mit einer persönlichen Ansprache.'};
   if(phase==='Erstansprache')return {step:'interest',title:'Reaktion prüfen und Interesse klären',task:'Reaktion prüfen und Interesse klären',nextPhase:'Interesse',days:2,button:'Interesse markieren',hint:'Dokumentiere die Reaktion. Bei Interesse führst du den Kontakt in die nächste Phase.'};
   if(phase==='Interesse')return {step:'information',title:'Passende Informationen senden',task:'Passende Informationen senden',nextPhase:'Informationen versendet',days:2,button:'Informationen als gesendet markieren',hint:'Sende die vereinbarte Landingpage oder die passende Information aus der Recruiting-Bibliothek.'};
   if(phase==='Informationen versendet'){
@@ -1630,7 +1594,6 @@ function crmAssistantRecommendation(c){
   if(phase==='Termin vereinbart')return {step:'presentation',title:'Termin vorbereiten und durchführen',task:'Termin vorbereiten und durchführen',nextPhase:'Präsentation',days:1,button:'Präsentation markieren',hint:'Bestätige den Termin und bereite die wichtigsten Gesprächspunkte vor.'};
   if(phase==='Präsentation')return {step:'decision',title:'Entscheidungsgespräch führen',task:'Entscheidungsgespräch führen',nextPhase:'Entscheidung',days:1,button:'Entscheidungsphase markieren',hint:'Besprich die offenen Fragen und vereinbare eine klare Entscheidung.'};
   if(phase==='Entscheidung')return {step:'partner',title:'Entscheidung klären',task:'Entscheidung klären',nextPhase:'Geschäftspartner',days:1,button:'Als Geschäftspartner markieren',hint:'Halte die Entscheidung fest. Bei einer Absage wählst du „Kein Interesse“.'};
-  if(phase==='Kunde')return {step:'partnercheck',title:'Interesse an der Geschäftspartnerschaft prüfen',task:'Interesse an der Geschäftspartnerschaft prüfen',nextPhase:'Entscheidung',days:3,button:'Entscheidungsphase öffnen',hint:'Prüfe, ob aus dem Kunden ein aktiver Geschäftspartner werden soll.'};
   if(phase==='Geschäftspartner')return {step:'onboarding',title:'Start und Einarbeitung begleiten',task:'Start und Einarbeitung begleiten',nextPhase:'Geschäftspartner',days:3,button:'Aufgabe anlegen',hint:'Lege den nächsten konkreten Einarbeitungs- oder Startschritt fest.'};
   return {step:'review',title:c.nextStep||'Kontaktstand prüfen',task:c.nextStep||'Kontaktstand prüfen',nextPhase:phase,days:1,button:'Wiedervorlage anlegen',hint:'Prüfe den aktuellen Stand und lege den nächsten konkreten Schritt fest.'};
 }
@@ -1686,7 +1649,7 @@ function crmRenderAssistantList(person,limit=6){
 function crmRenderContactAssistant(c){
   const rec=crmAssistantRecommendation(c);
   if(!rec)return '';
-  return `<div class="process-card assistant-card contact-assistant"><div class="process-card-head"><h4>Nächste empfohlene Aktion</h4><span class="badge">${esc(crmEnsurePhase(c))}</span></div><p><strong>${esc(rec.title)}</strong></p><p class="small">${esc(rec.hint)}</p><div class="quick-actions"><button class="copy-btn" onclick="knowledgeOpenForRecommendation('${esc(c.id)}')">Passende Vorlage</button><button class="copy-btn" onclick="crmAssistantCreateTask('${esc(c.id)}',${Number(rec.days||1)})">Aufgabe anlegen</button><button class="primary" onclick="crmAssistantApply('${esc(c.id)}')">${esc(rec.button)}</button></div></div>${renderCrmPhaseTemplates(c)}`;
+  return `<div class="process-card assistant-card contact-assistant"><div class="process-card-head"><h4>Nächste empfohlene Aktion</h4><span class="badge">${esc(crmEnsurePhase(c))}</span></div><p><strong>${esc(rec.title)}</strong></p><p class="small">${esc(rec.hint)}</p><div class="quick-actions"><button class="copy-btn" onclick="knowledgeOpenForRecommendation('${esc(c.id)}')">Passende Vorlage</button><button class="copy-btn" onclick="crmAssistantCreateTask('${esc(c.id)}',${Number(rec.days||1)})">Aufgabe anlegen</button><button class="primary" onclick="crmAssistantApply('${esc(c.id)}')">${esc(rec.button)}</button></div></div>`;
 }
 function crmContactBucketSort(list){
   const rank={A:0,B:1,C:2};
@@ -1709,7 +1672,7 @@ function renderProcessManager(person){
   const contacts=crmContacts().filter(c=>(person==='Alle'||(c.owner||'Peter')===person));
   const todayKeyValue=crmToday();
   const phaseOf=c=>crmEnsurePhase(c);
-  const isTerminal=c=>['Geschäftspartner','Kein Interesse','Archiv','Kunde'].includes(phaseOf(c));
+  const isTerminal=c=>['Geschäftspartner','Kein Interesse','Archiv'].includes(phaseOf(c));
   const isAppointment=c=>/termin|zoom|präsentation/i.test(`${c.nextStep||''} ${c.status||''} ${phaseOf(c)}`);
   const overdueContacts=contacts.filter(c=>!isTerminal(c)&&c.followDate&&c.followDate<todayKeyValue);
   const todayAppointments=contacts.filter(c=>!isTerminal(c)&&c.followDate===todayKeyValue&&isAppointment(c));
@@ -1810,7 +1773,7 @@ function renderCrmContacts(){
 }
 function renderCrmEmptyState(){return `<div class="card empty-state"><h3>Kontaktakte</h3><p>Wähle einen Kontakt aus der Liste oder lege einen neuen Kontakt an.</p><button class="primary" onclick="selectedContactId='__new'; render()">Neuen Kontakt anlegen</button></div>`}
 function renderCrmForm(c){
-  c=c||{owner:currentPerson(),createdBy:currentPerson(),status:'Neu',phase:'Neuer Kontakt',priority:'A',source:'LinkedIn',phoneCountry:'+49',interest:'3',trust:'3',activityLevel:'3'};
+  c=c||{owner:currentPerson(),createdBy:currentPerson(),status:'Erstansprache',phase:'Erstansprache',priority:'A',source:'LinkedIn',phoneCountry:'+49',interest:'3',trust:'3',activityLevel:'3'};
   const id=c.id||'';
   const input=(k,label,type='text')=>`<label>${label}<input id="crm_${k}" type="${type}" value="${esc(c[k]||'')}"></label>`;
   const nextSelected=crmNextStepOptions().includes(c.nextStep||'') ? (c.nextStep||'') : ((c.nextStep||'') ? 'Sonstiges' : '');
@@ -1854,7 +1817,22 @@ function renderCrmForm(c){
   </div>`;
 }
 function crmTabButton(key,label){return `<button class="tab-btn ${selectedContactTab===key?'active':''}" onclick="selectedContactTab='${key}'; render()">${label}</button>`}
-function crmTabButton(key,label){return `<button class="tab-btn ${selectedContactTab===key?'active':''}" onclick="selectedContactTab='${key}'; render()">${label}</button>`}
+function crmArchiveContact(id){
+  const c=crmFindContact(id); if(!c)return;
+  if(!confirm(`Kontakt ${crmFullName(c)} archivieren?`))return;
+  const old=crmEnsurePhase(c);
+  c.phase='Archiv'; c.status='Archiv'; c.updatedAt=new Date().toISOString();
+  if(!Array.isArray(c.timeline))c.timeline=[];
+  c.timeline.push({date:todayKey(),time:new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}),type:'Archiv',text:`Kontakt archiviert · vorherige Phase: ${old}`});
+  save(); render();
+}
+function crmReactivateContact(id){
+  const c=crmFindContact(id); if(!c)return;
+  c.phase='Erstansprache'; c.status='Erstansprache'; c.updatedAt=new Date().toISOString();
+  if(!Array.isArray(c.timeline))c.timeline=[];
+  c.timeline.push({date:todayKey(),time:new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}),type:'Archiv',text:'Kontakt reaktiviert · Phase: Erstansprache'});
+  save(); render();
+}
 function crmSetPhase(id,phase){
   const c=crmFindContact(id); if(!c || !crmPipelinePhases().includes(phase))return;
   const old=crmEnsurePhase(c); if(old===phase)return;
@@ -1869,7 +1847,7 @@ function renderCrmPipeline(c){
 }
 function renderCrmDetail(id){
   const c=crmFindContact(id); if(!c)return renderCrmForm(null);
-  return `<div class="card contact-file"><div class="contact-file-actions"><button class="copy-btn" onclick="crmCloseContact()">◀ Zur Kontaktübersicht</button><div><button class="copy-btn" onclick="selectedContactTab='edit'; render()">Bearbeiten</button><button class="copy-btn danger" onclick="crmDeleteContact('${esc(c.id)}')">Löschen</button></div></div><div class="contact-sticky-head"><div><p class="eyebrow">Kontaktakte</p><h3>${esc(crmFullName(c))}</h3><p class="contact-code-line">${esc(c.contactCode||'')}</p><p>${esc(c.company||'')} ${c.city?'· '+esc(c.city):''}</p></div><div class="contact-head-meta"><span class="badge">Prio ${esc(c.priority||'A')}</span><span class="badge">${esc(crmEnsurePhase(c))}</span><p class="small">Zuständig: ${esc(c.owner||'Peter')}${c.support?' · Unterstützung: '+esc(c.support):''}</p><p class="small"><strong>Wiedervorlage:</strong> ${esc(c.followDate||'offen')}</p></div></div>
+  return `<div class="card contact-file"><div class="contact-file-actions"><button class="copy-btn" onclick="crmCloseContact()">◀ Zur Kontaktübersicht</button><div><button class="copy-btn" onclick="selectedContactTab='edit'; render()">Bearbeiten</button>${crmEnsurePhase(c)==='Archiv'?`<button class="copy-btn" onclick="crmReactivateContact('${esc(c.id)}')">Reaktivieren</button>`:`<button class="copy-btn" onclick="crmArchiveContact('${esc(c.id)}')">Archivieren</button>`}<button class="copy-btn danger" onclick="crmDeleteContact('${esc(c.id)}')">Löschen</button></div></div><div class="contact-sticky-head"><div><p class="eyebrow">Kontaktakte</p><h3>${esc(crmFullName(c))}</h3><p class="contact-code-line">${esc(c.contactCode||'')}</p><p>${esc(c.company||'')} ${c.city?'· '+esc(c.city):''}</p></div><div class="contact-head-meta"><span class="badge">Prio ${esc(c.priority||'A')}</span><span class="badge">${esc(crmEnsurePhase(c))}</span><p class="small">Zuständig: ${esc(c.owner||'Peter')}${c.support?' · Unterstützung: '+esc(c.support):''}</p><p class="small"><strong>Wiedervorlage:</strong> ${esc(c.followDate||'offen')}</p></div></div>
     ${renderCrmPipeline(c)}
     ${renderCrmCommunicationBar(c)}
     ${crmRenderContactAssistant(c)}
@@ -1885,7 +1863,7 @@ function renderCrmTabContent(c){
   if(selectedContactTab==='communication')return renderCrmCommunication(c);
   if(selectedContactTab==='notes')return renderCrmNotes(c);
   if(selectedContactTab==='documents')return `<div class="tab-content"><h4>Dokumente</h4><p class="small">Dieser Bereich ist vorbereitet. Dokumente, Angebote, Bilder und PDFs folgen in einer späteren Version.</p></div>`;
-  return `<div class="tab-content"><div class="contact-status-strip"><span>${esc(c.contactCode||'')}</span><span>Priorität ${esc(c.priority||'A')}</span><span>Status: ${esc(c.status||'Neu')}</span></div><div class="info-card-grid"><section class="info-card"><h4>Kontaktdaten</h4><p><strong>Name:</strong> ${esc(crmFullName(c))}</p><p><strong>Kontakt-ID:</strong> ${esc(c.contactCode||'')}</p><p><strong>Geburtsdatum:</strong> ${esc(c.birthday||'')}</p><p><strong>Adresse:</strong><br>${esc(c.street||'')}${c.street?'<br>':''}${esc(c.postalCode||'')} ${esc(c.city||'')}</p><p><strong>Mobil:</strong> ${crmFullPhone(c)?`<a href="tel:+${esc(crmFullPhone(c))}" onclick="crmQuickLog('${esc(c.id)}','Telefon','Anruf aus Übersicht gestartet','Nachfassen')">${esc(crmPhoneDisplay(c))}</a>`:esc(crmPhoneLocalDisplay(c)||'')}</p><p><strong>WhatsApp:</strong> ${crmFullPhone(c)?`<a href="${esc(crmBuildCommunicationUrl(c,'WhatsApp','free'))}" onclick="crmQuickLog('${esc(c.id)}','WhatsApp','WhatsApp aus Kontaktdaten geöffnet','WhatsApp senden')">WhatsApp schreiben</a>`:'Nicht hinterlegt'}</p><p><strong>E-Mail:</strong> ${c.email?`<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>`:'Nicht hinterlegt'}</p><p><strong>Website:</strong> ${c.website?`<a href="${esc(crmWebsiteHref(c.website))}" target="_blank" rel="noopener">${esc(c.website)}</a>`:'Nicht hinterlegt'}</p></section><section class="info-card"><h4>Beruf und Profile</h4><p><strong>Firma:</strong> ${esc(c.company||'')}</p><p><strong>Beruf:</strong> ${esc(c.job||'')}</p><p><strong>Branche:</strong> ${esc(c.branch||'')}</p><p><strong>Zielgruppe:</strong> ${esc(c.targetGroup||'')}</p><p><strong>LinkedIn:</strong> ${c.linkedin?`<a href="${esc(crmWebsiteHref(c.linkedin))}" target="_blank" rel="noopener">Profil öffnen</a>`:'Nicht hinterlegt'}</p><p><strong>Facebook:</strong> ${c.facebook?`<a href="${esc(crmWebsiteHref(c.facebook))}" target="_blank" rel="noopener">Profil öffnen</a>`:'Nicht hinterlegt'}</p><p><strong>Instagram:</strong> ${c.instagram?`<a href="${esc(crmWebsiteHref(c.instagram))}" target="_blank" rel="noopener">Profil öffnen</a>`:'Nicht hinterlegt'}</p><p><strong>WhatsApp vorhanden:</strong> ${c.whatsapp?'Ja':'Nein'}</p></section><section class="info-card"><h4>Recruiting</h4><p><strong>Zuständig:</strong> ${esc(c.owner||'Peter')}${c.support?' · Unterstützung: '+esc(c.support):''}</p><p><strong>Recruiting-Phase:</strong> ${esc(crmEnsurePhase(c))}</p><p><strong>Quelle:</strong> ${esc(c.source||'')}</p><p><strong>Priorität:</strong> ${esc(c.priority||'A')}</p><p><strong>Wiedervorlage:</strong> ${esc(c.followDate||'offen')}</p><p><strong>Schlagwörter:</strong></p>${crmTagChips(c)?`<div class="contact-tags">${crmTagChips(c)}</div>`:'<p class="small">Keine Schlagwörter hinterlegt.</p>'}<p><strong>Bewertung:</strong><br>Interesse ${esc(c.interest||'3')}/5 · Vertrauen ${esc(c.trust||'3')}/5 · Aktivität ${esc(c.activityLevel||'3')}/5</p></section><section class="info-card"><h4>Landingpage</h4><p><strong>Gesendet:</strong> ${c.landingSent?'Ja':'Nein'} ${c.landingSentDate?'am '+esc(c.landingSentDate):''}</p><p><strong>Gesehen:</strong> ${c.landingSeen?'Ja':'Nein'} ${c.landingDate?'am '+esc(c.landingDate):''}</p>${c.landingSeen?`<p><strong>Video 1:</strong> ${c.video1Seen?'Ja':'Nein'}</p>${c.video1Seen?`<p><strong>Video 2:</strong> ${c.video2Seen?'Ja':'Nein'}</p>`:''}${c.video2Seen?`<p><strong>Video 3:</strong> ${c.video3Seen?'Ja':'Nein'}</p>`:''}${c.video3Seen?`<p><strong>Follow-up aktiv:</strong> ${c.followupActive?'Ja':'Nein'}</p>`:''}`:'<p class="small">Noch keine Landingpage-Aktivität hinterlegt.</p>'}</section><section class="info-card info-card-wide"><h4>Kommunikation</h4>${renderCrmCommunicationBar(c)}</section></div><div class="quick-actions"><button class="primary" onclick="selectedContactTab='edit'; render()">Bearbeiten</button><button class="copy-btn" onclick="selectedContactTab='communication'; render()">Kommunikation eintragen</button><button class="copy-btn" onclick="selectedContactTab='timeline'; render()">Zeitachse öffnen</button></div></div>`;
+  return `<div class="tab-content"><div class="contact-status-strip"><span>${esc(c.contactCode||'')}</span><span>Priorität ${esc(c.priority||'A')}</span><span>Phase: ${esc(crmEnsurePhase(c))}</span></div><div class="info-card-grid"><section class="info-card"><h4>Kontaktdaten</h4><p><strong>Name:</strong> ${esc(crmFullName(c))}</p><p><strong>Kontakt-ID:</strong> ${esc(c.contactCode||'')}</p><p><strong>Geburtsdatum:</strong> ${esc(c.birthday||'')}</p><p><strong>Adresse:</strong><br>${esc(c.street||'')}${c.street?'<br>':''}${esc(c.postalCode||'')} ${esc(c.city||'')}</p><p><strong>Mobil:</strong> ${crmFullPhone(c)?`<a href="tel:+${esc(crmFullPhone(c))}" onclick="crmQuickLog('${esc(c.id)}','Telefon','Anruf aus Übersicht gestartet','Nachfassen')">${esc(crmPhoneDisplay(c))}</a>`:esc(crmPhoneLocalDisplay(c)||'')}</p><p><strong>WhatsApp:</strong> ${crmFullPhone(c)?`<a href="${esc(crmBuildCommunicationUrl(c,'WhatsApp','free'))}" onclick="crmQuickLog('${esc(c.id)}','WhatsApp','WhatsApp aus Kontaktdaten geöffnet','WhatsApp senden')">WhatsApp schreiben</a>`:'Nicht hinterlegt'}</p><p><strong>E-Mail:</strong> ${c.email?`<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>`:'Nicht hinterlegt'}</p><p><strong>Website:</strong> ${c.website?`<a href="${esc(crmWebsiteHref(c.website))}" target="_blank" rel="noopener">${esc(c.website)}</a>`:'Nicht hinterlegt'}</p></section><section class="info-card"><h4>Beruf und Profile</h4><p><strong>Firma:</strong> ${esc(c.company||'')}</p><p><strong>Beruf:</strong> ${esc(c.job||'')}</p><p><strong>Branche:</strong> ${esc(c.branch||'')}</p><p><strong>Zielgruppe:</strong> ${esc(c.targetGroup||'')}</p><p><strong>LinkedIn:</strong> ${c.linkedin?`<a href="${esc(crmWebsiteHref(c.linkedin))}" target="_blank" rel="noopener">Profil öffnen</a>`:'Nicht hinterlegt'}</p><p><strong>Facebook:</strong> ${c.facebook?`<a href="${esc(crmWebsiteHref(c.facebook))}" target="_blank" rel="noopener">Profil öffnen</a>`:'Nicht hinterlegt'}</p><p><strong>Instagram:</strong> ${c.instagram?`<a href="${esc(crmWebsiteHref(c.instagram))}" target="_blank" rel="noopener">Profil öffnen</a>`:'Nicht hinterlegt'}</p><p><strong>WhatsApp vorhanden:</strong> ${c.whatsapp?'Ja':'Nein'}</p></section><section class="info-card"><h4>Recruiting</h4><p><strong>Zuständig:</strong> ${esc(c.owner||'Peter')}${c.support?' · Unterstützung: '+esc(c.support):''}</p><p><strong>Recruiting-Phase:</strong> ${esc(crmEnsurePhase(c))}</p><p><strong>Quelle:</strong> ${esc(c.source||'')}</p><p><strong>Priorität:</strong> ${esc(c.priority||'A')}</p><p><strong>Wiedervorlage:</strong> ${esc(c.followDate||'offen')}</p><p><strong>Schlagwörter:</strong></p>${crmTagChips(c)?`<div class="contact-tags">${crmTagChips(c)}</div>`:'<p class="small">Keine Schlagwörter hinterlegt.</p>'}<p><strong>Bewertung:</strong><br>Interesse ${esc(c.interest||'3')}/5 · Vertrauen ${esc(c.trust||'3')}/5 · Aktivität ${esc(c.activityLevel||'3')}/5</p></section><section class="info-card"><h4>Landingpage</h4><p><strong>Gesendet:</strong> ${c.landingSent?'Ja':'Nein'} ${c.landingSentDate?'am '+esc(c.landingSentDate):''}</p><p><strong>Gesehen:</strong> ${c.landingSeen?'Ja':'Nein'} ${c.landingDate?'am '+esc(c.landingDate):''}</p>${c.landingSeen?`<p><strong>Video 1:</strong> ${c.video1Seen?'Ja':'Nein'}</p>${c.video1Seen?`<p><strong>Video 2:</strong> ${c.video2Seen?'Ja':'Nein'}</p>`:''}${c.video2Seen?`<p><strong>Video 3:</strong> ${c.video3Seen?'Ja':'Nein'}</p>`:''}${c.video3Seen?`<p><strong>Follow-up aktiv:</strong> ${c.followupActive?'Ja':'Nein'}</p>`:''}`:'<p class="small">Noch keine Landingpage-Aktivität hinterlegt.</p>'}</section><section class="info-card info-card-wide"><h4>Kommunikation</h4>${renderCrmCommunicationBar(c)}</section></div><div class="quick-actions"><button class="primary" onclick="selectedContactTab='edit'; render()">Bearbeiten</button><button class="copy-btn" onclick="selectedContactTab='communication'; render()">Kommunikation eintragen</button><button class="copy-btn" onclick="selectedContactTab='timeline'; render()">Zeitachse öffnen</button></div></div>`;
 }
 
 function crmAddTimeline(id){
