@@ -1,3 +1,12 @@
+# Version 1.8.6 – 10.07.2026
+
+- Recruiting-Assistent trennt Vorlagen nach Peter und Martina.
+- Vorlagen werden nach aktueller Recruiting-Phase gefiltert.
+- Bis zu drei passende Vorlagen erscheinen direkt in der Kontaktakte.
+- Kopieren und direkte Verwendung bleiben möglich.
+- Allgemeine Bibliothek wird bei geöffnetem Kontakt person- und phasenbezogen gefiltert.
+- Alle bisherigen Funktionen bleiben erhalten.
+
 # Version 1.8.5 – 10.07.2026
 
 - Recruiting-Pipeline auf zehn Phasen bereinigt.
