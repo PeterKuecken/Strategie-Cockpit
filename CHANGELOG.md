@@ -1,3 +1,12 @@
+## Version 1.8.8
+
+- Recruiting-Trichter im Vertriebscockpit ergänzt.
+- Kontakte je Recruiting-Phase für Heute, Diese Woche, Dieser Monat und Gesamtbestand.
+- Jede Phase öffnet die dazugehörige Kontaktliste.
+- Umwandlungsquoten zwischen den aktiven Recruiting-Phasen.
+- Auswertung erfolgt automatisch aus Kontaktanlage, aktueller Phase und Zeitachse.
+- Smartphone-Darstellung angepasst.
+
 ## Version 1.8.7.1
 - Fehlerkorrektur: Manuell geändertes Wiedervorlagedatum wird sofort im Kontakt gespeichert.
 - Aufgabe anlegen und Empfehlung übernehmen verwenden das ausgewählte Datum zuverlässig.

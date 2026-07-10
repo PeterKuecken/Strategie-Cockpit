@@ -27,3 +27,6 @@ Der Recruiting-Assistent schlägt den nächsten Schritt auf Basis der aktuellen 
 
 
 Korrektur 1.8.7.1: Ein manuell geändertes Wiedervorlagedatum wird sofort am Kontakt gespeichert und von den Assistenten-Aktionen übernommen.
+
+
+Version 1.8.8: Recruiting-Trichter im Vertriebscockpit mit Zeiträumen Heute, Diese Woche, Dieser Monat und Gesamtbestand. Jede Phase ist anklickbar. Umwandlungsquoten werden aus den dokumentierten Phasenwechseln berechnet.
