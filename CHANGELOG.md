@@ -1,3 +1,11 @@
+# Version 1.7.9
+
+- Kontaktübersicht für den täglichen Arbeitsablauf erweitert.
+- Priorität, Status, Wiedervorlage, nächster Schritt und letzte Aktivität direkt sichtbar.
+- Schnellaktionen für Telefon, WhatsApp, E-Mail, LinkedIn und Wiedervorlage ergänzt.
+- Wiedervorlage auf Datum ohne Uhrzeit umgestellt.
+- Bestehende Kontakte und Funktionen vollständig übernommen.
+
 # Version 1.7.8
 
 - Dashboard mit ausgeschriebenem Datum ergänzt.
