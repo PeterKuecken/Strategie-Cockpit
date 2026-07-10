@@ -1,3 +1,7 @@
+## Version 2.0.5
+
+Die Sprachsteuerung und die Sprachhilfe wurden aus der Kopfzeile in die linke Navigation unterhalb der Menüpunkte verschoben. Dadurch bleiben beide Funktionen auf jeder Seite erreichbar. Alle übrigen Funktionen aus Version 2.0.4 bleiben unverändert.
+
 Version 1.9.3: Die vollständigen Recruiting-Bibliotheken sind nach Peter, Martina und Recruiting-Phase mit dem Recruiting-Assistenten verknüpft. Kundenservice, Jahrespläne und reine Social-Media-Jahresinhalte bleiben außerhalb der automatischen Vorschläge.
 
 Version 1.9.1: Die empfohlene Wiedervorlage wird im Recruiting-Assistenten als eigener, deutlich hervorgehobener Abschnitt angezeigt.
@@ -87,3 +91,10 @@ Auf Smartphones öffnet die App beim Export den Teilen-Dialog. Die JSON-Sicherun
 - Feste Sprachbefehle öffnen Hauptbereiche, suchen Kontakte und setzen nach Bestätigung Wiedervorlagen.
 - Das Mikrofon hört nur nach bewusstem Antippen zu.
 - Bei fehlender Browserunterstützung bleibt die normale Bedienung erhalten.
+
+
+## Version 2.0.4
+- Natürlich formulierte Sprachbefehle
+- Direkter Aufruf der 52-Wochen-Jahrespläne von Peter und Martina
+- Direkter Aufruf einzelner Wochen
+- Flexible Synonyme für Navigation und Kontaktsuche
