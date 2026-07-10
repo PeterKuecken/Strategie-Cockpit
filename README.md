@@ -33,3 +33,6 @@ Version 1.8.8.1: Recruiting-Trichter im Vertriebscockpit mit Zeiträumen Heute, 
 
 
 Version 1.8.8.1: Kontaktöffnung aus dem Recruiting-Trichter korrigiert.
+
+
+Version 1.8.9: Der Recruiting-Assistent führt einen Ein-Klick-Workflow ein. „Schritt abschließen und weiter“ erledigt die aktuelle passende Aufgabe, setzt die nächste Recruiting-Phase, aktualisiert den nächsten Schritt, legt die passende Wiedervorlage fest und dokumentiert den Ablauf in der Zeitachse. Abschlussphasen werden durch eine Sicherheitsabfrage geschützt.

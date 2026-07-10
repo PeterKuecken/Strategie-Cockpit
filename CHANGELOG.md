@@ -1,3 +1,14 @@
+# Version 1.8.9 – 10.07.2026
+
+- Neuer Button „Schritt abschließen und weiter“.
+- Passende offene Aufgabe des Kontakts wird automatisch als erledigt markiert.
+- Recruiting-Phase wechselt automatisch zum nächsten Schritt.
+- Nächste empfohlene Aktion, Vorlagen und Wiedervorlage aktualisieren sich automatisch.
+- Zeitachse dokumentiert abgeschlossenen und neuen Schritt.
+- Sicherheitsabfrage bei Geschäftspartner, Kein Interesse und Archiv.
+- Kurzer Assistenten-Hinweis zeigt überfällige, heutige oder nächste Aktion.
+- Dashboard und Vertriebscockpit aktualisieren sich über die gemeinsame Kontaktdatenbasis.
+
 # Version 1.8.8.1
 
 - Kontakte aus dem Recruiting-Trichter und den Vertriebslisten öffnen jetzt direkt die Kontaktakte im Menüpunkt Kontakte.
