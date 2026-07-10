@@ -101,3 +101,10 @@
 - Bestehende Statuswerte werden ohne Datenverlust einer Pipeline-Phase zugeordnet.
 - Aktuelle Phase erscheint in Kontaktübersicht und Kontaktkopf.
 - Smartphone-Darstellung horizontal scrollbar.
+
+## Version 1.8.4
+- Nächste empfohlene Aktion richtet sich jetzt nach der aktuellen Recruiting-Phase.
+- Für jede Phase gibt es einen klaren nächsten Arbeitsschritt.
+- Übernommene Empfehlungen aktualisieren Phase, nächsten Schritt und Wiedervorlagedatum.
+- Wiedervorlagen des Assistenten werden ohne Uhrzeit angelegt.
+- Bei „Kein Interesse“ und „Archiv“ erscheint keine weitere Handlungsempfehlung.
