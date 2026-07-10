@@ -161,3 +161,11 @@ Version 1.8.9.1: Die empfohlene Wiedervorlage wird im Recruiting-Assistenten als
 - Übernommene Empfehlungen aktualisieren Phase, nächsten Schritt und Wiedervorlagedatum.
 - Wiedervorlagen des Assistenten werden ohne Uhrzeit angelegt.
 - Bei „Kein Interesse“ und „Archiv“ erscheint keine weitere Handlungsempfehlung.
+
+## Version 1.9.0
+- Proaktive Hinweise im Recruiting-Assistenten ergänzt.
+- Überfällige Wiedervorlagen werden deutlich hervorgehoben.
+- Aktive Kontakte ohne Wiedervorlage werden automatisch erkannt.
+- Kontakte, die zu lange in derselben Recruiting-Phase stehen, werden markiert.
+- Dringende Kontakte werden im Recruiting-Assistenten zuerst angezeigt.
+- Alle bisherigen Funktionen bleiben unverändert.
