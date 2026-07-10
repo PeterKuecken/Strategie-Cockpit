@@ -1,3 +1,5 @@
+Version 1.9.3: Die vollständigen Recruiting-Bibliotheken sind nach Peter, Martina und Recruiting-Phase mit dem Recruiting-Assistenten verknüpft. Kundenservice, Jahrespläne und reine Social-Media-Jahresinhalte bleiben außerhalb der automatischen Vorschläge.
+
 Version 1.9.1: Die empfohlene Wiedervorlage wird im Recruiting-Assistenten als eigener, deutlich hervorgehobener Abschnitt angezeigt.
 
 # Recruiting-Cockpit Peter & Martina Kücken
@@ -41,3 +43,12 @@ Version 1.9.1: Der Recruiting-Assistent führt einen Ein-Klick-Workflow ein. „
 
 
 Version 1.9.1 ergänzt proaktive Hinweise für überfällige, nicht terminierte und festgefahrene Recruiting-Kontakte.
+
+
+## Version 1.9.3
+- Hauptnavigation neu geordnet.
+- Peter in „Peter heute“ umbenannt.
+- Martina in „Martina heute“ umbenannt.
+- Recruiting-Assistent als eigener Hauptmenüpunkt.
+- Vertriebscockpit als eigener Hauptmenüpunkt.
+- 52-Wochen-Pläne und alle Inhalte bleiben unverändert erhalten.

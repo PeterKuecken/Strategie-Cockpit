@@ -1,3 +1,20 @@
+# Version 1.9.3
+
+- Hauptnavigation: Dashboard, Kontakte, Recruiting-Assistent, Peter heute, Martina heute, Recruiting-Bibliothek, Vertriebscockpit, Einstellungen.
+- Recruiting-Assistent als eigener direkter Arbeitsbereich.
+- Vertriebscockpit aus dem Dashboard herausgelöst und als Hauptmenüpunkt erreichbar.
+- Keine Inhalte oder Funktionen entfernt.
+- 52-Wochen-Pläne bleiben in Peter heute und Martina heute erhalten.
+
+# Version 1.9.2
+
+- Große Recruiting-Bibliothek mit dem Recruiting-Assistenten verknüpft.
+- Peters vorhandene WhatsApp-, LinkedIn-, Facebook-, Unternehmer-, Empfehlungs-, Einwand- sowie Video- und Sprachnachrichten-Bibliotheken nach Recruiting-Phase zugeordnet.
+- Peters und Martinas Vorlagen strikt getrennt.
+- Fehlende Martina-Vorlagen für Einwände, Empfehlungen, Kein Interesse, Reaktivierung und nächste Partner-Schritte ergänzt.
+- Kundenservice, Jahrespläne und reine Social-Media-Inhalte von automatischen Vorschlägen ausgeschlossen.
+- Doppelte Vorlagentexte automatisch ausgefiltert.
+
 # Version 1.9.1
 
 - Intelligente Priorisierung mit Rot, Orange und Grün.

@@ -2917,6 +2917,19 @@ window.APP_CONTENT = {
       ]
     },
     {
+      "id": "assistent",
+      "title": "Recruiting-Assistent",
+      "navTitle": "Recruiting-Assistent",
+      "type": "assistant",
+      "text": "Priorisierte Kontakte, nächste empfohlene Aktionen, passende Vorlagen und Wiedervorlagen auf einen Blick.",
+      "tags": [
+        "Recruiting",
+        "Assistent",
+        "Priorisierung",
+        "Wiedervorlage"
+      ]
+    },
+    {
       "id": "wissen",
       "title": "Recruiting-Wissen",
       "navTitle": "Recruiting-Wissen",
@@ -2938,8 +2951,7 @@ window.APP_CONTENT = {
       "label": "Dashboard",
       "sections": [
         "heute",
-        "aufgaben",
-        "kennzahlen"
+        "aufgaben"
       ]
     },
     {
@@ -2950,7 +2962,14 @@ window.APP_CONTENT = {
       "directTarget": "recruiting"
     },
     {
-      "label": "Peter",
+      "label": "Recruiting-Assistent",
+      "sections": [
+        "assistent"
+      ],
+      "directTarget": "assistent"
+    },
+    {
+      "label": "Peter heute",
       "sections": [
         "whatsapp_lib",
         "linkedin_lib",
@@ -2967,7 +2986,7 @@ window.APP_CONTENT = {
       ]
     },
     {
-      "label": "Martina",
+      "label": "Martina heute",
       "sections": [
         "martina_home",
         "martina_band1",
@@ -2986,10 +3005,18 @@ window.APP_CONTENT = {
       "directTarget": "wissen"
     },
     {
+      "label": "Vertriebscockpit",
+      "sections": [
+        "kennzahlen"
+      ],
+      "directTarget": "kennzahlen"
+    },
+    {
       "label": "Einstellungen",
       "sections": [
         "impressum"
-      ]
+      ],
+      "directTarget": "impressum"
     }
   ]
 };
