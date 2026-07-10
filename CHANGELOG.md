@@ -1,4 +1,13 @@
-# Version 1.8.2.3
+# Version 1.8.3
+
+- Kontaktkachel „Neue Kontakte“ entfernt.
+- Kundenkachel entfernt.
+- „Geschäftspartner“ in „Aktive Geschäftspartner“ umbenannt.
+- Kontaktkacheln nach Arbeitspriorität neu sortiert.
+- „Kontakte ohne Wiedervorlage“ orange hervorgehoben.
+- Alle übrigen Funktionen unverändert übernommen.
+
+# Version 1.8.3
 
 - Recruiting-Pipeline auf Smartphones als vertikale Liste dargestellt.
 - Volle Bildschirmbreite der Kontaktakte wiederhergestellt.
