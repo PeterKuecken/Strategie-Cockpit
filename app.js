@@ -1231,21 +1231,48 @@ function knowledgeFindContact(){
   const pick=Number(window.prompt(`Mehrere Kontakte gefunden:\n${list}\n\nNummer auswählen:`));
   return matches[pick-1]||null;
 }
-function knowledgeSend(id){
+async function knowledgeSend(id){
   const t=knowledgeTemplate(id); if(!t)return;
   const c=(selectedContactId&&crmFindContact(selectedContactId))||knowledgeFindContact();
   if(!c)return;
   const text=knowledgeContactText(t,c);
+
   if(t.category==='WhatsApp'){
-    const num=crmFullPhone(c); if(!num){alert('Bei diesem Kontakt fehlt die Mobilnummer.');return;}
-    crmAddCommunicationLog(c,'WhatsApp',t.title); save(); window.location.href=`https://wa.me/${num}?text=${encodeURIComponent(text)}`; return;
+    const num=crmFullPhone(c);
+    if(!num){alert('Bei diesem Kontakt fehlt die Mobilnummer.');return;}
+    crmAddCommunicationLog(c,'WhatsApp',t.title); save();
+    window.location.href=`https://wa.me/${num}?text=${encodeURIComponent(text)}`;
+    return;
   }
+
   if(t.category==='E-Mail'){
     if(!c.email){alert('Bei diesem Kontakt fehlt die E-Mail-Adresse.');return;}
-    crmAddCommunicationLog(c,'E-Mail',t.title); save(); window.location.href=`mailto:${encodeURIComponent(c.email)}?subject=${encodeURIComponent(t.subject||t.title)}&body=${encodeURIComponent(text)}`; return;
+    crmAddCommunicationLog(c,'E-Mail',t.title); save();
+    window.location.href=`mailto:${encodeURIComponent(c.email)}?subject=${encodeURIComponent(t.subject||t.title)}&body=${encodeURIComponent(text)}`;
+    return;
   }
-  copyText(text); selectedContactId=c.id; selectedContactTab='communication'; current='recruiting'; render();
-  setTimeout(()=>alert('Vorlage kopiert. Die Kontaktakte wurde geöffnet.'),50);
+
+  if(t.category==='LinkedIn' || t.category==='Facebook'){
+    const url=t.category==='LinkedIn' ? c.linkedin : c.facebook;
+    const channel=t.category;
+    const opened=url ? window.open('about:blank','_blank') : null;
+    await copyText(text);
+    crmAddCommunicationLog(c,channel,`${t.title} vorbereitet`); save();
+    selectedContactId=c.id;
+    if(url){
+      const target=crmWebsiteHref(url);
+      if(opened){opened.location.href=target;}
+      else {window.open(target,'_blank');}
+      alert(`Text wurde kopiert. Das ${channel}-Profil wird geöffnet. Bitte den Text dort einfügen.`);
+    }else{
+      alert(`Text wurde kopiert. Bei diesem Kontakt ist noch kein ${channel}-Profil hinterlegt.`);
+    }
+    return;
+  }
+
+  await copyText(text);
+  selectedContactId=c.id; selectedContactTab='communication'; current='recruiting'; render();
+  setTimeout(()=>alert('Vorlage wurde kopiert. Die Kontaktakte ist geöffnet.'),50);
 }
 function knowledgeOpenForRecommendation(contactId){
   const c=crmFindContact(contactId); if(!c)return;
@@ -1261,7 +1288,7 @@ function renderKnowledge(s){
   const contact=selectedContactId?crmFindContact(selectedContactId):null;
   view.innerHTML=`<div class="card knowledge-head"><p class="eyebrow">Version 1.6.0</p><h2>${esc(s.title)}</h2><p>${esc(s.text)}</p>${contact?`<p class="knowledge-contact">Aktueller Kontakt: <strong>${esc(crmFullName(contact))}</strong> · ${esc(contact.contactCode||'')}</p>`:''}<input class="knowledge-search" type="search" placeholder="Vorlage suchen, z. B. Landingpage oder Video 2" value="${esc(knowledgeQuery)}" oninput="knowledgeQuery=this.value; renderKnowledge(sectionById('wissen'))"></div>
   <div class="knowledge-categories">${cats.map(cat=>`<button class="${knowledgeCategory===cat?'primary':'copy-btn'}" onclick="knowledgeSetCategory('${esc(cat)}')">${esc(cat)}</button>`).join('')}</div>
-  <div class="knowledge-grid">${filtered.length?filtered.map(t=>`<article class="knowledge-card"><span class="knowledge-label">${esc(t.category)}</span><h3>${esc(t.title)}</h3><div class="knowledge-text">${esc(knowledgeContactText(t,contact)).replaceAll('\n','<br>')}</div><div class="knowledge-actions"><button class="copy-btn" onclick="knowledgeCopy('${esc(t.id)}')">Kopieren</button><button class="primary" onclick="knowledgeSend('${esc(t.id)}')">An Kontakt senden</button></div></article>`).join(''):'<div class="card"><p>Keine passende Vorlage gefunden.</p></div>'}</div>`;
+  <div class="knowledge-grid">${filtered.length?filtered.map(t=>`<article class="knowledge-card"><span class="knowledge-label">${esc(t.category)}</span><h3>${esc(t.title)}</h3><div class="knowledge-text">${esc(knowledgeContactText(t,contact)).replaceAll('\n','<br>')}</div><div class="knowledge-actions"><button class="copy-btn" onclick="knowledgeCopy('${esc(t.id)}')">Kopieren</button><button class="primary" onclick="knowledgeSend('${esc(t.id)}')">Jetzt verwenden</button></div></article>`).join(''):'<div class="card"><p>Keine passende Vorlage gefunden.</p></div>'}</div>`;
 }
 
 function renderRecruiting(s){

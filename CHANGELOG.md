@@ -1,10 +1,11 @@
 # Änderungsprotokoll
 
-## Version 1.6.0 – 10.07.2026
+## Version 1.6.1 – 10.07.2026
 
-- Wissensbereich mit LinkedIn, Facebook, WhatsApp, E-Mail und Gespräch ergänzt.
-- Gemeinsame Suche über alle Vorlagen.
-- Vorlagen können kopiert oder direkt an einen Kontakt gesendet werden.
-- WhatsApp und E-Mail öffnen mit Empfänger und vorbereitetem Text.
-- Recruiting-Assistent verlinkt auf passende Vorlagen.
-- Darstellung für PC und Smartphone angepasst.
+- Schaltfläche „An Kontakt senden“ in „Jetzt verwenden“ umbenannt.
+- LinkedIn-Vorlagen kopieren den Text und öffnen das hinterlegte LinkedIn-Profil.
+- Facebook-Vorlagen kopieren den Text und öffnen das hinterlegte Facebook-Profil.
+- WhatsApp öffnet den Kontakt mit vorbereitetem Nachrichtentext.
+- E-Mail öffnet das E-Mail-Programm mit Empfänger, Betreff und Text.
+- Fehlende Profil-, Mobil- oder E-Mail-Daten werden verständlich gemeldet.
+- Nutzung der Vorlagen wird im Kommunikationsprotokoll erfasst.
