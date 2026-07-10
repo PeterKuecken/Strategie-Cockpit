@@ -1,18 +1,11 @@
-# Changelog
-
-## 1.6.2
-- Landingpage-Link `https://www.ichmachdicherfolgreich.de` fest in die Landingpage-Vorlagen eingebaut.
-- Automatische Abfrage für eine Wiedervorlage in zwei Tagen entfernt.
-- Versionsangaben aktualisiert.
-
 # Änderungsprotokoll
 
-## Version 1.6.1 – 10.07.2026
+## 1.6.3
 
-- Schaltfläche „An Kontakt senden“ in „Jetzt verwenden“ umbenannt.
-- LinkedIn-Vorlagen kopieren den Text und öffnen das hinterlegte LinkedIn-Profil.
-- Facebook-Vorlagen kopieren den Text und öffnen das hinterlegte Facebook-Profil.
-- WhatsApp öffnet den Kontakt mit vorbereitetem Nachrichtentext.
-- E-Mail öffnet das E-Mail-Programm mit Empfänger, Betreff und Text.
-- Fehlende Profil-, Mobil- oder E-Mail-Daten werden verständlich gemeldet.
-- Nutzung der Vorlagen wird im Kommunikationsprotokoll erfasst.
+- Prozesslogik der Landingpage neu geordnet.
+- Video 1, Video 2 und Video 3 werden nicht mehr als einzelne Versandaufgaben behandelt.
+- Neue Trennung zwischen „Landingpage gesendet“ und „Landingpage gesehen“.
+- Der Recruiting-Assistent wertet den tatsächlichen Ansichtsstand der drei Videos aus.
+- Bei teilweise angesehenen Videos empfiehlt das Cockpit Beobachten oder eine freundliche Nachfrage.
+- Erst nach allen drei angesehenen Videos empfiehlt das Cockpit ein Follow-up-Gespräch.
+- Wissensbereich enthält keine Aufforderungen mehr, einzelne Videos zu versenden.

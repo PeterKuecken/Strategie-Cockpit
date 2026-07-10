@@ -9,7 +9,7 @@ const firebaseConfig = {
   appId: "1:523160644442:web:ff840ac629a9f62ebae163"
 };
 
-const APP_VERSION='1.6.2';
+const APP_VERSION='1.6.3';
 const LANDINGPAGE_URL='https://www.ichmachdicherfolgreich.de';
 const APP_BUILD='10.07.2026';
 let firebaseApp=null;
@@ -883,6 +883,8 @@ function crmEnsureContactCodes(){
     }
     if(!c.createdBy)c.createdBy=(c.contactCode||'').startsWith('MK-')?'Martina':'Peter';
     if(!c.phoneCountry)c.phoneCountry='+49';
+    if(typeof c.landingSent!=='boolean')c.landingSent=!!c.landingSeen;
+    if(!c.landingSentDate && c.landingSent && c.landingDate)c.landingSentDate=c.landingDate;
     if(!Array.isArray(c.communication))c.communication=[];
     if(!Array.isArray(c.noteEntries))c.noteEntries=[];
   });
@@ -907,7 +909,7 @@ function crmPersonFilter(c){return (c.owner || 'Peter')===currentPerson() || (c.
 function crmStatusOptions(){return ['Neu','Kontaktanfrage gesendet','Vernetzt','Erstgespräch','Interesse','Präsentation geplant','Präsentation erfolgt','Nachfassen','Kunde','Geschäftspartner','Kein Interesse','Archiv']}
 function crmSources(){return ['LinkedIn','Facebook','WhatsApp','Empfehlung','Veranstaltung','Kunde','Sonstiges']}
 function crmPriorities(){return ['A','B','C']}
-function crmNextStepOptions(){return ['LinkedIn-Anfrage senden','Facebook-Nachricht senden','WhatsApp senden','Telefonat führen','Landingpage senden','Video 1 senden','Video 2 senden','Video 3 senden','Zoom vereinbaren','Präsentation durchführen','Nachfassen','Kunde betreuen','Geschäftspartner begleiten','Sonstiges']}
+function crmNextStepOptions(){return ['LinkedIn-Anfrage senden','Facebook-Nachricht senden','WhatsApp senden','Telefonat führen','Landingpage senden','Prüfen, ob Landingpage angekommen ist','Landingpage-Fortschritt beobachten','Bei teilweise angesehenen Videos nachfragen','Follow-up-Gespräch führen','Zoom vereinbaren','Präsentation durchführen','Nachfassen','Kunde betreuen','Geschäftspartner begleiten','Sonstiges']}
 function crmChannelOptions(){return ['LinkedIn','Facebook','WhatsApp','Telefon','Zoom','Persönlich','E-Mail','Sonstiges']}
 function crmCommTemplates(channel){
   if(channel==='WhatsApp')return {
@@ -917,9 +919,9 @@ function crmCommTemplates(channel){
 ${LANDINGPAGE_URL}
 
 Schau dir das in Ruhe an. Danach interessiert mich deine ehrliche Einschätzung.`},
-    video1:{label:'Video 1',step:'Video 1 senden',text:(c)=>`Hallo ${c.firstName||crmFullName(c)}, ich wollte kurz nachfragen, ob du Video 1 schon anschauen konntest.`},
-    video2:{label:'Video 2',step:'Video 2 senden',text:(c)=>`Hallo ${c.firstName||crmFullName(c)}, wenn Video 1 für dich gepasst hat, wäre jetzt Video 2 der nächste sinnvolle Schritt.`},
-    video3:{label:'Video 3',step:'Video 3 senden',text:(c)=>`Hallo ${c.firstName||crmFullName(c)}, Video 3 rundet die Informationen ab. Danach können wir gemeinsam ein kurzes Gespräch führen.`},
+    video1:{label:'Link angekommen?',step:'Prüfen, ob Landingpage angekommen ist',text:(c)=>`Hallo ${c.firstName||crmFullName(c)}, kurze Nachfrage: Ist der Link zur Landingpage bei dir angekommen und lässt er sich öffnen?`},
+    video2:{label:'Teilweise angesehen',step:'Bei teilweise angesehenen Videos nachfragen',text:(c)=>`Hallo ${c.firstName||crmFullName(c)}, ich wollte kurz hören, ob beim Anschauen der Informationen eine Frage aufgekommen ist. Schau dir den Rest gern in Ruhe an.`},
+    video3:{label:'Follow-up nach allen Videos',step:'Follow-up-Gespräch führen',text:(c)=>`Hallo ${c.firstName||crmFullName(c)}, du hast dir die Informationen vollständig angesehen. Lass uns kurz über deinen Eindruck und deine offenen Fragen sprechen.`},
     followup:{label:'Follow-up',step:'Nachfassen',text:(c)=>`Hallo ${c.firstName||crmFullName(c)}, ich wollte kurz hören, wie dein Eindruck nach den Informationen ist.`},
     appointment:{label:'Terminbestätigung',step:'Termin bestätigen',text:(c)=>`Hallo ${c.firstName||crmFullName(c)}, ich bestätige dir hiermit unseren Termin. Ich freue mich auf das Gespräch.`},
     reminder:{label:'Erinnerung',step:'Erinnerung senden',text:(c)=>`Hallo ${c.firstName||crmFullName(c)}, kurze Erinnerung an unseren vereinbarten nächsten Schritt.`},
@@ -978,12 +980,15 @@ function crmAddCommunicationLog(c,channel,label){
 function crmSuggestFollowup(c,channel,key){
   const t=crmCommTemplates(channel)[key]; if(!t)return;
   if(key==='landing'){
-    c.status='Nachfassen'; c.nextStep='Nachfragen, ob Video 1 angesehen wurde';
-    c.landingSeen=true; if(!c.landingDate)c.landingDate=todayKey();
-  }else if(key==='video1'){c.nextStep='Video 2 senden';}
-  else if(key==='video2'){c.nextStep='Video 3 senden';}
-  else if(key==='video3'){c.nextStep='Telefontermin vereinbaren';}
-  else if(key==='followup'){c.nextStep='Telefonat führen';}
+    c.status='Nachfassen'; c.landingSent=true; c.landingSentDate=c.landingSentDate||todayKey();
+    c.nextStep='Prüfen, ob Landingpage angekommen ist';
+  }else if(key==='video1'){
+    c.nextStep='Landingpage-Fortschritt beobachten';
+  }else if(key==='video2'){
+    c.nextStep='Landingpage-Fortschritt beobachten';
+  }else if(key==='video3'){
+    c.nextStep='Follow-up-Gespräch führen';
+  }else if(key==='followup'){c.nextStep='Telefonat führen';}
 }
 function crmOpenComm(id,channel){
   const key=document.getElementById(`crm_template_${channel}`)?.value||'free';
@@ -999,15 +1004,23 @@ function crmQuickLog(id,channel,label,nextStep){
   const c=crmFindContact(id); if(!c)return;
   crmAddCommunicationLog(c,channel,label);
   if(nextStep)c.nextStep=nextStep;
-  if(label.includes('Landingpage')){c.status='Nachfassen'; c.landingSeen=true; if(!c.landingDate)c.landingDate=todayKey();}
+  if(label.includes('Landingpage')){c.status='Nachfassen'; c.landingSent=true; c.landingSentDate=c.landingSentDate||todayKey();}
   save(); render();
 }
+function crmDaysSince(dateKey){
+  if(!dateKey)return 0;
+  const then=new Date(`${dateKey}T00:00:00`); const now=new Date(); now.setHours(0,0,0,0);
+  return Math.max(0,Math.floor((now-then)/86400000));
+}
 function crmRecommendedAction(c){
-  if(!c.landingSeen)return 'Landingpage senden';
-  if(!c.video1Seen)return 'Nachfragen, ob Video 1 angesehen wurde';
-  if(!c.video2Seen)return 'Video 2 senden';
-  if(!c.video3Seen)return 'Video 3 senden';
-  if(!c.followupActive)return 'Follow-up starten';
+  if(!c.landingSent && !c.landingSeen)return 'Landingpage senden';
+  if(c.landingSent && !c.landingSeen)return 'Prüfen, ob Landingpage angekommen ist';
+  const watched=[c.video1Seen,c.video2Seen,c.video3Seen].filter(Boolean).length;
+  if(watched<3){
+    const age=crmDaysSince(c.landingDate||c.landingSentDate);
+    return age>=2?'Bei teilweise angesehenen Videos freundlich nachfragen':'Landingpage-Fortschritt beobachten';
+  }
+  if(!c.followupActive)return 'Follow-up-Gespräch führen';
   if(!['Präsentation geplant','Präsentation erfolgt','Kunde','Geschäftspartner'].includes(c.status||''))return 'Telefontermin oder Zoom vereinbaren';
   return c.nextStep||'Nächsten Schritt prüfen';
 }
@@ -1017,11 +1030,11 @@ function renderCrmCommunicationBar(c){
     <label>WhatsApp<select id="crm_template_WhatsApp">${crmTemplateSelect('WhatsApp')}</select></label><button class="primary" onclick="crmOpenComm('${esc(c.id)}','WhatsApp')">WhatsApp Business öffnen</button>
     <label>E-Mail<select id="crm_template_E-Mail">${crmTemplateSelect('E-Mail')}</select></label><button class="primary" onclick="crmOpenComm('${esc(c.id)}','E-Mail')">Outlook öffnen</button>
     <button class="copy-btn" onclick="selectedContactTab='tasks'; render()">Termin/Aufgabe</button>
-    <button class="copy-btn" onclick="crmQuickLog('${esc(c.id)}','Landingpage','Landingpage gesendet','Nachfragen, ob Video 1 angesehen wurde')">Landingpage gesendet</button>
+    <button class="copy-btn" onclick="crmQuickLog('${esc(c.id)}','Landingpage','Landingpage gesendet','Prüfen, ob Landingpage angekommen ist')">Landingpage gesendet</button>
   </div></div>`;
 }
 
-function crmTaskOptions(){return ['LinkedIn-Nachricht','WhatsApp senden','Rückruf','Zoom vorbereiten','Präsentation','Landingpage senden','Video senden','Nachfassen','Sonstiges']}
+function crmTaskOptions(){return ['LinkedIn-Nachricht','WhatsApp senden','Rückruf','Zoom vorbereiten','Präsentation','Landingpage senden','Landingpage prüfen','Follow-up-Gespräch','Nachfassen','Sonstiges']}
 function crmSortAz(items,lastLabel){
   const collator=new Intl.Collator('de',{sensitivity:'base',numeric:true});
   const base=(items||[]).filter(x=>x!==lastLabel).sort((a,b)=>collator.compare(a,b));
@@ -1062,7 +1075,7 @@ function crmCollectForm(id){
   const rawContactCode=val('contactCode');
   const cleanContactCode=crmCodeNumber(rawContactCode) ? rawContactCode : '';
   return {
-    id:id||crmId(), contactCode:cleanContactCode, createdBy:val('createdBy')||currentPerson(), firstName:val('firstName'), lastName:val('lastName'), company:val('company'), birthday:val('birthday'), street:val('street'), postalCode:val('postalCode'), job:(val('jobOther')||val('jobSelect')||val('job')), branch:(val('branchOther')||val('branchSelect')||val('branch')), city:val('city'), phoneCountry:val('phoneCountry')||'+49', phone:val('phone'), email:val('email'), website:val('website'), linkedin:val('linkedin'), facebook:val('facebook'), instagram:val('instagram'), whatsapp:document.getElementById('crm_whatsapp')?.checked||false, owner:val('owner')||currentPerson(), support:val('support'), source:val('source'), targetGroup:(val('targetGroupOther')||val('targetGroupSelect')||val('targetGroup')), status:val('status')||'Neu', priority:val('priority')||'A', followDate:val('followDate'), followTime:val('followTime'), nextStep:(nextStepOther||nextStepSelect||val('nextStep')), landingSeen:document.getElementById('crm_landingSeen')?.checked||false, landingDate:(document.getElementById('crm_landingSeen')?.checked?val('landingDate'):''), video1Seen:(document.getElementById('crm_landingSeen')?.checked && (document.getElementById('crm_video1Seen')?.checked||false)), video2Seen:(document.getElementById('crm_landingSeen')?.checked && (document.getElementById('crm_video1Seen')?.checked||false) && (document.getElementById('crm_video2Seen')?.checked||false)), video3Seen:(document.getElementById('crm_landingSeen')?.checked && (document.getElementById('crm_video1Seen')?.checked||false) && (document.getElementById('crm_video2Seen')?.checked||false) && (document.getElementById('crm_video3Seen')?.checked||false)), followupActive:(document.getElementById('crm_landingSeen')?.checked && (document.getElementById('crm_video1Seen')?.checked||false) && (document.getElementById('crm_video2Seen')?.checked||false) && (document.getElementById('crm_video3Seen')?.checked||false) && (document.getElementById('crm_followupActive')?.checked||false)), interest:val('interest')||'3', trust:val('trust')||'3', activityLevel:val('activityLevel')||'3', notes:val('notes')
+    id:id||crmId(), contactCode:cleanContactCode, createdBy:val('createdBy')||currentPerson(), firstName:val('firstName'), lastName:val('lastName'), company:val('company'), birthday:val('birthday'), street:val('street'), postalCode:val('postalCode'), job:(val('jobOther')||val('jobSelect')||val('job')), branch:(val('branchOther')||val('branchSelect')||val('branch')), city:val('city'), phoneCountry:val('phoneCountry')||'+49', phone:val('phone'), email:val('email'), website:val('website'), linkedin:val('linkedin'), facebook:val('facebook'), instagram:val('instagram'), whatsapp:document.getElementById('crm_whatsapp')?.checked||false, owner:val('owner')||currentPerson(), support:val('support'), source:val('source'), targetGroup:(val('targetGroupOther')||val('targetGroupSelect')||val('targetGroup')), status:val('status')||'Neu', priority:val('priority')||'A', followDate:val('followDate'), followTime:val('followTime'), nextStep:(nextStepOther||nextStepSelect||val('nextStep')), landingSent:document.getElementById('crm_landingSent')?.checked||false, landingSentDate:(document.getElementById('crm_landingSent')?.checked?val('landingSentDate'):''), landingSeen:document.getElementById('crm_landingSeen')?.checked||false, landingDate:(document.getElementById('crm_landingSeen')?.checked?val('landingDate'):''), video1Seen:(document.getElementById('crm_landingSeen')?.checked && (document.getElementById('crm_video1Seen')?.checked||false)), video2Seen:(document.getElementById('crm_landingSeen')?.checked && (document.getElementById('crm_video1Seen')?.checked||false) && (document.getElementById('crm_video2Seen')?.checked||false)), video3Seen:(document.getElementById('crm_landingSeen')?.checked && (document.getElementById('crm_video1Seen')?.checked||false) && (document.getElementById('crm_video2Seen')?.checked||false) && (document.getElementById('crm_video3Seen')?.checked||false)), followupActive:(document.getElementById('crm_landingSeen')?.checked && (document.getElementById('crm_video1Seen')?.checked||false) && (document.getElementById('crm_video2Seen')?.checked||false) && (document.getElementById('crm_video3Seen')?.checked||false) && (document.getElementById('crm_followupActive')?.checked||false)), interest:val('interest')||'3', trust:val('trust')||'3', activityLevel:val('activityLevel')||'3', notes:val('notes')
   }
 }
 function crmSaveContact(id){
@@ -1081,7 +1094,7 @@ function crmSaveContact(id){
     if(old.owner!==data.owner)data.timeline.push({date:todayKey(),time:new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}),type:'Zuständigkeit',text:`Zuständigkeit geändert: ${old.owner||'offen'} → ${data.owner}`});
     if(old.priority!==data.priority)data.timeline.push({date:todayKey(),time:new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}),type:'Priorität',text:`Priorität geändert: ${old.priority||'offen'} → ${data.priority}`});
     if(old.followDate!==data.followDate || old.followTime!==data.followTime || old.nextStep!==data.nextStep)data.timeline.push({date:todayKey(),time:new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}),type:'Wiedervorlage',text:`Nächster Schritt: ${data.nextStep||'offen'}`});
-    if(old.landingSeen!==data.landingSeen || old.video1Seen!==data.video1Seen || old.video2Seen!==data.video2Seen || old.video3Seen!==data.video3Seen || old.followupActive!==data.followupActive)data.timeline.push({date:todayKey(),time:new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}),type:'Landingpage',text:'Landingpage-Status aktualisiert'});
+    if(old.landingSent!==data.landingSent || old.landingSeen!==data.landingSeen || old.video1Seen!==data.video1Seen || old.video2Seen!==data.video2Seen || old.video3Seen!==data.video3Seen || old.followupActive!==data.followupActive)data.timeline.push({date:todayKey(),time:new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}),type:'Landingpage',text:'Landingpage-Status aktualisiert'});
     state.crm.contacts[idx]=data;
   }else{
     data.contactCode=data.contactCode||crmNextContactCode(data.createdBy||data.owner||currentPerson());
@@ -1201,9 +1214,9 @@ const KNOWLEDGE_TEMPLATES=[
   {id:'fb-appointment',category:'Facebook',title:'Terminvereinbarung',keywords:'termin telefon zoom',text:'Ich finde unseren Austausch interessant. Ein kurzes Telefonat ist oft leichter als viele Nachrichten. Wann passen dir etwa 15 Minuten?'},
   {id:'wa-first',category:'WhatsApp',title:'Erstkontakt',keywords:'erstkontakt erste nachricht',text:'Hallo [Vorname], schön, dass wir jetzt auch über WhatsApp verbunden sind. Danke für den angenehmen Austausch. Mich interessiert noch: Wie bist du zu deiner heutigen Tätigkeit gekommen?'},
   {id:'wa-landing',category:'WhatsApp',title:'Landingpage senden',keywords:'landingpage informationen',text:'Hallo [Vorname], hier ist wie besprochen der Link zu unserer kurzen Info-Seite:\n\nhttps://www.ichmachdicherfolgreich.de\n\nSchau dir alles in Ruhe an. Danach interessiert mich deine ehrliche Einschätzung.'},
-  {id:'wa-video1',category:'WhatsApp',title:'Video 1',keywords:'video 1 nachfragen',text:'Hallo [Vorname], konntest du dir Video 1 bereits ansehen? Was war dein erster Eindruck?'},
-  {id:'wa-video2',category:'WhatsApp',title:'Video 2',keywords:'video 2 senden',text:'Hallo [Vorname], wenn Video 1 für dich gepasst hat, ist Video 2 jetzt der nächste Schritt. Gib mir danach bitte kurz deine Einschätzung.'},
-  {id:'wa-video3',category:'WhatsApp',title:'Video 3',keywords:'video 3 senden',text:'Hallo [Vorname], Video 3 rundet die Informationen ab. Danach können wir uns kurz austauschen und offene Fragen klären.'},
+  {id:'wa-video1',category:'WhatsApp',title:'Link angekommen?',keywords:'landingpage link angekommen öffnen',text:'Hallo [Vorname], kurze Nachfrage: Ist der Link zur Landingpage bei dir angekommen und lässt er sich öffnen?'},
+  {id:'wa-video2',category:'WhatsApp',title:'Teilweise angesehen',keywords:'landingpage teilweise angesehen fragen offen',text:'Hallo [Vorname], ich wollte kurz hören, ob beim Anschauen der Informationen eine Frage aufgekommen ist. Schau dir den Rest gern in Ruhe an.'},
+  {id:'wa-video3',category:'WhatsApp',title:'Follow-up nach allen Videos',keywords:'alle videos angesehen follow-up gespräch',text:'Hallo [Vorname], du hast dir die Informationen vollständig angesehen. Lass uns kurz über deinen Eindruck und deine offenen Fragen sprechen.'},
   {id:'wa-follow',category:'WhatsApp',title:'Follow-up',keywords:'follow-up nachfassen',text:'Hallo [Vorname], ich wollte kurz hören, wie dein Eindruck nach den Informationen ist. Welche Frage ist bei dir noch offen?'},
   {id:'mail-first',category:'E-Mail',title:'Erstkontakt',keywords:'erstkontakt erste mail',subject:'Unser Austausch',text:'Hallo [Vorname],\n\nvielen Dank für den angenehmen Kontakt. Ich freue mich auf den weiteren Austausch.\n\nViele Grüße\n[Absender]'},
   {id:'mail-landing',category:'E-Mail',title:'Landingpage senden',keywords:'landingpage informationen',subject:'Informationen wie besprochen',text:'Hallo [Vorname],\n\nwie besprochen sende ich dir hier die Informationen:\n\nhttps://www.ichmachdicherfolgreich.de\n\nSchau dir alles in Ruhe an. Danach interessiert mich deine ehrliche Einschätzung.\n\nViele Grüße\n[Absender]'},
@@ -1289,7 +1302,7 @@ function renderKnowledge(s){
   const q=(knowledgeQuery||'').trim().toLowerCase();
   const filtered=KNOWLEDGE_TEMPLATES.filter(t=>(knowledgeCategory==='Alle'||t.category===knowledgeCategory) && (!q||`${t.title} ${t.category} ${t.keywords} ${t.text}`.toLowerCase().includes(q)));
   const contact=selectedContactId?crmFindContact(selectedContactId):null;
-  view.innerHTML=`<div class="card knowledge-head"><p class="eyebrow">Version 1.6.2</p><h2>${esc(s.title)}</h2><p>${esc(s.text)}</p>${contact?`<p class="knowledge-contact">Aktueller Kontakt: <strong>${esc(crmFullName(contact))}</strong> · ${esc(contact.contactCode||'')}</p>`:''}<input class="knowledge-search" type="search" placeholder="Vorlage suchen, z. B. Landingpage oder Video 2" value="${esc(knowledgeQuery)}" oninput="knowledgeQuery=this.value; renderKnowledge(sectionById('wissen'))"></div>
+  view.innerHTML=`<div class="card knowledge-head"><p class="eyebrow">Version 1.6.3</p><h2>${esc(s.title)}</h2><p>${esc(s.text)}</p>${contact?`<p class="knowledge-contact">Aktueller Kontakt: <strong>${esc(crmFullName(contact))}</strong> · ${esc(contact.contactCode||'')}</p>`:''}<input class="knowledge-search" type="search" placeholder="Vorlage suchen, z. B. Landingpage oder Follow-up" value="${esc(knowledgeQuery)}" oninput="knowledgeQuery=this.value; renderKnowledge(sectionById('wissen'))"></div>
   <div class="knowledge-categories">${cats.map(cat=>`<button class="${knowledgeCategory===cat?'primary':'copy-btn'}" onclick="knowledgeSetCategory('${esc(cat)}')">${esc(cat)}</button>`).join('')}</div>
   <div class="knowledge-grid">${filtered.length?filtered.map(t=>`<article class="knowledge-card"><span class="knowledge-label">${esc(t.category)}</span><h3>${esc(t.title)}</h3><div class="knowledge-text">${esc(knowledgeContactText(t,contact)).replaceAll('\n','<br>')}</div><div class="knowledge-actions"><button class="copy-btn" onclick="knowledgeCopy('${esc(t.id)}')">Kopieren</button><button class="primary" onclick="knowledgeSend('${esc(t.id)}')">Jetzt verwenden</button></div></article>`).join(''):'<div class="card"><p>Keine passende Vorlage gefunden.</p></div>'}</div>`;
 }
@@ -1371,7 +1384,7 @@ function crmMetricsFor(person){
     contacts:list.length,
     active:active.length,
     tasks:crmProcessItems(person).length,
-    landing:list.filter(c=>c.landingSeen).length,
+    landing:list.filter(c=>c.landingSent||c.landingSeen).length,
     v1:list.filter(c=>c.video1Seen).length,
     v2:list.filter(c=>c.video2Seen).length,
     v3:list.filter(c=>c.video3Seen).length,
@@ -1382,9 +1395,9 @@ function crmSuggestions(person){
   const list=crmContacts().filter(c=>((c.owner||'Peter')===person || (c.support||'')===person) && crmActive(c));
   const suggestions=[];
   list.forEach(c=>{
-    if(c.landingSeen && !c.video1Seen)suggestions.push({c,text:'Nachfragen, ob Video 1 angesehen wurde'});
-    else if(c.video1Seen && !c.video2Seen)suggestions.push({c,text:'Video 2 senden'});
-    else if(c.video2Seen && !c.video3Seen)suggestions.push({c,text:'Video 3 senden'});
+    if(c.landingSent && !c.landingSeen)suggestions.push({c,text:'Prüfen, ob Landingpage angekommen ist'});
+    else if(c.landingSeen && !(c.video1Seen&&c.video2Seen&&c.video3Seen))suggestions.push({c,text:'Landingpage-Fortschritt beobachten'});
+    else if(c.video1Seen&&c.video2Seen&&c.video3Seen&&!c.followupActive)suggestions.push({c,text:'Follow-up-Gespräch führen'});
     else if(c.video3Seen && !c.followupActive)suggestions.push({c,text:'Follow-up starten'});
     else if(!c.nextStep)suggestions.push({c,text:'Nächsten Schritt festlegen'});
   });
@@ -1402,11 +1415,15 @@ function crmCreateSuggestedTask(contactId,text){
 
 function crmAssistantRecommendation(c){
   if(!c)return null;
-  if(!c.landingSeen)return {step:'landing',title:'Landingpage senden',task:'Landingpage senden',status:'Interesse',days:2,button:'Landingpage als gesendet markieren',hint:'Danach fragt das Cockpit in zwei Tagen nach Video 1.'};
-  if(c.landingSeen && !c.video1Seen)return {step:'video1check',title:'Nachfragen, ob Video 1 gesehen wurde',task:'Nachfragen, ob Video 1 angesehen wurde',status:'Nachfassen',days:1,button:'Video 1 als gesehen markieren',hint:'Wenn Video 1 gesehen wurde, folgt Video 2.'};
-  if(c.video1Seen && !c.video2Seen)return {step:'video2',title:'Video 2 senden',task:'Video 2 senden',status:'Nachfassen',days:2,button:'Video 2 als gesehen markieren',hint:'Danach prüfst du, ob Video 2 angesehen wurde.'};
-  if(c.video2Seen && !c.video3Seen)return {step:'video3',title:'Video 3 senden',task:'Video 3 senden',status:'Nachfassen',days:2,button:'Video 3 als gesehen markieren',hint:'Nach Video 3 folgt die Terminvereinbarung.'};
-  if(c.video3Seen && !c.followupActive)return {step:'followup',title:'Follow-up starten',task:'Follow-up starten',status:'Nachfassen',days:1,button:'Follow-up als gestartet markieren',hint:'Danach Telefon- oder Zoomtermin vereinbaren.'};
+  if(!c.landingSent && !c.landingSeen)return {step:'landing',title:'Landingpage senden',task:'Landingpage senden',status:'Interesse',days:1,button:'Landingpage als gesendet markieren',hint:'Die drei Videos liegen auf der Landingpage. Sie werden nicht einzeln versendet.'};
+  if(c.landingSent && !c.landingSeen)return {step:'linkcheck',title:'Prüfen, ob Landingpage angekommen ist',task:'Prüfen, ob Landingpage angekommen ist',status:'Nachfassen',days:1,button:'Nachfrage protokollieren',hint:'Frage nur, ob der Link angekommen ist und funktioniert.'};
+  const watched=[c.video1Seen,c.video2Seen,c.video3Seen].filter(Boolean).length;
+  if(watched<3){
+    const age=crmDaysSince(c.landingDate||c.landingSentDate);
+    if(age<2)return {step:'observe',title:'Landingpage-Fortschritt beobachten',task:'Landingpage-Fortschritt prüfen',status:'Interesse',days:2-age,button:'Wiedervorlage anlegen',hint:`${watched} von 3 Videos angesehen. Noch kein Follow-up nötig.`};
+    return {step:'partial',title:'Bei teilweise angesehenen Videos freundlich nachfragen',task:'Freundlich nach offenen Fragen erkundigen',status:'Nachfassen',days:2,button:'Nachfrage protokollieren',hint:`${watched} von 3 Videos angesehen. Kein Video einzeln versenden.`};
+  }
+  if(!c.followupActive)return {step:'followup',title:'Follow-up-Gespräch führen',task:'Follow-up-Gespräch führen',status:'Nachfassen',days:1,button:'Follow-up als gestartet markieren',hint:'Alle drei Videos wurden angesehen. Jetzt den persönlichen Eindruck besprechen.'};
   if(c.followupActive && !['Präsentation geplant','Präsentation erfolgt','Kunde','Geschäftspartner'].includes(c.status||''))return {step:'appointment',title:'Telefontermin oder Zoom vereinbaren',task:'Telefontermin oder Zoom vereinbaren',status:'Erstgespräch',days:1,button:'Terminphase markieren',hint:'Jetzt wird aus dem Interesse ein konkretes Gespräch.'};
   if(!c.nextStep)return {step:'next',title:'Nächsten Schritt festlegen',task:'Nächsten Schritt festlegen',status:c.status||'Neu',days:1,button:'Aufgabe für morgen anlegen',hint:'Der Kontakt braucht einen klaren nächsten Schritt.'};
   return {step:'review',title:c.nextStep||'Kontakt prüfen',task:c.nextStep||'Kontakt prüfen',status:c.status||'Neu',days:1,button:'Wiedervorlage anlegen',hint:'Prüfe den aktuellen Stand und entscheide bewusst weiter.'};
@@ -1431,13 +1448,13 @@ function crmAssistantApply(contactId){
   const nowTime=new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
   if(!Array.isArray(c.timeline))c.timeline=[];
   if(rec.step==='landing'){
-    c.landingSeen=true; c.landingDate=c.landingDate||todayKey(); c.status='Nachfassen'; c.nextStep='Nachfragen, ob Video 1 angesehen wurde'; c.followDate=crmDateAddKey(2); c.followTime=c.followTime||'09:00';
-  }else if(rec.step==='video1check'){
-    c.video1Seen=true; c.nextStep='Video 2 senden'; c.followDate=crmDateAddKey(1); c.followTime=c.followTime||'09:00';
-  }else if(rec.step==='video2'){
-    c.video2Seen=true; c.nextStep='Video 3 senden'; c.followDate=crmDateAddKey(2); c.followTime=c.followTime||'09:00';
-  }else if(rec.step==='video3'){
-    c.video3Seen=true; c.nextStep='Telefontermin oder Zoom vereinbaren'; c.followDate=crmDateAddKey(1); c.followTime=c.followTime||'09:00';
+    c.landingSent=true; c.landingSentDate=c.landingSentDate||todayKey(); c.status='Nachfassen'; c.nextStep='Prüfen, ob Landingpage angekommen ist'; c.followDate=crmDateAddKey(1); c.followTime=c.followTime||'09:00';
+  }else if(rec.step==='linkcheck'){
+    c.nextStep='Landingpage-Fortschritt beobachten'; c.followDate=crmDateAddKey(2); c.followTime=c.followTime||'09:00';
+  }else if(rec.step==='observe'){
+    c.nextStep='Landingpage-Fortschritt prüfen'; c.followDate=crmDateAddKey(Math.max(1,rec.days||1)); c.followTime=c.followTime||'09:00';
+  }else if(rec.step==='partial'){
+    c.nextStep='Landingpage-Fortschritt beobachten'; c.followDate=crmDateAddKey(2); c.followTime=c.followTime||'09:00';
   }else if(rec.step==='followup'){
     c.followupActive=true; c.nextStep='Telefonat führen'; c.followDate=crmDateAddKey(1); c.followTime=c.followTime||'09:00';
   }else if(rec.step==='appointment'){
@@ -1545,6 +1562,8 @@ function renderCrmForm(c){
       ${stars('interest','Interesse',c.interest)}${stars('trust','Vertrauen',c.trust)}${stars('activityLevel','Aktivität',c.activityLevel)}
     </div></div>
     <div class="crm-form-group"><h4>Landingpage</h4><div class="crm-form">
+      <label class="check-inline"><input id="crm_landingSent" type="checkbox" ${c.landingSent?'checked':''}> Landingpage gesendet</label>
+      <label>Versanddatum<input id="crm_landingSentDate" type="date" value="${esc(c.landingSentDate||'')}"></label>
       <label class="check-inline"><input id="crm_landingSeen" type="checkbox" ${c.landingSeen?'checked':''} onchange="crmToggleLandingDetails()"> Landingpage gesehen</label>
       <div id="crm_landingDetails" style="display:${c.landingSeen?'contents':'none'}" class="crm-form-nested">
         <label>Datum<input id="crm_landingDate" type="date" value="${esc(c.landingDate||'')}"></label>
@@ -1586,7 +1605,7 @@ function renderCrmTabContent(c){
   if(selectedContactTab==='communication')return renderCrmCommunication(c);
   if(selectedContactTab==='notes')return renderCrmNotes(c);
   if(selectedContactTab==='documents')return `<div class="tab-content"><h4>Dokumente</h4><p class="small">Dieser Bereich ist vorbereitet. Dokumente, Angebote, Bilder und PDFs folgen in einer späteren Version.</p></div>`;
-  return `<div class="tab-content"><div class="contact-status-strip"><span>${esc(c.contactCode||'')}</span><span>Priorität ${esc(c.priority||'A')}</span><span>Status: ${esc(c.status||'Neu')}</span><span>Nächster Schritt: ${esc(c.nextStep||'offen')}</span></div><div class="info-card-grid"><section class="info-card"><h4>Kontaktdaten</h4><p><strong>Name:</strong> ${esc(crmFullName(c))}</p><p><strong>Kontakt-ID:</strong> ${esc(c.contactCode||'')}</p><p><strong>Geburtsdatum:</strong> ${esc(c.birthday||'')}</p><p><strong>Adresse:</strong><br>${esc(c.street||'')}${c.street?'<br>':''}${esc(c.postalCode||'')} ${esc(c.city||'')}</p><p><strong>Mobil:</strong> ${crmFullPhone(c)?`<a href="tel:+${esc(crmFullPhone(c))}" onclick="crmQuickLog('${esc(c.id)}','Telefon','Anruf aus Übersicht gestartet','Nachfassen')">${esc(crmPhoneDisplay(c))}</a>`:esc(crmPhoneLocalDisplay(c)||'')}</p><p><strong>WhatsApp:</strong> ${crmFullPhone(c)?`<a href="${esc(crmBuildCommunicationUrl(c,'WhatsApp','free'))}" onclick="crmQuickLog('${esc(c.id)}','WhatsApp','WhatsApp aus Kontaktdaten geöffnet','WhatsApp senden')">WhatsApp schreiben</a>`:'Nicht hinterlegt'}</p><p><strong>E-Mail:</strong> ${c.email?`<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>`:'Nicht hinterlegt'}</p><p><strong>Website:</strong> ${c.website?`<a href="${esc(crmWebsiteHref(c.website))}" target="_blank" rel="noopener">${esc(c.website)}</a>`:'Nicht hinterlegt'}</p></section><section class="info-card"><h4>Beruf und Profile</h4><p><strong>Firma:</strong> ${esc(c.company||'')}</p><p><strong>Beruf:</strong> ${esc(c.job||'')}</p><p><strong>Branche:</strong> ${esc(c.branch||'')}</p><p><strong>Zielgruppe:</strong> ${esc(c.targetGroup||'')}</p><p><strong>LinkedIn:</strong> ${c.linkedin?`<a href="${esc(crmWebsiteHref(c.linkedin))}" target="_blank" rel="noopener">Profil öffnen</a>`:'Nicht hinterlegt'}</p><p><strong>Facebook:</strong> ${c.facebook?`<a href="${esc(crmWebsiteHref(c.facebook))}" target="_blank" rel="noopener">Profil öffnen</a>`:'Nicht hinterlegt'}</p><p><strong>Instagram:</strong> ${c.instagram?`<a href="${esc(crmWebsiteHref(c.instagram))}" target="_blank" rel="noopener">Profil öffnen</a>`:'Nicht hinterlegt'}</p><p><strong>WhatsApp vorhanden:</strong> ${c.whatsapp?'Ja':'Nein'}</p></section><section class="info-card"><h4>Recruiting</h4><p><strong>Zuständig:</strong> ${esc(c.owner||'Peter')}${c.support?' · Unterstützung: '+esc(c.support):''}</p><p><strong>Status:</strong> ${esc(c.status||'Neu')}</p><p><strong>Quelle:</strong> ${esc(c.source||'')}</p><p><strong>Priorität:</strong> ${esc(c.priority||'A')}</p><p><strong>Wiedervorlage:</strong> ${esc(c.followDate||'offen')} ${esc(c.followTime||'')}</p><p><strong>Nächster Schritt:</strong> ${esc(c.nextStep||'Noch kein nächster Schritt eingetragen.')}</p><p><strong>Bewertung:</strong><br>Interesse ${esc(c.interest||'3')}/5 · Vertrauen ${esc(c.trust||'3')}/5 · Aktivität ${esc(c.activityLevel||'3')}/5</p></section><section class="info-card"><h4>Landingpage</h4><p><strong>Gesehen:</strong> ${c.landingSeen?'Ja':'Nein'} ${c.landingDate?'am '+esc(c.landingDate):''}</p>${c.landingSeen?`<p><strong>Video 1:</strong> ${c.video1Seen?'Ja':'Nein'}</p>${c.video1Seen?`<p><strong>Video 2:</strong> ${c.video2Seen?'Ja':'Nein'}</p>`:''}${c.video2Seen?`<p><strong>Video 3:</strong> ${c.video3Seen?'Ja':'Nein'}</p>`:''}${c.video3Seen?`<p><strong>Follow-up aktiv:</strong> ${c.followupActive?'Ja':'Nein'}</p>`:''}`:'<p class="small">Noch keine Landingpage-Aktivität hinterlegt.</p>'}</section><section class="info-card info-card-wide"><h4>Kommunikation</h4>${renderCrmCommunicationBar(c)}</section></div><div class="quick-actions"><button class="primary" onclick="selectedContactTab='edit'; render()">Bearbeiten</button><button class="copy-btn" onclick="selectedContactTab='communication'; render()">Kommunikation eintragen</button><button class="copy-btn" onclick="selectedContactTab='timeline'; render()">Zeitachse öffnen</button></div></div>`;
+  return `<div class="tab-content"><div class="contact-status-strip"><span>${esc(c.contactCode||'')}</span><span>Priorität ${esc(c.priority||'A')}</span><span>Status: ${esc(c.status||'Neu')}</span><span>Nächster Schritt: ${esc(c.nextStep||'offen')}</span></div><div class="info-card-grid"><section class="info-card"><h4>Kontaktdaten</h4><p><strong>Name:</strong> ${esc(crmFullName(c))}</p><p><strong>Kontakt-ID:</strong> ${esc(c.contactCode||'')}</p><p><strong>Geburtsdatum:</strong> ${esc(c.birthday||'')}</p><p><strong>Adresse:</strong><br>${esc(c.street||'')}${c.street?'<br>':''}${esc(c.postalCode||'')} ${esc(c.city||'')}</p><p><strong>Mobil:</strong> ${crmFullPhone(c)?`<a href="tel:+${esc(crmFullPhone(c))}" onclick="crmQuickLog('${esc(c.id)}','Telefon','Anruf aus Übersicht gestartet','Nachfassen')">${esc(crmPhoneDisplay(c))}</a>`:esc(crmPhoneLocalDisplay(c)||'')}</p><p><strong>WhatsApp:</strong> ${crmFullPhone(c)?`<a href="${esc(crmBuildCommunicationUrl(c,'WhatsApp','free'))}" onclick="crmQuickLog('${esc(c.id)}','WhatsApp','WhatsApp aus Kontaktdaten geöffnet','WhatsApp senden')">WhatsApp schreiben</a>`:'Nicht hinterlegt'}</p><p><strong>E-Mail:</strong> ${c.email?`<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>`:'Nicht hinterlegt'}</p><p><strong>Website:</strong> ${c.website?`<a href="${esc(crmWebsiteHref(c.website))}" target="_blank" rel="noopener">${esc(c.website)}</a>`:'Nicht hinterlegt'}</p></section><section class="info-card"><h4>Beruf und Profile</h4><p><strong>Firma:</strong> ${esc(c.company||'')}</p><p><strong>Beruf:</strong> ${esc(c.job||'')}</p><p><strong>Branche:</strong> ${esc(c.branch||'')}</p><p><strong>Zielgruppe:</strong> ${esc(c.targetGroup||'')}</p><p><strong>LinkedIn:</strong> ${c.linkedin?`<a href="${esc(crmWebsiteHref(c.linkedin))}" target="_blank" rel="noopener">Profil öffnen</a>`:'Nicht hinterlegt'}</p><p><strong>Facebook:</strong> ${c.facebook?`<a href="${esc(crmWebsiteHref(c.facebook))}" target="_blank" rel="noopener">Profil öffnen</a>`:'Nicht hinterlegt'}</p><p><strong>Instagram:</strong> ${c.instagram?`<a href="${esc(crmWebsiteHref(c.instagram))}" target="_blank" rel="noopener">Profil öffnen</a>`:'Nicht hinterlegt'}</p><p><strong>WhatsApp vorhanden:</strong> ${c.whatsapp?'Ja':'Nein'}</p></section><section class="info-card"><h4>Recruiting</h4><p><strong>Zuständig:</strong> ${esc(c.owner||'Peter')}${c.support?' · Unterstützung: '+esc(c.support):''}</p><p><strong>Status:</strong> ${esc(c.status||'Neu')}</p><p><strong>Quelle:</strong> ${esc(c.source||'')}</p><p><strong>Priorität:</strong> ${esc(c.priority||'A')}</p><p><strong>Wiedervorlage:</strong> ${esc(c.followDate||'offen')} ${esc(c.followTime||'')}</p><p><strong>Nächster Schritt:</strong> ${esc(c.nextStep||'Noch kein nächster Schritt eingetragen.')}</p><p><strong>Bewertung:</strong><br>Interesse ${esc(c.interest||'3')}/5 · Vertrauen ${esc(c.trust||'3')}/5 · Aktivität ${esc(c.activityLevel||'3')}/5</p></section><section class="info-card"><h4>Landingpage</h4><p><strong>Gesendet:</strong> ${c.landingSent?'Ja':'Nein'} ${c.landingSentDate?'am '+esc(c.landingSentDate):''}</p><p><strong>Gesehen:</strong> ${c.landingSeen?'Ja':'Nein'} ${c.landingDate?'am '+esc(c.landingDate):''}</p>${c.landingSeen?`<p><strong>Video 1:</strong> ${c.video1Seen?'Ja':'Nein'}</p>${c.video1Seen?`<p><strong>Video 2:</strong> ${c.video2Seen?'Ja':'Nein'}</p>`:''}${c.video2Seen?`<p><strong>Video 3:</strong> ${c.video3Seen?'Ja':'Nein'}</p>`:''}${c.video3Seen?`<p><strong>Follow-up aktiv:</strong> ${c.followupActive?'Ja':'Nein'}</p>`:''}`:'<p class="small">Noch keine Landingpage-Aktivität hinterlegt.</p>'}</section><section class="info-card info-card-wide"><h4>Kommunikation</h4>${renderCrmCommunicationBar(c)}</section></div><div class="quick-actions"><button class="primary" onclick="selectedContactTab='edit'; render()">Bearbeiten</button><button class="copy-btn" onclick="selectedContactTab='communication'; render()">Kommunikation eintragen</button><button class="copy-btn" onclick="selectedContactTab='timeline'; render()">Zeitachse öffnen</button></div></div>`;
 }
 
 function crmAddTimeline(id){
