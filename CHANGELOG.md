@@ -1,11 +1,10 @@
-## Version 1.9.1
+# Version 1.9.1
 
-- Intelligente Kontaktpriorisierung in Rot, Orange und Grün.
-- Automatische Sortierung nach Handlungsdringlichkeit.
-- Tagesempfehlung im Dashboard.
-- Konkrete Warnhinweise und Prioritätsgründe.
-- Tagesfortschritt bleibt mit den priorisierten Arbeitslisten verbunden.
-- Darstellung für Desktop und Smartphone angepasst.
+- Intelligente Priorisierung mit Rot, Orange und Grün.
+- Automatische Tagesempfehlung im Dashboard.
+- Sortierung dringender Kontakte vor bald fälligen und unkritischen Kontakten.
+- Konkrete Prioritätsbegründung im Dashboard, in Arbeitslisten und im Recruiting-Assistenten.
+- Tagesfortschritt bleibt mit den bestehenden Aufgaben und Wiedervorlagen verbunden.
 
 Version 1.8.9.1: Die empfohlene Wiedervorlage wird im Recruiting-Assistenten als eigener, deutlich hervorgehobener Abschnitt angezeigt.
 
@@ -171,7 +170,7 @@ Version 1.8.9.1: Die empfohlene Wiedervorlage wird im Recruiting-Assistenten als
 - Wiedervorlagen des Assistenten werden ohne Uhrzeit angelegt.
 - Bei „Kein Interesse“ und „Archiv“ erscheint keine weitere Handlungsempfehlung.
 
-## Version 1.9.0
+## Version 1.9.1
 - Proaktive Hinweise im Recruiting-Assistenten ergänzt.
 - Überfällige Wiedervorlagen werden deutlich hervorgehoben.
 - Aktive Kontakte ohne Wiedervorlage werden automatisch erkannt.

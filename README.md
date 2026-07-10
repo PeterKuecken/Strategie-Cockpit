@@ -1,6 +1,4 @@
-Version 1.9.1: Intelligente Priorisierung mit Rot, Orange und Grün, Tagesempfehlung, automatischer Arbeitsreihenfolge und Tagesfortschritt.
-
-Version 1.9.0: Die empfohlene Wiedervorlage wird im Recruiting-Assistenten als eigener, deutlich hervorgehobener Abschnitt angezeigt.
+Version 1.9.1: Die empfohlene Wiedervorlage wird im Recruiting-Assistenten als eigener, deutlich hervorgehobener Abschnitt angezeigt.
 
 # Recruiting-Cockpit Peter & Martina Kücken
 
@@ -39,7 +37,7 @@ Version 1.8.8.1: Recruiting-Trichter im Vertriebscockpit mit Zeiträumen Heute, 
 Version 1.8.8.1: Kontaktöffnung aus dem Recruiting-Trichter korrigiert.
 
 
-Version 1.9.0: Der Recruiting-Assistent führt einen Ein-Klick-Workflow ein. „Schritt abschließen und weiter“ erledigt die aktuelle passende Aufgabe, setzt die nächste Recruiting-Phase, aktualisiert den nächsten Schritt, legt die passende Wiedervorlage fest und dokumentiert den Ablauf in der Zeitachse. Abschlussphasen werden durch eine Sicherheitsabfrage geschützt.
+Version 1.9.1: Der Recruiting-Assistent führt einen Ein-Klick-Workflow ein. „Schritt abschließen und weiter“ erledigt die aktuelle passende Aufgabe, setzt die nächste Recruiting-Phase, aktualisiert den nächsten Schritt, legt die passende Wiedervorlage fest und dokumentiert den Ablauf in der Zeitachse. Abschlussphasen werden durch eine Sicherheitsabfrage geschützt.
 
 
-Version 1.9.0 ergänzt proaktive Hinweise für überfällige, nicht terminierte und festgefahrene Recruiting-Kontakte.
+Version 1.9.1 ergänzt proaktive Hinweise für überfällige, nicht terminierte und festgefahrene Recruiting-Kontakte.

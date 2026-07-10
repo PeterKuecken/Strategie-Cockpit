@@ -710,24 +710,13 @@ footer{padding:10px 22px;color:var(--muted);background:#fff;border-top:1px solid
 
 
 /* Version 1.9.1: intelligente Priorisierung */
-.daily-priority-recommendation{display:flex;align-items:center;justify-content:space-between;gap:18px;border-left:6px solid #c43c35;background:#fff8f7}
-.daily-priority-recommendation h3{margin:.2rem 0 .35rem;line-height:1.35}
-.daily-priority-recommendation p{margin:0;color:#53687b}
-.smart-priority-line{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}
-.smart-priority-line small{font-size:.78rem;color:#586c7e}
-.smart-priority-badge{display:inline-flex;align-items:center;padding:5px 9px;border-radius:999px;font-size:.76rem;font-weight:800;line-height:1.1}
-.smart-priority-red{background:#ffe6e4;color:#9b1f18;border:1px solid #e28b85}
-.smart-priority-orange{background:#fff0d8;color:#8a4c00;border:1px solid #e5b267}
-.smart-priority-green{background:#e8f6ec;color:#24633b;border:1px solid #8fc59f}
-.smart-priority-row{border-left:5px solid transparent}
-.smart-priority-row-red{border-left-color:#c43c35!important;background:#fff8f7}
-.smart-priority-row-orange{border-left-color:#db8500!important;background:#fffaf1}
-.smart-priority-row-green{border-left-color:#3f8d5b!important}
-.smart-priority-contact{width:100%;box-sizing:border-box;padding:12px;border-radius:10px}
-.contact-assistant .process-card-head>div:first-child{display:grid;gap:5px}
-@media(max-width:760px){
-  .daily-priority-recommendation{align-items:stretch;flex-direction:column}
-  .daily-priority-recommendation button{width:100%}
-  .smart-priority-line{align-items:flex-start;flex-direction:column;gap:4px}
-  .smart-priority-badge{font-size:.8rem}
-}
+.smart-priority{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:999px;font-size:.78rem;font-weight:700;line-height:1.2;border:1px solid transparent}
+.smart-priority-red{background:#fff0f0;color:#9b1c1c;border-color:#df7777}
+.smart-priority-orange{background:#fff5e6;color:#8a4a00;border-color:#f0b35a}
+.smart-priority-green{background:#eef8f1;color:#23643a;border-color:#82c49a}
+.smart-priority-large{display:flex;flex-direction:column;align-items:flex-start;border-radius:12px;padding:11px 13px;margin:10px 0;font-size:.9rem}
+.smart-priority-large span{font-weight:500}
+.smart-daily-recommendation h3{margin:.25rem 0 .8rem;line-height:1.35}
+.smart-priority-summary{display:flex;gap:8px;flex-wrap:wrap}
+.dashboard-contact-main small .smart-priority{margin-bottom:5px}
+@media(max-width:760px){.smart-priority-summary{display:grid;grid-template-columns:1fr}.smart-priority-summary .smart-priority{justify-content:center}.smart-priority-large{font-size:.95rem}}

@@ -465,10 +465,51 @@ function crmIsAppointment(c){
 function crmIsFollowup(c){
   return /nachfass|follow.?up|wiedervorlage|prüfen|pruefen|beobachten|nachfragen/i.test(`${c.nextStep||''} ${c.status||''}`);
 }
+
+function crmSmartPriority(c){
+  if(!c || !crmActive(c))return {level:'green',rank:3,label:'Kein aktueller Handlungsbedarf',reason:'Kontakt ist aktuell im Plan.'};
+  const today=crmToday();
+  const next2=crmDateAddKey(2);
+  const phase=crmEnsurePhase(c);
+  const follow=String(c.followDate||'');
+  const isToday=follow===today;
+  const overdue=follow && follow<today;
+  const text=`${c.nextStep||''} ${phase}`;
+  if(overdue)return {level:'red',rank:0,label:'Heute bearbeiten',reason:`Wiedervorlage seit ${formatDate(follow)} überfällig.`};
+  if(isToday && crmIsAppointment(c))return {level:'red',rank:0,label:'Heute bearbeiten',reason:'Termin oder Präsentation ist heute fällig.'};
+  if(isToday && crmIsFollowup(c))return {level:'red',rank:0,label:'Heute bearbeiten',reason:'Nachfassen ist heute vorgesehen.'};
+  if(isToday)return {level:'red',rank:0,label:'Heute bearbeiten',reason:'Wiedervorlage ist heute fällig.'};
+  if(phase==='Entscheidung' && (!follow || follow<=next2))return {level:'red',rank:0,label:'Heute bearbeiten',reason:'Entscheidung ist offen.'};
+  if(follow && follow>today && follow<=next2)return {level:'orange',rank:1,label:'Bald bearbeiten',reason:`Wiedervorlage am ${formatDate(follow)}.`};
+  const alert=crmAssistantAlert(c);
+  if(alert?.type==='missing')return {level:'orange',rank:1,label:'Bald bearbeiten',reason:'Keine Wiedervorlage festgelegt.'};
+  if(alert?.type==='stalled')return {level:'orange',rank:1,label:'Bald bearbeiten',reason:alert.text};
+  return {level:'green',rank:2,label:'Kein aktueller Handlungsbedarf',reason:follow?`Nächste Wiedervorlage am ${formatDate(follow)}.`:'Aktuell kein dringender Schritt.'};
+}
+function crmSmartPriorityCounts(list){
+  return list.reduce((acc,c)=>{const p=crmSmartPriority(c); acc[p.level]=(acc[p.level]||0)+1; return acc;},{red:0,orange:0,green:0});
+}
+function crmDailyRecommendation(list){
+  const red=list.filter(c=>crmSmartPriority(c).level==='red');
+  const orange=list.filter(c=>crmSmartPriority(c).level==='orange');
+  const overdue=red.filter(c=>c.followDate && c.followDate<crmToday()).length;
+  const followups=red.filter(c=>c.followDate===crmToday() && crmIsFollowup(c)).length;
+  const appointments=red.filter(c=>c.followDate===crmToday() && crmIsAppointment(c)).length;
+  if(red.length){
+    const parts=[];
+    if(overdue)parts.push(`${overdue} überfällige${overdue===1?'n Kontakt':' Kontakte'}`);
+    if(followups)parts.push(`${followups} Nachfass${followups===1?'kontakt':'kontakte'}`);
+    if(appointments)parts.push(`${appointments} Termin${appointments===1?'':'e'}`);
+    return `Heute solltest du zuerst ${parts.length?parts.join(', '):`${red.length} priorisierte Kontakte`} bearbeiten.`;
+  }
+  if(orange.length)return `Heute gibt es nichts Dringendes. Plane als Nächstes ${orange.length} bald fällige${orange.length===1?'n Kontakt':' Kontakte'} ein.`;
+  return 'Heute gibt es keinen dringenden Handlungsbedarf. Deine Kontakte sind im Plan.';
+}
+
 function crmDashboardBuckets(){
   const today=crmToday();
   const all=crmDashboardContacts();
-  const byDue=(a,b)=>String(a.followTime||'99:99').localeCompare(String(b.followTime||'99:99')) || String(a.priority||'C').localeCompare(String(b.priority||'C')) || crmFullName(a).localeCompare(crmFullName(b),'de');
+  const byDue=(a,b)=>crmSmartPriority(a).rank-crmSmartPriority(b).rank || String(a.followTime||'99:99').localeCompare(String(b.followTime||'99:99')) || String(a.priority||'C').localeCompare(String(b.priority||'C')) || crmFullName(a).localeCompare(crmFullName(b),'de');
   return {
     today:all.filter(c=>c.followDate===today).sort(byDue),
     overdue:all.filter(c=>c.followDate && c.followDate<today).sort((a,b)=>String(a.followDate).localeCompare(String(b.followDate)) || byDue(a,b)),
@@ -499,8 +540,7 @@ function dashboardSetList(filter){dashboardListFilter=filter; render(); setTimeo
 function dashboardListTitle(filter){return ({today:'Heute fällige Kontakte',overdue:'Überfällige Kontakte',appointments:'Heutige Termine',followups:'Wiedervorlagen für heute'})[filter]||'Heute fällige Kontakte'}
 function renderDashboardContactList(list,filter){
   const title=dashboardListTitle(filter);
-  const sorted=list.slice().sort((a,b)=>crmSmartPriority(a).rank-crmSmartPriority(b).rank || String(a.priority||'C').localeCompare(String(b.priority||'C')) || String(a.followDate||'9999').localeCompare(String(b.followDate||'9999')) || crmFullName(a).localeCompare(crmFullName(b),'de'));
-  return `<div id="dashboardWorkList" class="card dashboard-work-list"><div class="section-title-row"><div><p class="eyebrow">Arbeitsliste</p><h3>${esc(title)} (${sorted.length})</h3></div><button class="copy-btn" onclick="current='recruiting'; render(); setTimeout(()=>document.getElementById('crmContactsSection')?.scrollIntoView({behavior:'smooth'}),50)">Alle Kontakte</button></div>${sorted.length?`<div class="dashboard-contact-list">${sorted.map(c=>{const p=crmSmartPriority(c);return `<div class="dashboard-contact-row smart-priority-row smart-priority-row-${p.level}"><button class="dashboard-contact-main" onclick="crmOpenContact('${esc(c.id)}')"><div class="smart-priority-line">${crmPriorityBadge(c)}<small>${esc(p.reason)}</small></div><strong>${esc(crmFullName(c))}</strong><span>${esc(c.contactCode||'')} · ${esc(c.company||c.job||'')} ${c.city?'· '+esc(c.city):''}</span><small>${c.followDate?esc(formatDate(c.followDate)):''} · ${esc(c.nextStep||'Nächsten Schritt festlegen')} · Priorität ${esc(c.priority||'A')}</small></button><button class="copy-btn" onclick="crmCompleteProcessItem('follow','${esc(c.id)}')">✓ Erledigt</button></div>`}).join('')}</div>`:`<p class="ok-text">In diesem Bereich ist aktuell nichts offen.</p>`}</div>`;
+  return `<div id="dashboardWorkList" class="card dashboard-work-list"><div class="section-title-row"><div><p class="eyebrow">Arbeitsliste</p><h3>${esc(title)} (${list.length})</h3></div><button class="copy-btn" onclick="current='recruiting'; render(); setTimeout(()=>document.getElementById('crmContactsSection')?.scrollIntoView({behavior:'smooth'}),50)">Alle Kontakte</button></div>${list.length?`<div class="dashboard-contact-list">${list.map(c=>`<div class="dashboard-contact-row"><button class="dashboard-contact-main" onclick="crmOpenContact('${esc(c.id)}')"><strong>${esc(crmFullName(c))}</strong><span>${esc(c.contactCode||'')} · ${esc(c.company||c.job||'')} ${c.city?'· '+esc(c.city):''}</span><small><span class="smart-priority smart-priority-${crmSmartPriority(c).level}">${esc(crmSmartPriority(c).label)}</span> ${esc(crmSmartPriority(c).reason)}<br>${c.followDate?esc(formatDate(c.followDate))+' · ':''}${esc(c.nextStep||'Nächsten Schritt festlegen')} · Priorität ${esc(c.priority||'A')}</small></button><button class="copy-btn" onclick="crmCompleteProcessItem('follow','${esc(c.id)}')">✓ Erledigt</button></div>`).join('')}</div>`:`<p class="ok-text">In diesem Bereich ist aktuell nichts offen.</p>`}</div>`;
 }
 function renderDailyOverview(s){
   const b=crmDashboardBuckets();
@@ -509,7 +549,7 @@ function renderDailyOverview(s){
   const progress=dashboardProgressData(b);
   view.innerHTML=`
     <div class="card dashboard-intro"><p class="eyebrow">Tagesübersicht · ${esc(dashboardLongDate())}</p><h2>${crmGreeting(person)}</h2><p>Du siehst hier nur Kontakte und Termine, die jetzt bearbeitet werden müssen. Ein Klick öffnet die passende Arbeitsliste.</p></div>
-    ${(()=>{const s=crmDailyPrioritySummary(person);return `<div class="card daily-priority-recommendation"><div><p class="eyebrow">Tagesempfehlung</p><h3>${esc(s.text)}</h3><p>${s.red.length} heute bearbeiten · ${s.orange.length} bald bearbeiten · ${s.green.length} im Plan</p></div>${s.red.length?`<button class="primary" onclick="dashboardSetList('${b.overdue.length?'overdue':'today'}')">Dringende Kontakte öffnen</button>`:''}</div>`})()}
+    <div class="card smart-daily-recommendation"><p class="eyebrow">Tagesempfehlung</p><h3>${esc(crmDailyRecommendation(crmDashboardContacts()))}</h3><div class="smart-priority-summary">${(()=>{const x=crmSmartPriorityCounts(crmDashboardContacts());return `<span class="smart-priority smart-priority-red">${x.red} heute</span><span class="smart-priority smart-priority-orange">${x.orange} bald</span><span class="smart-priority smart-priority-green">${x.green} im Plan</span>`})()}</div></div>
     ${b.overdue.length?`<button class="dashboard-alert" onclick="dashboardSetList('overdue')"><strong>${b.overdue.length} überfällige${b.overdue.length===1?'r Kontakt':' Kontakte'}</strong><span>Bitte zuerst bearbeiten. Ein Klick öffnet die Arbeitsliste.</span></button>`:''}
     <div class="card dashboard-progress-card">
       <div class="dashboard-progress-head"><div><p class="eyebrow">Tagesziel</p><h3>Alle heute fälligen und überfälligen Kontakte bearbeiten</h3></div><strong>${progress.percent}%</strong></div>
@@ -1740,67 +1780,8 @@ function crmAssistantAlert(c){
   return null;
 }
 
-function crmSmartPriority(c){
-  if(!c || !crmActive(c))return {level:'green',rank:3,label:'Kein aktueller Handlungsbedarf',reason:'Alles im Plan'};
-  const today=crmToday();
-  const nextTwo=crmDateAddKey(2);
-  const phase=crmEnsurePhase(c);
-  const alert=crmAssistantAlert(c);
-  const isToday=c.followDate===today;
-  const isAppointment=isToday && crmIsAppointment(c);
-  const isDecision=phase==='Entscheidung';
-  if((c.followDate && c.followDate<today) || isToday || isAppointment || isDecision){
-    let reason='Heute bearbeiten';
-    if(c.followDate && c.followDate<today)reason='Wiedervorlage überfällig';
-    else if(isAppointment)reason='Termin heute';
-    else if(isDecision)reason='Entscheidung offen';
-    else if(crmIsFollowup(c))reason='Nachfassen heute';
-    return {level:'red',rank:1,label:'Heute bearbeiten',reason};
-  }
-  if((c.followDate && c.followDate>today && c.followDate<=nextTwo) || alert?.type==='stalled' || alert?.type==='missing'){
-    let reason='Bald bearbeiten';
-    if(alert?.type==='stalled')reason='Zu lange in derselben Phase';
-    else if(alert?.type==='missing')reason='Keine Wiedervorlage festgelegt';
-    else reason=`Wiedervorlage am ${formatDate(c.followDate)}`;
-    return {level:'orange',rank:2,label:'Bald bearbeiten',reason};
-  }
-  return {level:'green',rank:3,label:'Kein aktueller Handlungsbedarf',reason:c.followDate?`Wiedervorlage am ${formatDate(c.followDate)}`:'Alles im Plan'};
-}
-function crmSmartPriorityContacts(person=currentPerson()){
-  return crmContacts().filter(c=>((c.owner||'Peter')===person || (c.support||'')===person) && crmActive(c)).slice().sort((a,b)=>{
-    const pa=crmSmartPriority(a), pb=crmSmartPriority(b);
-    if(pa.rank!==pb.rank)return pa.rank-pb.rank;
-    if(String(a.priority||'C')!==String(b.priority||'C'))return String(a.priority||'C').localeCompare(String(b.priority||'C'));
-    if(String(a.followDate||'9999')!==String(b.followDate||'9999'))return String(a.followDate||'9999').localeCompare(String(b.followDate||'9999'));
-    return crmFullName(a).localeCompare(crmFullName(b),'de');
-  });
-}
-function crmDailyPrioritySummary(person=currentPerson()){
-  const contacts=crmSmartPriorityContacts(person);
-  const red=contacts.filter(c=>crmSmartPriority(c).level==='red');
-  const orange=contacts.filter(c=>crmSmartPriority(c).level==='orange');
-  const appointments=red.filter(crmIsAppointment);
-  const followups=red.filter(crmIsFollowup);
-  const overdue=red.filter(c=>c.followDate && c.followDate<crmToday());
-  let text='Heute gibt es keine dringenden Recruiting-Aufgaben.';
-  if(red.length){
-    const parts=[];
-    if(overdue.length)parts.push(`${overdue.length} überfällige${overdue.length===1?'n Kontakt':' Kontakte'}`);
-    if(followups.length)parts.push(`${followups.length} Nachfass${followups.length===1?'kontakt':'kontakte'}`);
-    if(appointments.length)parts.push(`${appointments.length} ${appointments.length===1?'Termin':'Termine'}`);
-    text=`Heute solltest du zuerst ${parts.length?parts.join(', '):`${red.length} dringende Kontakte`} bearbeiten.`;
-  }else if(orange.length){
-    text=`Heute ist nichts überfällig. Prüfe als Nächstes ${orange.length} bald fällige${orange.length===1?'n Kontakt':' Kontakte'}.`;
-  }
-  return {contacts,red,orange,green:contacts.filter(c=>crmSmartPriority(c).level==='green'),text};
-}
-function crmPriorityBadge(c){
-  const p=crmSmartPriority(c);
-  return `<span class="smart-priority-badge smart-priority-${p.level}">${esc(p.label)}</span>`;
-}
-
 function crmAssistantItems(person){
-  return crmContacts().filter(c=>((c.owner||'Peter')===person || (c.support||'')===person) && crmActive(c)).map(c=>({c,rec:crmAssistantRecommendation(c),alert:crmAssistantAlert(c)})).filter(x=>x.rec).sort((a,b)=>(b.alert?.severity||0)-(a.alert?.severity||0) || String(a.c.priority||'C').localeCompare(String(b.c.priority||'C')) || String(a.c.followDate||'9999').localeCompare(String(b.c.followDate||'9999')) || crmFullName(a.c).localeCompare(crmFullName(b.c),'de'));
+  return crmContacts().filter(c=>((c.owner||'Peter')===person || (c.support||'')===person) && crmActive(c)).map(c=>({c,rec:crmAssistantRecommendation(c),alert:crmAssistantAlert(c)})).filter(x=>x.rec).sort((a,b)=>crmSmartPriority(a.c).rank-crmSmartPriority(b.c).rank || (b.alert?.severity||0)-(a.alert?.severity||0) || String(a.c.priority||'C').localeCompare(String(b.c.priority||'C')) || String(a.c.followDate||'9999').localeCompare(String(b.c.followDate||'9999')) || crmFullName(a.c).localeCompare(crmFullName(b.c),'de'));
 }
 function crmAssistantSuggestedDate(c,rec){
   if(!rec)return todayKey();
@@ -1890,7 +1871,7 @@ function crmRenderAssistantList(person,limit=6){
   const items=allItems.slice(0,limit);
   const urgent=allItems.filter(x=>(x.alert?.severity||0)>=2).length;
   const stalled=allItems.filter(x=>x.alert?.type==='stalled').length;
-  return `<div class="process-card assistant-card"><div class="process-card-head"><div><h4>Recruiting-Assistent</h4>${urgent||stalled?`<p class="assistant-alert-summary">${urgent?`${urgent} dringend`:''}${urgent&&stalled?' · ':''}${stalled?`${stalled} zu lange ohne Fortschritt`:''}</p>`:''}</div><span class="process-count">${allItems.length} Vorschläge</span></div>${items.length?`<div class="process-list">${items.map(({c,rec,alert})=>`<div class="process-item assistant-item ${alert?`assistant-alert-${alert.type}`:''}"><button class="process-main" onclick="crmOpenContact('${esc(c.id)}')"><div class="smart-priority-line">${crmPriorityBadge(c)}<small>${esc(crmSmartPriority(c).reason)}</small></div><strong>${esc(crmFullName(c))}</strong><span>${esc(c.contactCode||'')} · ${esc(c.company||c.job||'')} ${c.city?'· '+esc(c.city):''}</span>${alert?`<div class="assistant-proactive-alert"><b>${esc(alert.title)}</b><small>${esc(alert.text)}</small></div>`:''}<div class="process-task-line"><b>Empfohlener Schritt:</b> ${esc(rec.title)}</div><small>${esc(rec.hint)}</small></button><div class="assistant-actions"><button class="copy-btn" onclick="knowledgeOpenForRecommendation('${esc(c.id)}')">Passende Vorlage</button><button class="copy-btn" onclick="crmAssistantCreateTask('${esc(c.id)}',${Number(rec.days||1)})">Aufgabe anlegen</button><button class="primary" onclick="crmAssistantApply('${esc(c.id)}')">Schritt abschließen und weiter</button></div></div>`).join('')}</div>`:'<p class="small">Aktuell gibt es keine neuen Empfehlungen.</p>'}</div>`;
+  return `<div class="process-card assistant-card"><div class="process-card-head"><div><h4>Recruiting-Assistent</h4>${urgent||stalled?`<p class="assistant-alert-summary">${urgent?`${urgent} dringend`:''}${urgent&&stalled?' · ':''}${stalled?`${stalled} zu lange ohne Fortschritt`:''}</p>`:''}</div><span class="process-count">${allItems.length} Vorschläge</span></div>${items.length?`<div class="process-list">${items.map(({c,rec,alert})=>`<div class="process-item assistant-item ${alert?`assistant-alert-${alert.type}`:''}"><button class="process-main" onclick="crmOpenContact('${esc(c.id)}')"><strong>${esc(crmFullName(c))}</strong><span>${esc(c.contactCode||'')} · ${esc(c.company||c.job||'')} ${c.city?'· '+esc(c.city):''}</span><div class="smart-priority smart-priority-${crmSmartPriority(c).level}">${esc(crmSmartPriority(c).label)} · ${esc(crmSmartPriority(c).reason)}</div>${alert?`<div class="assistant-proactive-alert"><b>${esc(alert.title)}</b><small>${esc(alert.text)}</small></div>`:''}<div class="process-task-line"><b>Empfohlener Schritt:</b> ${esc(rec.title)}</div><small>${esc(rec.hint)}</small></button><div class="assistant-actions"><button class="copy-btn" onclick="knowledgeOpenForRecommendation('${esc(c.id)}')">Passende Vorlage</button><button class="copy-btn" onclick="crmAssistantCreateTask('${esc(c.id)}',${Number(rec.days||1)})">Aufgabe anlegen</button><button class="primary" onclick="crmAssistantApply('${esc(c.id)}')">Schritt abschließen und weiter</button></div></div>`).join('')}</div>`:'<p class="small">Aktuell gibt es keine neuen Empfehlungen.</p>'}</div>`;
 }
 function crmAssistantStatusText(c,rec){
   const today=crmToday();
@@ -1903,7 +1884,7 @@ function crmRenderContactAssistant(c){
   if(!rec)return '';
   const suggestedDate=crmAssistantSuggestedDate(c,rec);
   const alert=crmAssistantAlert(c);
-  return `<div class="process-card assistant-card contact-assistant"><div class="process-card-head"><div><h4>Recruiting-Assistent</h4><div class="smart-priority-line">${crmPriorityBadge(c)}<small>${esc(crmSmartPriority(c).reason)}</small></div></div><span class="badge">${esc(crmEnsurePhase(c))}</span></div>${alert?`<div class="assistant-proactive-alert assistant-proactive-alert-large ${alert.type}"><b>${esc(alert.title)}</b><span>${esc(alert.text)}</span></div>`:''}<p class="assistant-status-note"><strong>${esc(crmAssistantStatusText(c,rec))}</strong></p><p class="small">${esc(rec.hint)}</p><section class="assistant-followup assistant-followup-prominent" aria-label="Empfohlene Wiedervorlage"><div class="assistant-followup-title">Empfohlene Wiedervorlage</div><label for="crm_assistant_follow_${esc(c.id)}"><span>Datum</span><input id="crm_assistant_follow_${esc(c.id)}" type="date" value="${esc(suggestedDate)}" onchange="crmAssistantSetFollowDate('${esc(c.id)}',this.value)"></label><p class="assistant-followup-current">Aktuell vorgeschlagen: <strong>${esc(formatDate(suggestedDate))}</strong></p><small>Du kannst das Datum ändern. Aufgabe anlegen und Schritt abschließen übernehmen genau dieses Datum.</small></section><div class="quick-actions"><button class="copy-btn" onclick="knowledgeOpenForRecommendation('${esc(c.id)}')">Alle passenden Vorlagen</button><button class="copy-btn" onclick="crmAssistantCreateTask('${esc(c.id)}',${Number(rec.days||1)})">Aufgabe anlegen</button><button class="primary" onclick="crmAssistantApply('${esc(c.id)}')">Schritt abschließen und weiter</button></div>${crmRenderRecommendedTemplates(c)}</div>`;
+  return `<div class="process-card assistant-card contact-assistant"><div class="process-card-head"><h4>Recruiting-Assistent</h4><span class="badge">${esc(crmEnsurePhase(c))}</span></div>${alert?`<div class="assistant-proactive-alert assistant-proactive-alert-large ${alert.type}"><b>${esc(alert.title)}</b><span>${esc(alert.text)}</span></div>`:''}<div class="smart-priority smart-priority-${crmSmartPriority(c).level} smart-priority-large"><strong>${esc(crmSmartPriority(c).label)}</strong><span>${esc(crmSmartPriority(c).reason)}</span></div><p class="assistant-status-note"><strong>${esc(crmAssistantStatusText(c,rec))}</strong></p><p class="small">${esc(rec.hint)}</p><section class="assistant-followup assistant-followup-prominent" aria-label="Empfohlene Wiedervorlage"><div class="assistant-followup-title">Empfohlene Wiedervorlage</div><label for="crm_assistant_follow_${esc(c.id)}"><span>Datum</span><input id="crm_assistant_follow_${esc(c.id)}" type="date" value="${esc(suggestedDate)}" onchange="crmAssistantSetFollowDate('${esc(c.id)}',this.value)"></label><p class="assistant-followup-current">Aktuell vorgeschlagen: <strong>${esc(formatDate(suggestedDate))}</strong></p><small>Du kannst das Datum ändern. Aufgabe anlegen und Schritt abschließen übernehmen genau dieses Datum.</small></section><div class="quick-actions"><button class="copy-btn" onclick="knowledgeOpenForRecommendation('${esc(c.id)}')">Alle passenden Vorlagen</button><button class="copy-btn" onclick="crmAssistantCreateTask('${esc(c.id)}',${Number(rec.days||1)})">Aufgabe anlegen</button><button class="primary" onclick="crmAssistantApply('${esc(c.id)}')">Schritt abschließen und weiter</button></div>${crmRenderRecommendedTemplates(c)}</div>`;
 }
 function crmContactBucketSort(list){
   const rank={A:0,B:1,C:2};
@@ -1918,13 +1899,8 @@ function crmContactBucketSort(list){
   });
 }
 function crmRenderContactBucket(title,items,emptyText,extraClass=''){
-  const list=items.slice().sort((a,b)=>{
-    const smart=crmSmartPriority(a).rank-crmSmartPriority(b).rank; if(smart!==0)return smart;
-    const rank={A:0,B:1,C:2}; const pr=(rank[a.priority]??9)-(rank[b.priority]??9); if(pr!==0)return pr;
-    const due=String(a.followDate||'9999-12-31').localeCompare(String(b.followDate||'9999-12-31')); if(due!==0)return due;
-    return crmFullName(a).localeCompare(crmFullName(b),'de');
-  });
-  return `<div class="process-card contact-bucket ${extraClass}"><div class="process-card-head"><h4>${esc(title)}</h4><span class="process-count">${list.length}</span></div>${list.length?`<div class="process-list">${list.slice(0,12).map(c=>{const p=crmSmartPriority(c);return `<button class="process-main smart-priority-contact smart-priority-row-${p.level}" onclick="crmOpenContact('${esc(c.id)}')"><div class="smart-priority-line">${crmPriorityBadge(c)}<small>${esc(p.reason)}</small></div><strong>${esc(crmFullName(c))}</strong><span>${esc(c.contactCode||'')} · ${esc(c.company||c.job||'')} ${c.city?'· '+esc(c.city):''}</span><small>${c.followDate?`Wiedervorlage: ${esc(formatDate(c.followDate))} · `:''}Prio ${esc(c.priority||'A')} · ${esc(crmEnsurePhase(c))}</small></button>`}).join('')}</div>`:`<p class="small">${esc(emptyText)}</p>`}</div>`;
+  const list=crmContactBucketSort(items);
+  return `<div class="process-card contact-bucket ${extraClass}"><div class="process-card-head"><h4>${esc(title)}</h4><span class="process-count">${list.length}</span></div>${list.length?`<div class="process-list">${list.slice(0,12).map(c=>`<button class="process-main" onclick="crmOpenContact('${esc(c.id)}')"><strong>${esc(crmFullName(c))}</strong><span>${esc(c.contactCode||'')} · ${esc(c.company||c.job||'')} ${c.city?'· '+esc(c.city):''}</span><small>${c.followDate?`Wiedervorlage: ${esc(formatDate(c.followDate))} · `:''}Prio ${esc(c.priority||'A')} · ${esc(crmEnsurePhase(c))}</small></button>`).join('')}</div>`:`<p class="small">${esc(emptyText)}</p>`}</div>`;
 }
 function renderProcessManager(person){
   const all=crmProcessItems(person);
