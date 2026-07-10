@@ -1,3 +1,5 @@
+Version 1.8.9.1: Die empfohlene Wiedervorlage wird im Recruiting-Assistenten als eigener, deutlich hervorgehobener Abschnitt angezeigt.
+
 # Recruiting-Cockpit Peter & Martina Kücken
 
 Version 1.8.6

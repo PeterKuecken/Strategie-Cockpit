@@ -1,3 +1,5 @@
+Version 1.8.9.1: Die empfohlene Wiedervorlage wird im Recruiting-Assistenten als eigener, deutlich hervorgehobener Abschnitt angezeigt.
+
 # Version 1.8.9 – 10.07.2026
 
 - Neuer Button „Schritt abschließen und weiter“.
