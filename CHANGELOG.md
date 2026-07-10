@@ -1,15 +1,5 @@
 # Version 1.8.2
 
-- Recruiting-Pipeline mit zwölf Phasen ergänzt.
-- Visuelle Fortschrittsleiste in der Kontaktakte ergänzt.
-- Phasenwechsel per Klick mit automatischem Chronik-Eintrag.
-- Bestehende Statuswerte werden automatisch auf die neue Pipeline übertragen.
-- Anzeige der aktuellen Phase in Kontaktübersicht, Dashboard und Vertriebscockpit vereinheitlicht.
-- Desktop- und Smartphone-Darstellung angepasst.
-- Alle bisherigen Funktionen und Inhalte bleiben erhalten.
-
-# Version 1.8.0
-
 - Schlagwörter für Kontakte ergänzt.
 - Mehrere Schlagwörter können kommagetrennt gespeichert werden.
 - Schlagwörter erscheinen in Kontaktliste und Kontaktakte.
@@ -72,3 +62,11 @@
 - Mobile Cache-Korrektur: Programmdateien eindeutig umbenannt.
 - Kontakte öffnet auf PC und Smartphone direkt die Kontaktverwaltung.
 - Kein Unterpunkt Recruiting in der Navigation.
+
+## Version 1.8.2
+- Sichtbare Recruiting-Pipeline mit zwölf Phasen in jeder Kontaktakte.
+- Phasenwechsel direkt per Klick oder Fingertipp.
+- Automatischer Chronik-Eintrag bei jedem Phasenwechsel.
+- Bestehende Statuswerte werden ohne Datenverlust einer Pipeline-Phase zugeordnet.
+- Aktuelle Phase erscheint in Kontaktübersicht und Kontaktkopf.
+- Smartphone-Darstellung horizontal scrollbar.

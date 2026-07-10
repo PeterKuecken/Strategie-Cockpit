@@ -665,8 +665,8 @@ function salesMetricContacts(metric,period){
     if(metric==='infoSent')return salesDateInRange(c.landingSentDate,range) || salesTimelineMatches(c,range,[/Landingpage.*gesendet/i,/Information.*versendet/i,/Link.*gesendet/i],["Landingpage"]);
     if(metric==='appointments')return salesTimelineMatches(c,range,[/→\s*Präsentation geplant/i,/Termin vereinbart/i,/Termin geplant/i],["Termin"]);
     if(metric==='presentations')return salesTimelineMatches(c,range,[/→\s*Präsentation erfolgt/i,/Präsentation durchgeführt/i,/Präsentation erfolgt/i],["Präsentation"]);
-    if(metric==='customers')return salesTimelineMatches(c,range,[/→\s*Kunde/i,/Status geändert:.*Kunde/i,/Recruiting-Phase geändert:.*Kunde/i]) || (crmPipelinePhase(c)==='Kunde' && salesDateInRange(updated,range));
-    if(metric==='partners')return salesTimelineMatches(c,range,[/→\s*Geschäftspartner/i,/Status geändert:.*Geschäftspartner/i,/Recruiting-Phase geändert:.*Geschäftspartner/i]) || (crmPipelinePhase(c)==='Geschäftspartner' && salesDateInRange(updated,range));
+    if(metric==='customers')return salesTimelineMatches(c,range,[/→\s*Kunde/i,/Status geändert:.*Kunde/i]) || (c.status==='Kunde' && salesDateInRange(updated,range));
+    if(metric==='partners')return salesTimelineMatches(c,range,[/→\s*Geschäftspartner/i,/Status geändert:.*Geschäftspartner/i]) || (c.status==='Geschäftspartner' && salesDateInRange(updated,range));
     return false;
   }).filter((c,i,a)=>a.findIndex(x=>x.id===c.id)===i);
 }
@@ -677,7 +677,7 @@ function salesDashboardSetPeriod(period){salesDashboardPeriod=period; render()}
 function salesDashboardSetMetric(metric){salesDashboardMetric=metric; render(); setTimeout(()=>document.getElementById('salesMetricList')?.scrollIntoView({behavior:'smooth',block:'start'}),40)}
 function renderSalesMetricList(list,metric,period){
   const range=salesDashboardRange(period); const title=salesDashboardMetricTitle(metric);
-  return `<div id="salesMetricList" class="card dashboard-work-list"><div class="section-title-row"><div><p class="eyebrow">Kontaktliste · ${esc(range.label)}</p><h3>${esc(title)} (${list.length})</h3></div><button class="copy-btn" onclick="current='recruiting'; render(); setTimeout(()=>document.getElementById('crmContactsSection')?.scrollIntoView({behavior:'smooth'}),50)">Alle Kontakte</button></div>${list.length?`<div class="dashboard-contact-list">${list.map(c=>`<div class="dashboard-contact-row"><button class="dashboard-contact-main" onclick="crmOpenContact('${esc(c.id)}')"><strong>${esc(crmFullName(c))}</strong><span>${esc(c.contactCode||'')} · ${esc(c.company||c.job||'')} ${c.city?'· '+esc(c.city):''}</span><small>Phase: ${esc(crmPipelinePhase(c))} · Zuständig: ${esc(c.owner||'Peter')}${c.nextStep?' · '+esc(c.nextStep):''}</small></button></div>`).join('')}</div>`:`<p class="ok-text">Für diesen Zeitraum sind keine passenden Kontakte dokumentiert.</p>`}</div>`;
+  return `<div id="salesMetricList" class="card dashboard-work-list"><div class="section-title-row"><div><p class="eyebrow">Kontaktliste · ${esc(range.label)}</p><h3>${esc(title)} (${list.length})</h3></div><button class="copy-btn" onclick="current='recruiting'; render(); setTimeout(()=>document.getElementById('crmContactsSection')?.scrollIntoView({behavior:'smooth'}),50)">Alle Kontakte</button></div>${list.length?`<div class="dashboard-contact-list">${list.map(c=>`<div class="dashboard-contact-row"><button class="dashboard-contact-main" onclick="crmOpenContact('${esc(c.id)}')"><strong>${esc(crmFullName(c))}</strong><span>${esc(c.contactCode||'')} · ${esc(c.company||c.job||'')} ${c.city?'· '+esc(c.city):''}</span><small>Status: ${esc(c.status||'Neu')} · Zuständig: ${esc(c.owner||'Peter')}${c.nextStep?' · '+esc(c.nextStep):''}</small></button></div>`).join('')}</div>`:`<p class="ok-text">Für diesen Zeitraum sind keine passenden Kontakte dokumentiert.</p>`}</div>`;
 }
 function renderSalesCockpit(s){
   const metrics=[
@@ -966,7 +966,7 @@ function round(n){return Math.round(Number(n||0))}
 
 
 
-/* Recruiting CRM Version 1.8.2 – Recruiting-Pipeline */
+/* Recruiting CRM Version 1.5.1 RC1 */
 function ensureCrm(){
   if(!state.crm)state.crm={contacts:[],tasks:[],dailyDone:{},counters:{PK:0,MK:0}};
   if(!Array.isArray(state.crm.contacts))state.crm.contacts=[];
@@ -1011,9 +1011,6 @@ function crmEnsureContactCodes(){
     if(!Array.isArray(c.communication))c.communication=[];
     if(!Array.isArray(c.noteEntries))c.noteEntries=[];
     if(!Array.isArray(c.tags))c.tags=String(c.tags||'').split(',').map(x=>x.trim()).filter(Boolean);
-    const phase=crmPipelineFromLegacy(c.pipelinePhase||c.status);
-    if(c.pipelinePhase!==phase){c.pipelinePhase=phase; changed=true;}
-    if(c.status!==phase){c.status=phase; changed=true;}
   });
   return changed;
 }
@@ -1033,14 +1030,24 @@ function crmDisplayName(c){return `${c.contactCode?c.contactCode+' · ':''}${crm
 function crmShortLabel(c){return `${c.contactCode||''} ${crmFullName(c)} ${c.company||''} ${c.city||''}`.trim()}
 function crmLastActivity(c){return (c.timeline||[]).slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''))[0]}
 function crmPersonFilter(c){return (c.owner || 'Peter')===currentPerson() || (c.support || '')===currentPerson()}
-const CRM_PIPELINE_PHASES=['Neuer Kontakt','Erstansprache','Interesse','Informationen versendet','Nachfassen','Termin vereinbart','Präsentation','Entscheidung','Kunde','Geschäftspartner','Kein Interesse','Archiv'];
-function crmPipelineFromLegacy(value){
-  const v=String(value||'').trim();
-  const map={'Neu':'Neuer Kontakt','Kontaktanfrage gesendet':'Erstansprache','Vernetzt':'Erstansprache','Erstgespräch':'Erstansprache','Interesse':'Interesse','Präsentation geplant':'Termin vereinbart','Präsentation erfolgt':'Präsentation','Nachfassen':'Nachfassen','Kunde':'Kunde','Geschäftspartner':'Geschäftspartner','Kein Interesse':'Kein Interesse','Archiv':'Archiv'};
-  return CRM_PIPELINE_PHASES.includes(v)?v:(map[v]||'Neuer Kontakt');
+function crmPipelinePhases(){return ['Neuer Kontakt','Erstansprache','Interesse','Informationen versendet','Nachfassen','Termin vereinbart','Präsentation','Entscheidung','Kunde','Geschäftspartner','Kein Interesse','Archiv']}
+function crmPhaseFromLegacy(c){
+  const raw=String(c?.phase||c?.status||'').trim();
+  if(crmPipelinePhases().includes(raw))return raw;
+  const map={
+    'Neu':'Neuer Kontakt','Kontaktanfrage gesendet':'Erstansprache','Vernetzt':'Erstansprache','Erstgespräch':'Erstansprache',
+    'Interesse':'Interesse','Präsentation geplant':'Termin vereinbart','Präsentation erfolgt':'Präsentation','Nachfassen':'Nachfassen',
+    'Kunde':'Kunde','Geschäftspartner':'Geschäftspartner','Kein Interesse':'Kein Interesse','Archiv':'Archiv'
+  };
+  if(c?.landingSent||c?.landingSeen)return c?.followupActive?'Nachfassen':'Informationen versendet';
+  return map[raw]||'Neuer Kontakt';
 }
-function crmPipelinePhase(c){return crmPipelineFromLegacy(c?.pipelinePhase||c?.status)}
-function crmStatusOptions(){return CRM_PIPELINE_PHASES.slice()}
+function crmStatusFromPhase(phase){
+  const map={'Neuer Kontakt':'Neu','Erstansprache':'Erstgespräch','Interesse':'Interesse','Informationen versendet':'Nachfassen','Nachfassen':'Nachfassen','Termin vereinbart':'Präsentation geplant','Präsentation':'Präsentation erfolgt','Entscheidung':'Nachfassen','Kunde':'Kunde','Geschäftspartner':'Geschäftspartner','Kein Interesse':'Kein Interesse','Archiv':'Archiv'};
+  return map[phase]||'Neu';
+}
+function crmEnsurePhase(c){if(!c)return 'Neuer Kontakt'; const phase=crmPhaseFromLegacy(c); c.phase=phase; return phase}
+function crmStatusOptions(){return crmPipelinePhases()}
 function crmSources(){return ['LinkedIn','Facebook','WhatsApp','Empfehlung','Veranstaltung','Kunde','Sonstiges']}
 function crmPriorities(){return ['A','B','C']}
 function crmAllTags(){return [...new Set(crmContacts().flatMap(c=>Array.isArray(c.tags)?c.tags:[]).map(x=>String(x).trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'de',{sensitivity:'base'}))}
@@ -1116,7 +1123,7 @@ function crmAddCommunicationLog(c,channel,label){
 function crmSuggestFollowup(c,channel,key){
   const t=crmCommTemplates(channel)[key]; if(!t)return;
   if(key==='landing'){
-    c.status='Nachfassen'; c.pipelinePhase='Nachfassen'; c.landingSent=true; c.landingSentDate=c.landingSentDate||todayKey();
+    c.status='Nachfassen'; c.landingSent=true; c.landingSentDate=c.landingSentDate||todayKey();
     c.nextStep='Prüfen, ob Landingpage angekommen ist';
   }else if(key==='video1'){
     c.nextStep='Landingpage-Fortschritt beobachten';
@@ -1140,7 +1147,7 @@ function crmQuickLog(id,channel,label,nextStep){
   const c=crmFindContact(id); if(!c)return;
   crmAddCommunicationLog(c,channel,label);
   if(nextStep)c.nextStep=nextStep;
-  if(label.includes('Landingpage')){c.status='Nachfassen'; c.pipelinePhase='Nachfassen'; c.landingSent=true; c.landingSentDate=c.landingSentDate||todayKey();}
+  if(label.includes('Landingpage')){c.status='Nachfassen'; c.landingSent=true; c.landingSentDate=c.landingSentDate||todayKey();}
   save(); render();
 }
 function crmDaysSince(dateKey){
@@ -1157,7 +1164,7 @@ function crmRecommendedAction(c){
     return age>=2?'Bei teilweise angesehenen Videos freundlich nachfragen':'Landingpage-Fortschritt beobachten';
   }
   if(!c.followupActive)return 'Follow-up-Gespräch führen';
-  if(!['Termin vereinbart','Präsentation','Entscheidung','Kunde','Geschäftspartner'].includes(crmPipelinePhase(c)))return 'Telefontermin oder Zoom vereinbaren';
+  if(!['Präsentation geplant','Präsentation erfolgt','Kunde','Geschäftspartner'].includes(c.status||''))return 'Telefontermin oder Zoom vereinbaren';
   return c.nextStep||'Nächsten Schritt prüfen';
 }
 function renderCrmCommunicationBar(c){
@@ -1195,7 +1202,7 @@ function crmToggleLandingDetails(){
 }
 function crmHtmlOptions(items,selected){return items.map(x=>`<option value="${esc(x)}" ${x===(selected||'')?'selected':''}>${esc(x)}</option>`).join('')}
 function crmNormalize(v){return String(v||'').trim().toLowerCase().replace(/\s+/g,' ')}
-function crmActive(c){return !['Archiv','Kein Interesse','Kunde','Geschäftspartner'].includes(crmPipelinePhase(c))}
+function crmActive(c){return !['Archiv','Kein Interesse','Kunde','Geschäftspartner'].includes(c.status)}
 function crmDuplicateWarning(data,id){
   const name=crmNormalize(`${data.firstName||''} ${data.lastName||''}`);
   const phone=crmNormalize(crmFullPhone(data));
@@ -1211,9 +1218,12 @@ function crmCollectForm(id){
   const rawContactCode=val('contactCode');
   const cleanContactCode=crmCodeNumber(rawContactCode) ? rawContactCode : '';
   const tags=[...new Set(val('tags').split(',').map(x=>x.trim()).filter(Boolean))];
-  return {
-    id:id||crmId(), contactCode:cleanContactCode, createdBy:val('createdBy')||currentPerson(), firstName:val('firstName'), lastName:val('lastName'), company:val('company'), birthday:val('birthday'), street:val('street'), postalCode:val('postalCode'), job:(val('jobOther')||val('jobSelect')||val('job')), branch:(val('branchOther')||val('branchSelect')||val('branch')), city:val('city'), phoneCountry:val('phoneCountry')||'+49', phone:val('phone'), email:val('email'), website:val('website'), linkedin:val('linkedin'), facebook:val('facebook'), instagram:val('instagram'), whatsapp:document.getElementById('crm_whatsapp')?.checked||false, owner:val('owner')||currentPerson(), support:val('support'), source:val('source'), targetGroup:(val('targetGroupOther')||val('targetGroupSelect')||val('targetGroup')), status:crmPipelineFromLegacy(val('status')||'Neuer Kontakt'), pipelinePhase:crmPipelineFromLegacy(val('status')||'Neuer Kontakt'), priority:val('priority')||'A', followDate:val('followDate'), followTime:'', nextStep:(nextStepOther||nextStepSelect||val('nextStep')), landingSent:document.getElementById('crm_landingSent')?.checked||false, landingSentDate:(document.getElementById('crm_landingSent')?.checked?val('landingSentDate'):''), landingSeen:document.getElementById('crm_landingSeen')?.checked||false, landingDate:(document.getElementById('crm_landingSeen')?.checked?val('landingDate'):''), video1Seen:(document.getElementById('crm_landingSeen')?.checked && (document.getElementById('crm_video1Seen')?.checked||false)), video2Seen:(document.getElementById('crm_landingSeen')?.checked && (document.getElementById('crm_video1Seen')?.checked||false) && (document.getElementById('crm_video2Seen')?.checked||false)), video3Seen:(document.getElementById('crm_landingSeen')?.checked && (document.getElementById('crm_video1Seen')?.checked||false) && (document.getElementById('crm_video2Seen')?.checked||false) && (document.getElementById('crm_video3Seen')?.checked||false)), followupActive:(document.getElementById('crm_landingSeen')?.checked && (document.getElementById('crm_video1Seen')?.checked||false) && (document.getElementById('crm_video2Seen')?.checked||false) && (document.getElementById('crm_video3Seen')?.checked||false) && (document.getElementById('crm_followupActive')?.checked||false)), interest:val('interest')||'3', trust:val('trust')||'3', activityLevel:val('activityLevel')||'3', tags, notes:val('notes')
-  }
+  const phase=val('phase')||crmPhaseFromLegacy({status:val('status')||'Neu'});
+  const data={
+    id:id||crmId(), contactCode:cleanContactCode, createdBy:val('createdBy')||currentPerson(), firstName:val('firstName'), lastName:val('lastName'), company:val('company'), birthday:val('birthday'), street:val('street'), postalCode:val('postalCode'), job:(val('jobOther')||val('jobSelect')||val('job')), branch:(val('branchOther')||val('branchSelect')||val('branch')), city:val('city'), phoneCountry:val('phoneCountry')||'+49', phone:val('phone'), email:val('email'), website:val('website'), linkedin:val('linkedin'), facebook:val('facebook'), instagram:val('instagram'), whatsapp:document.getElementById('crm_whatsapp')?.checked||false, owner:val('owner')||currentPerson(), support:val('support'), source:val('source'), targetGroup:(val('targetGroupOther')||val('targetGroupSelect')||val('targetGroup')), status:val('status')||'Neu', priority:val('priority')||'A', followDate:val('followDate'), followTime:'', nextStep:(nextStepOther||nextStepSelect||val('nextStep')), landingSent:document.getElementById('crm_landingSent')?.checked||false, landingSentDate:(document.getElementById('crm_landingSent')?.checked?val('landingSentDate'):''), landingSeen:document.getElementById('crm_landingSeen')?.checked||false, landingDate:(document.getElementById('crm_landingSeen')?.checked?val('landingDate'):''), video1Seen:(document.getElementById('crm_landingSeen')?.checked && (document.getElementById('crm_video1Seen')?.checked||false)), video2Seen:(document.getElementById('crm_landingSeen')?.checked && (document.getElementById('crm_video1Seen')?.checked||false) && (document.getElementById('crm_video2Seen')?.checked||false)), video3Seen:(document.getElementById('crm_landingSeen')?.checked && (document.getElementById('crm_video1Seen')?.checked||false) && (document.getElementById('crm_video2Seen')?.checked||false) && (document.getElementById('crm_video3Seen')?.checked||false)), followupActive:(document.getElementById('crm_landingSeen')?.checked && (document.getElementById('crm_video1Seen')?.checked||false) && (document.getElementById('crm_video2Seen')?.checked||false) && (document.getElementById('crm_video3Seen')?.checked||false) && (document.getElementById('crm_followupActive')?.checked||false)), interest:val('interest')||'3', trust:val('trust')||'3', activityLevel:val('activityLevel')||'3', tags, notes:val('notes'), phase
+  };
+  data.status=crmStatusFromPhase(phase);
+  return data;
 }
 function crmSaveContact(id){
   ensureCrm();
@@ -1227,7 +1237,8 @@ function crmSaveContact(id){
     data.contactCode=old.contactCode||data.contactCode||crmNextContactCode(old.createdBy||data.createdBy||old.owner||data.owner||currentPerson());
     data.createdBy=old.createdBy||data.createdBy||currentPerson();
     data.createdAt=old.createdAt||now; data.updatedAt=now; data.timeline=old.timeline||[]; data.communication=old.communication||[]; data.noteEntries=old.noteEntries||[];
-    if(crmPipelinePhase(old)!==data.pipelinePhase)data.timeline.push({date:todayKey(),time:new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}),type:'Pipeline',text:`Recruiting-Phase geändert: ${crmPipelinePhase(old)} → ${data.pipelinePhase}`});
+    const oldPhase=crmEnsurePhase(old);
+    if(oldPhase!==data.phase)data.timeline.push({date:todayKey(),time:new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}),type:'Recruiting-Phase',text:`Phase geändert: ${oldPhase} → ${data.phase}`});
     if(old.owner!==data.owner)data.timeline.push({date:todayKey(),time:new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}),type:'Zuständigkeit',text:`Zuständigkeit geändert: ${old.owner||'offen'} → ${data.owner}`});
     if(old.priority!==data.priority)data.timeline.push({date:todayKey(),time:new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}),type:'Priorität',text:`Priorität geändert: ${old.priority||'offen'} → ${data.priority}`});
     if(old.followDate!==data.followDate || old.followTime!==data.followTime || old.nextStep!==data.nextStep)data.timeline.push({date:todayKey(),time:new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}),type:'Wiedervorlage',text:`Nächster Schritt: ${data.nextStep||'offen'}`});
@@ -1236,7 +1247,7 @@ function crmSaveContact(id){
   }else{
     data.contactCode=data.contactCode||crmNextContactCode(data.createdBy||data.owner||currentPerson());
     data.createdBy=data.createdBy||currentPerson();
-    data.createdAt=now; data.updatedAt=now; data.communication=[]; data.noteEntries=[]; data.timeline=[{date:todayKey(),time:new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}),type:'Anlage',text:`Kontakt ${data.contactCode} angelegt`}];
+    data.createdAt=now; data.updatedAt=now; data.communication=[]; data.noteEntries=[]; data.timeline=[{date:todayKey(),time:new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}),type:'Anlage',text:`Kontakt ${data.contactCode} angelegt · Phase: ${data.phase}`}];
     state.crm.contacts.unshift(data);
   }
   selectedContactId=data.id; selectedContactTab='overview'; crmSave();
@@ -1271,7 +1282,7 @@ function crmFilteredContacts(){
     if(owner==='Meine' && !crmPersonFilter(c))return false;
     if(owner==='Peter' && (c.owner||'Peter')!=='Peter')return false;
     if(owner==='Martina' && (c.owner||'Peter')!=='Martina')return false;
-    if(status && crmPipelinePhase(c)!==status)return false;
+    if(status && c.status!==status)return false;
     if(source && c.source!==source)return false;
     if(prio && c.priority!==prio)return false;
     if(job && c.job!==job)return false;
@@ -1279,7 +1290,7 @@ function crmFilteredContacts(){
     if(targetGroup && c.targetGroup!==targetGroup)return false;
     if(tag && !(Array.isArray(c.tags)&&c.tags.includes(tag)))return false;
     if(q){
-      const hay=crmNormalize([c.contactCode,crmFullName(c),c.firstName,c.lastName,c.company,c.job,c.branch,c.city,c.street,c.postalCode,c.birthday,crmFullPhone(c),c.phone,c.email,c.linkedin,c.facebook,c.targetGroup,c.source,crmPipelinePhase(c),(c.tags||[]).join(' ')].join(' '));
+      const hay=crmNormalize([c.contactCode,crmFullName(c),c.firstName,c.lastName,c.company,c.job,c.branch,c.city,c.street,c.postalCode,c.birthday,crmFullPhone(c),c.phone,c.email,c.linkedin,c.facebook,c.targetGroup,c.source,c.status,(c.tags||[]).join(' ')].join(' '));
       if(!hay.includes(q))return false;
     }
     return true;
@@ -1441,7 +1452,7 @@ function renderKnowledge(s){
   const q=(knowledgeQuery||'').trim().toLowerCase();
   const filtered=KNOWLEDGE_TEMPLATES.filter(t=>(knowledgeCategory==='Alle'||t.category===knowledgeCategory) && (!q||`${t.title} ${t.category} ${t.keywords} ${t.text}`.toLowerCase().includes(q)));
   const contact=selectedContactId?crmFindContact(selectedContactId):null;
-  view.innerHTML=`<div class="card knowledge-head"><p class="eyebrow">Version 1.8.2</p><h2>${esc(s.title)}</h2><p>${esc(s.text)}</p>${contact?`<p class="knowledge-contact">Aktueller Kontakt: <strong>${esc(crmFullName(contact))}</strong> · ${esc(contact.contactCode||'')}</p>`:''}<input class="knowledge-search" type="search" placeholder="Vorlage suchen, z. B. Landingpage oder Follow-up" value="${esc(knowledgeQuery)}" oninput="knowledgeQuery=this.value; renderKnowledge(sectionById('wissen'))"></div>
+  view.innerHTML=`<div class="card knowledge-head"><p class="eyebrow">Version 1.8.0</p><h2>${esc(s.title)}</h2><p>${esc(s.text)}</p>${contact?`<p class="knowledge-contact">Aktueller Kontakt: <strong>${esc(crmFullName(contact))}</strong> · ${esc(contact.contactCode||'')}</p>`:''}<input class="knowledge-search" type="search" placeholder="Vorlage suchen, z. B. Landingpage oder Follow-up" value="${esc(knowledgeQuery)}" oninput="knowledgeQuery=this.value; renderKnowledge(sectionById('wissen'))"></div>
   <div class="knowledge-categories">${cats.map(cat=>`<button class="${knowledgeCategory===cat?'primary':'copy-btn'}" onclick="knowledgeSetCategory('${esc(cat)}')">${esc(cat)}</button>`).join('')}</div>
   <div class="knowledge-grid">${filtered.length?filtered.map(t=>`<article class="knowledge-card"><span class="knowledge-label">${esc(t.category)}</span><h3>${esc(t.title)}</h3><div class="knowledge-text">${esc(knowledgeContactText(t,contact)).replaceAll('\n','<br>')}</div><div class="knowledge-actions"><button class="copy-btn" onclick="knowledgeCopy('${esc(t.id)}')">Kopieren</button><button class="primary" onclick="knowledgeSend('${esc(t.id)}')">Jetzt verwenden</button></div></article>`).join(''):'<div class="card"><p>Keine passende Vorlage gefunden.</p></div>'}</div>`;
 }
@@ -1527,7 +1538,7 @@ function crmMetricsFor(person){
     v1:list.filter(c=>c.video1Seen).length,
     v2:list.filter(c=>c.video2Seen).length,
     v3:list.filter(c=>c.video3Seen).length,
-    partners:list.filter(c=>crmPipelinePhase(c)==='Geschäftspartner').length
+    partners:list.filter(c=>c.status==='Geschäftspartner').length
   };
 }
 function crmSuggestions(person){
@@ -1563,9 +1574,9 @@ function crmAssistantRecommendation(c){
     return {step:'partial',title:'Bei teilweise angesehenen Videos freundlich nachfragen',task:'Freundlich nach offenen Fragen erkundigen',status:'Nachfassen',days:2,button:'Nachfrage protokollieren',hint:`${watched} von 3 Videos angesehen. Kein Video einzeln versenden.`};
   }
   if(!c.followupActive)return {step:'followup',title:'Follow-up-Gespräch führen',task:'Follow-up-Gespräch führen',status:'Nachfassen',days:1,button:'Follow-up als gestartet markieren',hint:'Alle drei Videos wurden angesehen. Jetzt den persönlichen Eindruck besprechen.'};
-  if(c.followupActive && !['Termin vereinbart','Präsentation','Entscheidung','Kunde','Geschäftspartner'].includes(crmPipelinePhase(c)))return {step:'appointment',title:'Telefontermin oder Zoom vereinbaren',task:'Telefontermin oder Zoom vereinbaren',status:'Termin vereinbart',days:1,button:'Terminphase markieren',hint:'Jetzt wird aus dem Interesse ein konkretes Gespräch.'};
-  if(!c.nextStep)return {step:'next',title:'Nächsten Schritt festlegen',task:'Nächsten Schritt festlegen',status:crmPipelinePhase(c),days:1,button:'Aufgabe für morgen anlegen',hint:'Der Kontakt braucht einen klaren nächsten Schritt.'};
-  return {step:'review',title:c.nextStep||'Kontakt prüfen',task:c.nextStep||'Kontakt prüfen',status:crmPipelinePhase(c),days:1,button:'Wiedervorlage anlegen',hint:'Prüfe den aktuellen Stand und entscheide bewusst weiter.'};
+  if(c.followupActive && !['Präsentation geplant','Präsentation erfolgt','Kunde','Geschäftspartner'].includes(c.status||''))return {step:'appointment',title:'Telefontermin oder Zoom vereinbaren',task:'Telefontermin oder Zoom vereinbaren',status:'Erstgespräch',days:1,button:'Terminphase markieren',hint:'Jetzt wird aus dem Interesse ein konkretes Gespräch.'};
+  if(!c.nextStep)return {step:'next',title:'Nächsten Schritt festlegen',task:'Nächsten Schritt festlegen',status:c.status||'Neu',days:1,button:'Aufgabe für morgen anlegen',hint:'Der Kontakt braucht einen klaren nächsten Schritt.'};
+  return {step:'review',title:c.nextStep||'Kontakt prüfen',task:c.nextStep||'Kontakt prüfen',status:c.status||'Neu',days:1,button:'Wiedervorlage anlegen',hint:'Prüfe den aktuellen Stand und entscheide bewusst weiter.'};
 }
 function crmAssistantItems(person){
   return crmContacts().filter(c=>((c.owner||'Peter')===person || (c.support||'')===person) && crmActive(c)).map(c=>({c,rec:crmAssistantRecommendation(c)})).filter(x=>x.rec).sort((a,b)=>String(a.c.priority||'C').localeCompare(String(b.c.priority||'C')) || String(a.c.followDate||'9999').localeCompare(String(b.c.followDate||'9999')) || crmFullName(a.c).localeCompare(crmFullName(b.c),'de'));
@@ -1587,7 +1598,7 @@ function crmAssistantApply(contactId){
   const nowTime=new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
   if(!Array.isArray(c.timeline))c.timeline=[];
   if(rec.step==='landing'){
-    c.landingSent=true; c.landingSentDate=c.landingSentDate||todayKey(); c.status='Nachfassen'; c.pipelinePhase='Nachfassen'; c.nextStep='Prüfen, ob Landingpage angekommen ist'; c.followDate=crmDateAddKey(1); c.followTime=c.followTime||'09:00';
+    c.landingSent=true; c.landingSentDate=c.landingSentDate||todayKey(); c.status='Nachfassen'; c.nextStep='Prüfen, ob Landingpage angekommen ist'; c.followDate=crmDateAddKey(1); c.followTime=c.followTime||'09:00';
   }else if(rec.step==='linkcheck'){
     c.nextStep='Landingpage-Fortschritt beobachten'; c.followDate=crmDateAddKey(2); c.followTime=c.followTime||'09:00';
   }else if(rec.step==='observe'){
@@ -1597,7 +1608,7 @@ function crmAssistantApply(contactId){
   }else if(rec.step==='followup'){
     c.followupActive=true; c.nextStep='Telefonat führen'; c.followDate=crmDateAddKey(1); c.followTime=c.followTime||'09:00';
   }else if(rec.step==='appointment'){
-    c.status='Termin vereinbart'; c.pipelinePhase='Termin vereinbart'; c.nextStep='Termin vorbereiten'; c.followDate=crmDateAddKey(1); c.followTime=c.followTime||'09:00';
+    c.status='Präsentation geplant'; c.nextStep='Termin vorbereiten'; c.followDate=crmDateAddKey(1); c.followTime=c.followTime||'09:00';
   }else{
     c.nextStep=rec.task; c.followDate=crmDateAddKey(rec.days||1); c.followTime=c.followTime||'09:00';
   }
@@ -1659,7 +1670,7 @@ function renderCrmToolbar(){
   return `<div class="crm-toolbar crm-toolbar-addressbook">
     <button class="primary crm-new-contact-top" onclick="selectedContactId='__new'; selectedContactTab='overview'; render()">Neuer Kontakt</button>
     <select id="crmOwnerFilter" onchange="crmSetFilter('owner',this.value)">${crmHtmlOptions(['Meine','Alle','Peter','Martina'],crmFilters.owner||'Meine')}</select>
-    <select id="crmStatusFilter" onchange="crmSetFilter('status',this.value)"><option value="">Alle Status</option>${crmHtmlOptions(crmStatusOptions(),crmFilters.status||'')}</select>
+    <select id="crmStatusFilter" onchange="crmSetFilter('status',this.value)"><option value="">Alle Phasen</option>${crmHtmlOptions(crmStatusOptions(),crmFilters.status||'')}</select>
     <select id="crmSourceFilter" onchange="crmSetFilter('source',this.value)"><option value="">Alle Quellen</option>${crmHtmlOptions(crmSources(),crmFilters.source||'')}</select>
     <select id="crmPriorityFilter" onchange="crmSetFilter('priority',this.value)"><option value="">Alle Prioritäten</option>${crmHtmlOptions(crmPriorities(),crmFilters.priority||'')}</select>
     <select id="crmJobFilter" onchange="crmSetFilter('job',this.value)"><option value="">Alle Berufe</option>${crmHtmlOptions(crmJobOptions().filter(x=>x!=='Sonstiges'),crmFilters.job||'')}</select>
@@ -1699,7 +1710,7 @@ function renderCrmContacts(){
   return `<div class="contact-list contact-list-detailed">${list.map(c=>`<article data-contact-id="${esc(c.id)}" class="contact-card contact-card-detailed ${selectedContactId===c.id?'active':''}">
     <button class="contact-card-main" onclick="crmOpenContact('${esc(c.id)}')">
       <div class="contact-card-name"><strong>${esc(crmFullName(c))}</strong><span>${esc(c.contactCode||'')}</span><small>${esc(c.company||c.job||'')} ${c.city?'· '+esc(c.city):''}${c.source?' · '+esc(c.source):''}</small>${crmTagChips(c)?`<div class="contact-tags">${crmTagChips(c)}</div>`:''}</div>
-      <div class="contact-card-state"><span class="priority-pill ${crmPriorityClass(c.priority)}">Priorität ${esc(c.priority||'A')}</span><span class="badge pipeline-badge">${esc(crmPipelinePhase(c))}</span></div>
+      <div class="contact-card-state"><span class="priority-pill ${crmPriorityClass(c.priority)}">Priorität ${esc(c.priority||'A')}</span><span class="badge">${esc(crmEnsurePhase(c))}</span></div>
       <div class="contact-card-work"><small><b>Wiedervorlage:</b> ${esc(c.followDate?formatDate(c.followDate):'offen')}</small><small><b>Nächster Schritt:</b> ${esc(c.nextStep||'offen')}</small><small><b>Letzte Aktivität:</b> ${esc(crmContactLastActivityText(c))}</small></div>
     </button>
     <div class="crm-list-actions">${crmListQuickAction(c,'phone')}${crmListQuickAction(c,'whatsapp')}${crmListQuickAction(c,'email')}${crmListQuickAction(c,'linkedin')}<button class="crm-list-action" onclick="crmSetQuickFollowDate('${esc(c.id)}')">Wiedervorlage</button><button class="crm-list-action crm-list-open" onclick="crmOpenContact('${esc(c.id)}')">Kontakt öffnen</button></div>
@@ -1707,7 +1718,7 @@ function renderCrmContacts(){
 }
 function renderCrmEmptyState(){return `<div class="card empty-state"><h3>Kontaktakte</h3><p>Wähle einen Kontakt aus der Liste oder lege einen neuen Kontakt an.</p><button class="primary" onclick="selectedContactId='__new'; render()">Neuen Kontakt anlegen</button></div>`}
 function renderCrmForm(c){
-  c=c||{owner:currentPerson(),createdBy:currentPerson(),status:'Neuer Kontakt',pipelinePhase:'Neuer Kontakt',priority:'A',source:'LinkedIn',phoneCountry:'+49',interest:'3',trust:'3',activityLevel:'3'};
+  c=c||{owner:currentPerson(),createdBy:currentPerson(),status:'Neu',phase:'Neuer Kontakt',priority:'A',source:'LinkedIn',phoneCountry:'+49',interest:'3',trust:'3',activityLevel:'3'};
   const id=c.id||'';
   const input=(k,label,type='text')=>`<label>${label}<input id="crm_${k}" type="${type}" value="${esc(c[k]||'')}"></label>`;
   const nextSelected=crmNextStepOptions().includes(c.nextStep||'') ? (c.nextStep||'') : ((c.nextStep||'') ? 'Sonstiges' : '');
@@ -1724,7 +1735,7 @@ function renderCrmForm(c){
       <label>Zweiter Ansprechpartner<select id="crm_support"><option value="">Keiner</option>${crmHtmlOptions(['Peter','Martina'],c.support||'')}</select></label>
       <label>Quelle<select id="crm_source">${crmHtmlOptions(crmSources(),c.source||'LinkedIn')}</select></label>
       ${crmSelectWithOther('targetGroup','Zielgruppe',crmTargetGroupOptions(),c.targetGroup||'','Sonstige Zielgruppe')}
-      <label>Recruiting-Phase<select id="crm_status">${crmHtmlOptions(crmStatusOptions(),crmPipelinePhase(c))}</select></label>
+      <label>Recruiting-Phase<select id="crm_phase">${crmHtmlOptions(crmPipelinePhases(),crmEnsurePhase(c))}</select></label><input id="crm_status" type="hidden" value="${esc(c.status||crmStatusFromPhase(crmEnsurePhase(c)))}">
       <label>Priorität<select id="crm_priority">${crmHtmlOptions(crmPriorities(),c.priority||'A')}</select></label>
       <label>Wiedervorlage Datum<input id="crm_followDate" type="date" value="${esc(c.followDate||'')}"></label>
       <label>Nächster Schritt<select id="crm_nextStepSelect">${crmHtmlOptions(['',...crmNextStepOptions()],nextSelected)}</select></label>
@@ -1752,27 +1763,25 @@ function renderCrmForm(c){
 }
 function crmTabButton(key,label){return `<button class="tab-btn ${selectedContactTab===key?'active':''}" onclick="selectedContactTab='${key}'; render()">${label}</button>`}
 function crmTabButton(key,label){return `<button class="tab-btn ${selectedContactTab===key?'active':''}" onclick="selectedContactTab='${key}'; render()">${label}</button>`}
-function crmPipelineIndex(c){return Math.max(0,CRM_PIPELINE_PHASES.indexOf(crmPipelinePhase(c)))}
-function crmSetPipelinePhase(id,phase){
-  const c=crmFindContact(id); if(!c || !CRM_PIPELINE_PHASES.includes(phase))return;
-  const old=crmPipelinePhase(c); if(old===phase)return;
-  c.pipelinePhase=phase; c.status=phase; c.updatedAt=new Date().toISOString();
+function crmSetPhase(id,phase){
+  const c=crmFindContact(id); if(!c || !crmPipelinePhases().includes(phase))return;
+  const old=crmEnsurePhase(c); if(old===phase)return;
+  c.phase=phase; c.status=crmStatusFromPhase(phase); c.updatedAt=new Date().toISOString();
   if(!Array.isArray(c.timeline))c.timeline=[];
-  c.timeline.push({date:todayKey(),time:new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}),type:'Pipeline',text:`Recruiting-Phase geändert: ${old} → ${phase}`});
+  c.timeline.push({date:todayKey(),time:new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}),type:'Recruiting-Phase',text:`Phase geändert: ${old} → ${phase}`});
   save(); render();
 }
-function renderRecruitingPipeline(c){
-  const currentPhase=crmPipelinePhase(c); const currentIndex=crmPipelineIndex(c);
-  return `<section class="recruiting-pipeline-card"><div class="pipeline-heading"><div><p class="eyebrow">Recruiting-Pipeline</p><h4>Aktuelle Phase: ${esc(currentPhase)}</h4></div><span class="pipeline-position">${currentIndex+1} von ${CRM_PIPELINE_PHASES.length}</span></div><div class="recruiting-pipeline" role="list" aria-label="Recruiting-Pipeline">${CRM_PIPELINE_PHASES.map((phase,index)=>`<button type="button" class="pipeline-step ${index<currentIndex?'completed':''} ${index===currentIndex?'current':''}" onclick="crmSetPipelinePhase('${esc(c.id)}','${esc(phase)}')" title="Phase auf ${esc(phase)} setzen"><span class="pipeline-number">${index+1}</span><span>${esc(phase)}</span></button>`).join('')}</div><p class="small pipeline-help">Klicke auf eine Phase, um den Kontakt dort einzuordnen. Jede Änderung erscheint automatisch in der Zeitachse.</p></section>`;
+function renderCrmPipeline(c){
+  const phases=crmPipelinePhases(); const current=crmEnsurePhase(c); const currentIndex=phases.indexOf(current);
+  return `<section class="crm-pipeline-card"><div class="crm-pipeline-head"><div><p class="eyebrow">Recruiting-Pipeline</p><h4>Aktuelle Phase: ${esc(current)}</h4></div><span>${currentIndex+1} von ${phases.length}</span></div><div class="crm-pipeline-scroll"><div class="crm-pipeline">${phases.map((phase,i)=>`<button class="crm-pipeline-step ${i<currentIndex?'completed':''} ${i===currentIndex?'current':''} ${['Kein Interesse','Archiv'].includes(phase)?'terminal':''}" onclick="crmSetPhase('${esc(c.id)}','${esc(phase)}')" title="Phase auf ${esc(phase)} setzen"><span>${i+1}</span><strong>${esc(phase)}</strong></button>`).join('')}</div></div><p class="small crm-pipeline-hint">Tippe oder klicke auf eine Phase, um den Kontakt direkt dorthin zu setzen.</p></section>`;
 }
 function renderCrmDetail(id){
   const c=crmFindContact(id); if(!c)return renderCrmForm(null);
-  return `<div class="card contact-file"><div class="contact-file-actions"><button class="copy-btn" onclick="crmCloseContact()">◀ Zur Kontaktübersicht</button><div><button class="copy-btn" onclick="selectedContactTab='edit'; render()">Bearbeiten</button><button class="copy-btn danger" onclick="crmDeleteContact('${esc(c.id)}')">Löschen</button></div></div><div class="contact-sticky-head"><div><p class="eyebrow">Kontaktakte</p><h3>${esc(crmFullName(c))}</h3><p class="contact-code-line">${esc(c.contactCode||'')}</p><p>${esc(c.company||'')} ${c.city?'· '+esc(c.city):''}</p></div><div class="contact-head-meta"><span class="badge">Prio ${esc(c.priority||'A')}</span><span class="badge pipeline-badge">${esc(crmPipelinePhase(c))}</span><p class="small">Zuständig: ${esc(c.owner||'Peter')}${c.support?' · Unterstützung: '+esc(c.support):''}</p><p class="small"><strong>Nächster Schritt:</strong> ${esc(c.nextStep||'offen')}</p><p class="small"><strong>Wiedervorlage:</strong> ${esc(c.followDate||'offen')}</p></div></div>
-    ${renderRecruitingPipeline(c)}
+  return `<div class="card contact-file"><div class="contact-file-actions"><button class="copy-btn" onclick="crmCloseContact()">◀ Zur Kontaktübersicht</button><div><button class="copy-btn" onclick="selectedContactTab='edit'; render()">Bearbeiten</button><button class="copy-btn danger" onclick="crmDeleteContact('${esc(c.id)}')">Löschen</button></div></div><div class="contact-sticky-head"><div><p class="eyebrow">Kontaktakte</p><h3>${esc(crmFullName(c))}</h3><p class="contact-code-line">${esc(c.contactCode||'')}</p><p>${esc(c.company||'')} ${c.city?'· '+esc(c.city):''}</p></div><div class="contact-head-meta"><span class="badge">Prio ${esc(c.priority||'A')}</span><span class="badge">${esc(crmEnsurePhase(c))}</span><p class="small">Zuständig: ${esc(c.owner||'Peter')}${c.support?' · Unterstützung: '+esc(c.support):''}</p><p class="small"><strong>Nächster Schritt:</strong> ${esc(c.nextStep||'offen')}</p><p class="small"><strong>Wiedervorlage:</strong> ${esc(c.followDate||'offen')}</p></div></div>
+    ${renderCrmPipeline(c)}
     ${renderCrmCommunicationBar(c)}
     ${crmRenderContactAssistant(c)}
     <div class="tabs">${crmTabButton('overview','Übersicht')}${crmTabButton('communication','Kommunikation')}${crmTabButton('tasks','Aufgaben')}${crmTabButton('timeline','Zeitachse')}${crmTabButton('notes','Notizen')}${crmTabButton('documents','Dokumente')}${crmTabButton('edit','Bearbeiten')}</div>
-    ${renderCrmProgress(c)}
     ${renderCrmTabContent(c)}
     <div class="quick-actions contact-close-bottom"><button class="primary" onclick="crmCloseContact()">Kontakt schließen</button></div>
   </div>`;
@@ -1784,7 +1793,7 @@ function renderCrmTabContent(c){
   if(selectedContactTab==='communication')return renderCrmCommunication(c);
   if(selectedContactTab==='notes')return renderCrmNotes(c);
   if(selectedContactTab==='documents')return `<div class="tab-content"><h4>Dokumente</h4><p class="small">Dieser Bereich ist vorbereitet. Dokumente, Angebote, Bilder und PDFs folgen in einer späteren Version.</p></div>`;
-  return `<div class="tab-content"><div class="contact-status-strip"><span>${esc(c.contactCode||'')}</span><span>Priorität ${esc(c.priority||'A')}</span><span>Phase: ${esc(crmPipelinePhase(c))}</span><span>Nächster Schritt: ${esc(c.nextStep||'offen')}</span></div><div class="info-card-grid"><section class="info-card"><h4>Kontaktdaten</h4><p><strong>Name:</strong> ${esc(crmFullName(c))}</p><p><strong>Kontakt-ID:</strong> ${esc(c.contactCode||'')}</p><p><strong>Geburtsdatum:</strong> ${esc(c.birthday||'')}</p><p><strong>Adresse:</strong><br>${esc(c.street||'')}${c.street?'<br>':''}${esc(c.postalCode||'')} ${esc(c.city||'')}</p><p><strong>Mobil:</strong> ${crmFullPhone(c)?`<a href="tel:+${esc(crmFullPhone(c))}" onclick="crmQuickLog('${esc(c.id)}','Telefon','Anruf aus Übersicht gestartet','Nachfassen')">${esc(crmPhoneDisplay(c))}</a>`:esc(crmPhoneLocalDisplay(c)||'')}</p><p><strong>WhatsApp:</strong> ${crmFullPhone(c)?`<a href="${esc(crmBuildCommunicationUrl(c,'WhatsApp','free'))}" onclick="crmQuickLog('${esc(c.id)}','WhatsApp','WhatsApp aus Kontaktdaten geöffnet','WhatsApp senden')">WhatsApp schreiben</a>`:'Nicht hinterlegt'}</p><p><strong>E-Mail:</strong> ${c.email?`<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>`:'Nicht hinterlegt'}</p><p><strong>Website:</strong> ${c.website?`<a href="${esc(crmWebsiteHref(c.website))}" target="_blank" rel="noopener">${esc(c.website)}</a>`:'Nicht hinterlegt'}</p></section><section class="info-card"><h4>Beruf und Profile</h4><p><strong>Firma:</strong> ${esc(c.company||'')}</p><p><strong>Beruf:</strong> ${esc(c.job||'')}</p><p><strong>Branche:</strong> ${esc(c.branch||'')}</p><p><strong>Zielgruppe:</strong> ${esc(c.targetGroup||'')}</p><p><strong>LinkedIn:</strong> ${c.linkedin?`<a href="${esc(crmWebsiteHref(c.linkedin))}" target="_blank" rel="noopener">Profil öffnen</a>`:'Nicht hinterlegt'}</p><p><strong>Facebook:</strong> ${c.facebook?`<a href="${esc(crmWebsiteHref(c.facebook))}" target="_blank" rel="noopener">Profil öffnen</a>`:'Nicht hinterlegt'}</p><p><strong>Instagram:</strong> ${c.instagram?`<a href="${esc(crmWebsiteHref(c.instagram))}" target="_blank" rel="noopener">Profil öffnen</a>`:'Nicht hinterlegt'}</p><p><strong>WhatsApp vorhanden:</strong> ${c.whatsapp?'Ja':'Nein'}</p></section><section class="info-card"><h4>Recruiting</h4><p><strong>Zuständig:</strong> ${esc(c.owner||'Peter')}${c.support?' · Unterstützung: '+esc(c.support):''}</p><p><strong>Recruiting-Phase:</strong> ${esc(crmPipelinePhase(c))}</p><p><strong>Quelle:</strong> ${esc(c.source||'')}</p><p><strong>Priorität:</strong> ${esc(c.priority||'A')}</p><p><strong>Wiedervorlage:</strong> ${esc(c.followDate||'offen')}</p><p><strong>Nächster Schritt:</strong> ${esc(c.nextStep||'Noch kein nächster Schritt eingetragen.')}</p><p><strong>Schlagwörter:</strong></p>${crmTagChips(c)?`<div class="contact-tags">${crmTagChips(c)}</div>`:'<p class="small">Keine Schlagwörter hinterlegt.</p>'}<p><strong>Bewertung:</strong><br>Interesse ${esc(c.interest||'3')}/5 · Vertrauen ${esc(c.trust||'3')}/5 · Aktivität ${esc(c.activityLevel||'3')}/5</p></section><section class="info-card"><h4>Landingpage</h4><p><strong>Gesendet:</strong> ${c.landingSent?'Ja':'Nein'} ${c.landingSentDate?'am '+esc(c.landingSentDate):''}</p><p><strong>Gesehen:</strong> ${c.landingSeen?'Ja':'Nein'} ${c.landingDate?'am '+esc(c.landingDate):''}</p>${c.landingSeen?`<p><strong>Video 1:</strong> ${c.video1Seen?'Ja':'Nein'}</p>${c.video1Seen?`<p><strong>Video 2:</strong> ${c.video2Seen?'Ja':'Nein'}</p>`:''}${c.video2Seen?`<p><strong>Video 3:</strong> ${c.video3Seen?'Ja':'Nein'}</p>`:''}${c.video3Seen?`<p><strong>Follow-up aktiv:</strong> ${c.followupActive?'Ja':'Nein'}</p>`:''}`:'<p class="small">Noch keine Landingpage-Aktivität hinterlegt.</p>'}</section><section class="info-card info-card-wide"><h4>Kommunikation</h4>${renderCrmCommunicationBar(c)}</section></div><div class="quick-actions"><button class="primary" onclick="selectedContactTab='edit'; render()">Bearbeiten</button><button class="copy-btn" onclick="selectedContactTab='communication'; render()">Kommunikation eintragen</button><button class="copy-btn" onclick="selectedContactTab='timeline'; render()">Zeitachse öffnen</button></div></div>`;
+  return `<div class="tab-content"><div class="contact-status-strip"><span>${esc(c.contactCode||'')}</span><span>Priorität ${esc(c.priority||'A')}</span><span>Status: ${esc(c.status||'Neu')}</span><span>Nächster Schritt: ${esc(c.nextStep||'offen')}</span></div><div class="info-card-grid"><section class="info-card"><h4>Kontaktdaten</h4><p><strong>Name:</strong> ${esc(crmFullName(c))}</p><p><strong>Kontakt-ID:</strong> ${esc(c.contactCode||'')}</p><p><strong>Geburtsdatum:</strong> ${esc(c.birthday||'')}</p><p><strong>Adresse:</strong><br>${esc(c.street||'')}${c.street?'<br>':''}${esc(c.postalCode||'')} ${esc(c.city||'')}</p><p><strong>Mobil:</strong> ${crmFullPhone(c)?`<a href="tel:+${esc(crmFullPhone(c))}" onclick="crmQuickLog('${esc(c.id)}','Telefon','Anruf aus Übersicht gestartet','Nachfassen')">${esc(crmPhoneDisplay(c))}</a>`:esc(crmPhoneLocalDisplay(c)||'')}</p><p><strong>WhatsApp:</strong> ${crmFullPhone(c)?`<a href="${esc(crmBuildCommunicationUrl(c,'WhatsApp','free'))}" onclick="crmQuickLog('${esc(c.id)}','WhatsApp','WhatsApp aus Kontaktdaten geöffnet','WhatsApp senden')">WhatsApp schreiben</a>`:'Nicht hinterlegt'}</p><p><strong>E-Mail:</strong> ${c.email?`<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>`:'Nicht hinterlegt'}</p><p><strong>Website:</strong> ${c.website?`<a href="${esc(crmWebsiteHref(c.website))}" target="_blank" rel="noopener">${esc(c.website)}</a>`:'Nicht hinterlegt'}</p></section><section class="info-card"><h4>Beruf und Profile</h4><p><strong>Firma:</strong> ${esc(c.company||'')}</p><p><strong>Beruf:</strong> ${esc(c.job||'')}</p><p><strong>Branche:</strong> ${esc(c.branch||'')}</p><p><strong>Zielgruppe:</strong> ${esc(c.targetGroup||'')}</p><p><strong>LinkedIn:</strong> ${c.linkedin?`<a href="${esc(crmWebsiteHref(c.linkedin))}" target="_blank" rel="noopener">Profil öffnen</a>`:'Nicht hinterlegt'}</p><p><strong>Facebook:</strong> ${c.facebook?`<a href="${esc(crmWebsiteHref(c.facebook))}" target="_blank" rel="noopener">Profil öffnen</a>`:'Nicht hinterlegt'}</p><p><strong>Instagram:</strong> ${c.instagram?`<a href="${esc(crmWebsiteHref(c.instagram))}" target="_blank" rel="noopener">Profil öffnen</a>`:'Nicht hinterlegt'}</p><p><strong>WhatsApp vorhanden:</strong> ${c.whatsapp?'Ja':'Nein'}</p></section><section class="info-card"><h4>Recruiting</h4><p><strong>Zuständig:</strong> ${esc(c.owner||'Peter')}${c.support?' · Unterstützung: '+esc(c.support):''}</p><p><strong>Recruiting-Phase:</strong> ${esc(crmEnsurePhase(c))}</p><p><strong>Quelle:</strong> ${esc(c.source||'')}</p><p><strong>Priorität:</strong> ${esc(c.priority||'A')}</p><p><strong>Wiedervorlage:</strong> ${esc(c.followDate||'offen')}</p><p><strong>Nächster Schritt:</strong> ${esc(c.nextStep||'Noch kein nächster Schritt eingetragen.')}</p><p><strong>Schlagwörter:</strong></p>${crmTagChips(c)?`<div class="contact-tags">${crmTagChips(c)}</div>`:'<p class="small">Keine Schlagwörter hinterlegt.</p>'}<p><strong>Bewertung:</strong><br>Interesse ${esc(c.interest||'3')}/5 · Vertrauen ${esc(c.trust||'3')}/5 · Aktivität ${esc(c.activityLevel||'3')}/5</p></section><section class="info-card"><h4>Landingpage</h4><p><strong>Gesendet:</strong> ${c.landingSent?'Ja':'Nein'} ${c.landingSentDate?'am '+esc(c.landingSentDate):''}</p><p><strong>Gesehen:</strong> ${c.landingSeen?'Ja':'Nein'} ${c.landingDate?'am '+esc(c.landingDate):''}</p>${c.landingSeen?`<p><strong>Video 1:</strong> ${c.video1Seen?'Ja':'Nein'}</p>${c.video1Seen?`<p><strong>Video 2:</strong> ${c.video2Seen?'Ja':'Nein'}</p>`:''}${c.video2Seen?`<p><strong>Video 3:</strong> ${c.video3Seen?'Ja':'Nein'}</p>`:''}${c.video3Seen?`<p><strong>Follow-up aktiv:</strong> ${c.followupActive?'Ja':'Nein'}</p>`:''}`:'<p class="small">Noch keine Landingpage-Aktivität hinterlegt.</p>'}</section><section class="info-card info-card-wide"><h4>Kommunikation</h4>${renderCrmCommunicationBar(c)}</section></div><div class="quick-actions"><button class="primary" onclick="selectedContactTab='edit'; render()">Bearbeiten</button><button class="copy-btn" onclick="selectedContactTab='communication'; render()">Kommunikation eintragen</button><button class="copy-btn" onclick="selectedContactTab='timeline'; render()">Zeitachse öffnen</button></div></div>`;
 }
 
 function crmAddTimeline(id){
@@ -1834,6 +1843,7 @@ function renderCrmTasksTab(c){
 function renderCrmCommunication(c){
   const comm=(c.communication||[]).slice().reverse();
   return `<div class="tab-content"><h4>Kommunikation</h4>
+    ${renderCrmPipeline(c)}
     ${renderCrmCommunicationBar(c)}
     <div class="crm-toolbar"><select id="crm_comm_channel">${crmHtmlOptions(crmChannelOptions(),'WhatsApp')}</select><input id="crm_comm_text" placeholder="Kurze Gesprächsnotiz"><button class="primary" onclick="crmAddCommunication('${esc(c.id)}')">Notiz eintragen</button></div>
     ${comm.length?comm.map(e=>`<div class="timeline-item"><strong>${esc(e.date||'')}${e.time?' · '+esc(e.time):''}</strong> <span class="badge">${esc(e.channel||'')}</span><br>${esc(e.text||'')}</div>`).join(''):'<p class="small">Noch keine Kommunikation dokumentiert.</p>'}
