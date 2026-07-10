@@ -1,3 +1,9 @@
+# Version 1.8.8.1
+
+- Kontakte aus dem Recruiting-Trichter und den Vertriebslisten öffnen jetzt direkt die Kontaktakte im Menüpunkt Kontakte.
+- Desktop- und Smartphone-Klicklogik vereinheitlicht.
+- Alle übrigen Funktionen aus Version 1.8.8 bleiben unverändert.
+
 ## Version 1.8.8
 
 - Recruiting-Trichter im Vertriebscockpit ergänzt.
