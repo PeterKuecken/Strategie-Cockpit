@@ -2,10 +2,10 @@ window.APP_CONTENT = {
   "sections": [
     {
       "id": "heute",
-      "title": "1. Arbeitscockpit",
-      "navTitle": "1. Arbeitscockpit",
-      "type": "dashboard",
-      "text": "Das tägliche Arbeitscockpit für Peter und Martina mit Tageserfassung, Tätigkeitsergebnis und Historie.",
+      "title": "1. Tagesübersicht",
+      "navTitle": "1. Tagesübersicht",
+      "type": "daily_overview",
+      "text": "Die tägliche Übersicht für Peter und Martina. Du siehst sofort, was heute offen ist und wie der aktuelle Stand aussieht.",
       "peter": [
         "5 Kontakte ansprechen",
         "2 Unternehmerkontakte aufbauen",
@@ -22,113 +22,15 @@ window.APP_CONTENT = {
       ]
     },
     {
-      "id": "schnellzugriff",
-      "title": "2. Schnellzugriff",
-      "navTitle": "2. Schnellzugriff",
-      "type": "links",
+      "id": "aufgaben",
+      "title": "2. Aufgaben",
+      "navTitle": "2. Aufgaben",
+      "type": "tasks",
+      "text": "Tagesaufgaben, Tätigkeitsergebnis, Zeiträume und Historie für Peter und Martina.",
       "tags": [
-        "Navigation"
-      ],
-      "groups": [
-        {
-          "title": "Schnellzugriff Peter",
-          "links": [
-            {
-              "label": "1. WhatsApp-Bibliothek Peter",
-              "target": "whatsapp_lib"
-            },
-            {
-              "label": "2. LinkedIn-Bibliothek Peter",
-              "target": "linkedin_lib"
-            },
-            {
-              "label": "3. Facebook-Bibliothek Peter",
-              "target": "facebook_lib"
-            },
-            {
-              "label": "4. Unternehmer-Bibliothek Peter",
-              "target": "unternehmer_lib"
-            },
-            {
-              "label": "5. Empfehlungs-Bibliothek Peter",
-              "target": "empfehlungen_lib"
-            },
-            {
-              "label": "6. Kundenservice-Bibliothek Peter",
-              "target": "kunden_lib"
-            },
-            {
-              "label": "7. Einwand-Bibliothek Peter",
-              "target": "einwaende_lib"
-            },
-            {
-              "label": "8. Video- und Sprachnachrichten-Bibliothek Peter",
-              "target": "video_lib"
-            },
-            {
-              "label": "9. 52-Wochen-Jahresplan Peter",
-              "target": "peter52"
-            },
-            {
-              "label": "10. LinkedIn-Jahresplan Peter",
-              "target": "linkedin52"
-            },
-            {
-              "label": "11. Facebook-Jahresplan Peter",
-              "target": "facebook52"
-            },
-            {
-              "label": "12. Video-Jahresplan Peter",
-              "target": "videos52"
-            }
-          ]
-        },
-        {
-          "title": "Schnellzugriff Martina",
-          "links": [
-            {
-              "label": "1. Positionierung Martina",
-              "target": "martina_band1"
-            },
-            {
-              "label": "2. Personal Branding Martina",
-              "target": "martina_band2"
-            },
-            {
-              "label": "3. Empfehlungsmarketing Martina",
-              "target": "martina_band3"
-            },
-            {
-              "label": "4. Unternehmertum Martina",
-              "target": "martina_band4"
-            },
-            {
-              "label": "5. Praxis-Vorlagen Martina",
-              "target": "martina_band5"
-            },
-            {
-              "label": "6. 52-Wochen-Jahresplan Martina",
-              "target": "martina52"
-            }
-          ]
-        },
-        {
-          "title": "Cockpit",
-          "links": [
-            {
-              "label": "1. Arbeitscockpit",
-              "target": "heute"
-            },
-            {
-              "label": "2. Schnellzugriff",
-              "target": "schnellzugriff"
-            },
-            {
-              "label": "3. Vertriebs-Cockpit",
-              "target": "kennzahlen"
-            }
-          ]
-        }
+        "Aufgaben",
+        "Tagesarbeit",
+        "Tätigkeitsergebnis"
       ]
     },
     {
@@ -3016,10 +2918,10 @@ window.APP_CONTENT = {
     },
     {
       "id": "wissen",
-      "title": "5. Wissensbereich",
-      "navTitle": "5. Wissensbereich",
+      "title": "Recruiting-Wissen",
+      "navTitle": "Recruiting-Wissen",
       "type": "knowledge",
-      "text": "Vorlagen für LinkedIn, Facebook, WhatsApp, E-Mail und Gespräche.",
+      "text": "Praxiswissen, Leitfäden und Vorlagen für den gesamten Recruiting-Prozess.",
       "tags": [
         "Wissen",
         "Vorlagen",
@@ -3036,7 +2938,8 @@ window.APP_CONTENT = {
       "label": "Dashboard",
       "sections": [
         "heute",
-        "schnellzugriff"
+        "aufgaben",
+        "kennzahlen"
       ]
     },
     {
@@ -3081,15 +2984,10 @@ window.APP_CONTENT = {
       ]
     },
     {
-      "label": "Auswertungen",
-      "sections": [
-        "kennzahlen"
-      ]
-    },
-    {
       "label": "Einstellungen",
       "sections": [
         "impressum"
       ]
     }
-  ]};
+  ]
+};

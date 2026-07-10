@@ -9,7 +9,7 @@ const firebaseConfig = {
   appId: "1:523160644442:web:ff840ac629a9f62ebae163"
 };
 
-const APP_VERSION='1.7.1';
+const APP_VERSION='1.7.2';
 const LANDINGPAGE_URL='https://www.ichmachdicherfolgreich.de';
 const APP_BUILD='10.07.2026';
 let firebaseApp=null;
@@ -396,6 +396,8 @@ function render(){
   if(q)return renderSearch(q);
   const s=sectionById(current);
   if(!s)return;
+  if(s.type==='daily_overview')return renderDailyOverview(s);
+  if(s.type==='tasks')return renderTasks(s);
   if(s.type==='dashboard')return renderDashboard(s);
   if(s.type==='links')return renderLinks(s);
   if(s.type==='sales_cockpit')return renderSalesCockpit(s);
@@ -449,7 +451,15 @@ function personActivityStats(person,date){
   activityConfig[person].forEach(f=>{actual+=Number(activity[date][person][f.key]||0); target+=f.target});
   return {actual,target,percent:pct(actual,target)};
 }
-function renderDashboard(s){
+function renderDailyOverview(s){
+  const date=selectedDate || todayKey();
+  view.innerHTML=`
+    <div class="card"><h2>${esc(s.title)}</h2><p>${esc(s.text)}</p></div>
+    <div class="card"><h3>Heute noch offen</h3>${renderOpenToday(date)}</div>
+    ${renderProgressOverview()}
+  `;
+}
+function renderTasks(s){
   const date=selectedDate || todayKey();
   view.innerHTML=`
     <div class="card"><h2>${esc(s.title)}</h2><p>${esc(s.text)}</p></div>
@@ -1294,7 +1304,7 @@ function knowledgeOpenForRecommendation(contactId){
   const c=crmFindContact(contactId); if(!c)return;
   const rec=crmAssistantRecommendation(c); selectedContactId=c.id;
   knowledgeQuery=(rec&&rec.title)||c.nextStep||'';
-  knowledgeCategory='Alle'; current='wissen'; openNavGroupLabel='5. Wissensbereich'; searchInput.value=''; render();
+  knowledgeCategory='Alle'; current='wissen'; openNavGroupLabel='Recruiting-Bibliothek'; searchInput.value=''; render();
   setTimeout(()=>scrollToContent(),0);
 }
 function renderKnowledge(s){

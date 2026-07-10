@@ -1,7 +1,13 @@
 # Recruiting-Cockpit Peter & Martina Kücken
 
-Vollständige Version 1.7.1.
+Vollständige Version 1.7.2.
 
-## Neue Prozesslogik
+## Hauptnavigation
+Dashboard, Kontakte, Peter, Martina, Recruiting-Bibliothek, Einstellungen.
 
-Die drei Videos liegen auf der Landingpage und werden nicht einzeln versendet. Das Cockpit speichert nur, welche Videos angesehen wurden. Der Recruiting-Assistent unterscheidet zwischen Landingpage gesendet, Landingpage gesehen, teilweise angesehen und vollständig angesehen. Erst nach allen drei Videos empfiehlt er ein persönliches Follow-up.
+## Dashboard
+1. Tagesübersicht
+2. Aufgaben
+3. Vertriebs-Cockpit
+
+Der bisherige Schnellzugriff und der Hauptmenüpunkt Auswertungen wurden entfernt. Das Vertriebs-Cockpit liegt jetzt im Dashboard. Der bisherige Wissensbereich heißt Recruiting-Wissen.
