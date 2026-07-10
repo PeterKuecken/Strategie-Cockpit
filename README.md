@@ -1,10 +1,5 @@
-# Recruiting-Cockpit Peter und Martina Kücken
+# Recruiting-Cockpit Peter & Martina Kücken
 
-Vollständige Master-Version 1.7.5.
+Version 1.7.6
 
-Änderung in dieser Version:
-
-- Recruiting-Bibliothek öffnet direkt den Inhalt.
-- Der zusätzliche Unterpunkt Recruiting-Wissen entfällt in der Navigation.
-- Desktop und Smartphone verwenden dieselbe direkte Navigation.
-- Alle bisherigen Inhalte und Funktionen bleiben erhalten.
+Vollständige Master-Version. Das Dashboard liest fällige Kontakte, Termine, Wiedervorlagen und Aufgaben direkt aus der Kontaktverwaltung. Es entstehen keine doppelten Eingaben.

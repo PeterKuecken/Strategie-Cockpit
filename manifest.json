@@ -2,7 +2,7 @@
   "name": "Recruiting-Cockpit Peter & Martina Kücken",
   "short_name": "Kücken Cockpit",
   "description": "Strategiehandbuch und Recruiting-Cockpit für Peter und Martina.",
-  "start_url": "./index.html",
+  "start_url": "./index.html?v=176",
   "display": "standalone",
   "background_color": "#102a43",
   "theme_color": "#102a43",
