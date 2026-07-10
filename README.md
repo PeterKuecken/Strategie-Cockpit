@@ -1,3 +1,5 @@
+Version 1.9.1: Intelligente Priorisierung mit Rot, Orange und Grün, Tagesempfehlung, automatischer Arbeitsreihenfolge und Tagesfortschritt.
+
 Version 1.9.0: Die empfohlene Wiedervorlage wird im Recruiting-Assistenten als eigener, deutlich hervorgehobener Abschnitt angezeigt.
 
 # Recruiting-Cockpit Peter & Martina Kücken

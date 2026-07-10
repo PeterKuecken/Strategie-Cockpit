@@ -1,3 +1,12 @@
+## Version 1.9.1
+
+- Intelligente Kontaktpriorisierung in Rot, Orange und Grün.
+- Automatische Sortierung nach Handlungsdringlichkeit.
+- Tagesempfehlung im Dashboard.
+- Konkrete Warnhinweise und Prioritätsgründe.
+- Tagesfortschritt bleibt mit den priorisierten Arbeitslisten verbunden.
+- Darstellung für Desktop und Smartphone angepasst.
+
 Version 1.8.9.1: Die empfohlene Wiedervorlage wird im Recruiting-Assistenten als eigener, deutlich hervorgehobener Abschnitt angezeigt.
 
 # Version 1.8.9 – 10.07.2026
