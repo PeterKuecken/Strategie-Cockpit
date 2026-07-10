@@ -1,26 +1,3 @@
-# Version 2.0.5
-
-- Sprachsteuerung aus der Kopfzeile entfernt.
-- Sprachsteuerung dauerhaft unterhalb der linken Navigation platziert.
-- Sprachhilfe mit Fragezeichen direkt daneben platziert.
-- Statusmeldungen der Spracherkennung erscheinen unter den beiden Schaltflächen.
-- Desktop- und Smartphone-Darstellung angepasst.
-- Alle übrigen Funktionen bleiben unverändert.
-
-# Version 2.0.4
-
-- Sprachsteuerung versteht freie, natürliche Formulierungen.
-- 52-Wochen-Jahrespläne und einzelne Wochen lassen sich direkt öffnen.
-- Navigation erkennt mehrere gebräuchliche Formulierungen und Synonyme.
-- Bestehende Diktier- und Sprachfunktionen bleiben erhalten.
-
-# Version 2.0.3
-
-- Spracheingabe für Gesprächsnotizen ergänzt.
-- Sprachsteuerung für feste Navigations- und Kontaktbefehle ergänzt.
-- Sicherheitsabfrage vor sprachgesteuerten Datenänderungen.
-- Bedienung per Klick und Tastatur bleibt vollständig erhalten.
-
 # Version 2.0.2
 
 - Smartphone-Datensicherung über den systemeigenen Teilen-Dialog ergänzt.
@@ -274,6 +251,3 @@ Version 1.8.9.1: Die empfohlene Wiedervorlage wird im Recruiting-Assistenten als
 - Nummerierung in „Peter heute“ und „Martina heute“ korrigiert.
 - 52-Wochen-Jahresplan jeweils an Position 1.
 - Unterpunkte fortlaufend und widerspruchsfrei nummeriert.
-
-
-Version 2.0.6: Separate Spracheingabe für Textfelder ergänzt. 'Text diktieren' schreibt in das zuletzt aktive Textfeld. Direkte Diktierbuttons bei Notizen, Kommunikation und Zeitachse bleiben erhalten.
