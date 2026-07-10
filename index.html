@@ -13,7 +13,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#102a43">
-  <link rel="stylesheet" href="style.v202.css?v=202">
+  <link rel="stylesheet" href="style.v203.css?v=203">
 </head>
 <body>
   <header class="topbar">
@@ -21,7 +21,7 @@
       <img class="brand-logo" src="favicon.png" alt="App-Logo">
       <div><h1>Recruiting-Cockpit</h1><p>Peter & Martina Kücken</p></div>
     </div>
-    <div class="top-actions"><span id="syncStatus" class="sync-status">Nicht angemeldet</span><span id="userInfo" class="user-info hidden"></span><button id="logoutBtn" class="ghost hidden">Abmelden</button><button id="resetBtn" class="ghost hidden">Heute zurücksetzen</button></div>
+    <div class="top-actions"><button id="voiceCommandBtn" class="ghost voice-command-btn" type="button" onclick="speechStart('command')" title="App per Sprache steuern">Sprachsteuerung</button><button class="ghost voice-help-btn" type="button" onclick="speechShowHelp()" title="Sprachbefehle anzeigen">?</button><span id="speechStatus" class="speech-status hidden"></span><span id="syncStatus" class="sync-status">Nicht angemeldet</span><span id="userInfo" class="user-info hidden"></span><button id="logoutBtn" class="ghost hidden">Abmelden</button><button id="resetBtn" class="ghost hidden">Heute zurücksetzen</button></div>
   </header>
   <section id="loginScreen" class="login-screen">
     <div class="login-card">
@@ -47,7 +47,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
-  <script src="content.v202.js?v=202"></script>
-  <script src="app.v202.js?v=202"></script>
+  <script src="content.v203.js?v=203"></script>
+  <script src="app.v203.js?v=203"></script>
 </body>
 </html>

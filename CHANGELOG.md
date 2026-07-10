@@ -1,3 +1,10 @@
+# Version 2.0.3
+
+- Spracheingabe für Gesprächsnotizen ergänzt.
+- Sprachsteuerung für feste Navigations- und Kontaktbefehle ergänzt.
+- Sicherheitsabfrage vor sprachgesteuerten Datenänderungen.
+- Bedienung per Klick und Tastatur bleibt vollständig erhalten.
+
 # Version 2.0.2
 
 - Smartphone-Datensicherung über den systemeigenen Teilen-Dialog ergänzt.

@@ -66,7 +66,7 @@ Die persönlichen Tagesbereiche besitzen eigene Startseiten. Der jeweilige 52-Wo
 - Alle nachfolgenden Inhalte sind fortlaufend nummeriert.
 
 
-## Version 2.0.2
+## Version 2.0.3
 - Startdatum der 52-Wochen-Jahrespläne von Peter und Martina: 01.08.2026.
 - Startseiten „Peter heute“ und „Martina heute“ sprachlich geschärft.
 - Recruiting-Vorlagen systematisch nach Person und Recruiting-Phase zugeordnet.
@@ -80,3 +80,10 @@ Produktivfreigabe mit vollständiger Recruiting-Bibliothek, Datensicherung, Wied
 
 ## Mobile Datensicherung
 Auf Smartphones öffnet die App beim Export den Teilen-Dialog. Die JSON-Sicherung kann dort direkt in OneDrive, Dateien, Google Drive oder einer anderen Speicher-App abgelegt werden. Am PC erfolgt weiterhin ein normaler Download.
+
+
+## Spracheingabe und Sprachsteuerung
+- Gesprächsnotizen können über ein Mikrofon diktiert werden.
+- Feste Sprachbefehle öffnen Hauptbereiche, suchen Kontakte und setzen nach Bestätigung Wiedervorlagen.
+- Das Mikrofon hört nur nach bewusstem Antippen zu.
+- Bei fehlender Browserunterstützung bleibt die normale Bedienung erhalten.
