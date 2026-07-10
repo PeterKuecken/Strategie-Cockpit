@@ -66,7 +66,7 @@ Die persönlichen Tagesbereiche besitzen eigene Startseiten. Der jeweilige 52-Wo
 - Alle nachfolgenden Inhalte sind fortlaufend nummeriert.
 
 
-## Version 2.0.1
+## Version 2.0.2
 - Startdatum der 52-Wochen-Jahrespläne von Peter und Martina: 01.08.2026.
 - Startseiten „Peter heute“ und „Martina heute“ sprachlich geschärft.
 - Recruiting-Vorlagen systematisch nach Person und Recruiting-Phase zugeordnet.
@@ -76,3 +76,7 @@ Die persönlichen Tagesbereiche besitzen eigene Startseiten. Der jeweilige 52-Wo
 
 ## Version 2.0.0
 Produktivfreigabe mit vollständiger Recruiting-Bibliothek, Datensicherung, Wiederherstellung und abschließendem Funktionstest.
+
+
+## Mobile Datensicherung
+Auf Smartphones öffnet die App beim Export den Teilen-Dialog. Die JSON-Sicherung kann dort direkt in OneDrive, Dateien, Google Drive oder einer anderen Speicher-App abgelegt werden. Am PC erfolgt weiterhin ein normaler Download.

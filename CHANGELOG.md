@@ -1,3 +1,11 @@
+# Version 2.0.2
+
+- Smartphone-Datensicherung über den systemeigenen Teilen-Dialog ergänzt.
+- Direkte Ablage in OneDrive, Dateien, Google Drive oder anderen Speicher-Apps möglich.
+- Normaler Download am PC bleibt erhalten.
+- Download-Fallback für Smartphones ohne Datei-Teilen unterstützt.
+- Dateiname und Speicherhinweis werden nach der Sicherung angezeigt.
+
 # Version 2.0.1 – Einstellungen sichtbar korrigiert
 
 - Einstellungsseite mit Export, Import, Speicherstatus und Systemstatus sichtbar eingebaut.
