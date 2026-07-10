@@ -1,3 +1,17 @@
+# Version 2.0.1 – Einstellungen sichtbar korrigiert
+
+- Einstellungsseite mit Export, Import, Speicherstatus und Systemstatus sichtbar eingebaut.
+- Neue Dateinamen und Cache-Kennung verhindern alte GitHub- und Smartphone-Dateien.
+- Alle übrigen Funktionen bleiben unverändert.
+
+# Version 2.0.0 – Produktivfreigabe
+
+- Recruiting-Bibliothek für Peter und Martina vollständig nach Recruiting-Phasen zugeordnet.
+- Startdatum der 52-Wochen-Jahrespläne: 01.08.2026.
+- Einstellungen um Datensicherung, Wiederherstellung, Speicherstatus und Systemstatus ergänzt.
+- Vertriebscockpit unverändert übernommen.
+- Gesamte Navigation, Dateiverknüpfungen, JavaScript-Syntax und ZIP-Struktur geprüft.
+
 # Version 1.9.5
 - Startdatum beider 52-Wochen-Jahrespläne auf 01.08.2026 geändert.
 - Feinschliff in „Peter heute“ und „Martina heute“.
