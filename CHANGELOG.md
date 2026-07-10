@@ -274,3 +274,6 @@ Version 1.8.9.1: Die empfohlene Wiedervorlage wird im Recruiting-Assistenten als
 - Nummerierung in „Peter heute“ und „Martina heute“ korrigiert.
 - 52-Wochen-Jahresplan jeweils an Position 1.
 - Unterpunkte fortlaufend und widerspruchsfrei nummeriert.
+
+
+Version 2.0.6: Separate Spracheingabe für Textfelder ergänzt. 'Text diktieren' schreibt in das zuletzt aktive Textfeld. Direkte Diktierbuttons bei Notizen, Kommunikation und Zeitachse bleiben erhalten.

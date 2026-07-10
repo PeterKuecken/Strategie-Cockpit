@@ -98,3 +98,6 @@ Auf Smartphones öffnet die App beim Export den Teilen-Dialog. Die JSON-Sicherun
 - Direkter Aufruf der 52-Wochen-Jahrespläne von Peter und Martina
 - Direkter Aufruf einzelner Wochen
 - Flexible Synonyme für Navigation und Kontaktsuche
+
+
+Version 2.0.6: Separate Spracheingabe für Textfelder ergänzt. 'Text diktieren' schreibt in das zuletzt aktive Textfeld. Direkte Diktierbuttons bei Notizen, Kommunikation und Zeitachse bleiben erhalten.
