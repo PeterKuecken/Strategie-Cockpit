@@ -1,6 +1,6 @@
 # Recruiting-Cockpit Peter & Martina Kücken
 
-Version 1.8.6
+Version 1.8.7
 
 Diese vollständige Master-Version bereinigt die Kontaktverwaltung und die Recruiting-Pipeline. Die sichtbare Pipeline beginnt mit der Erstansprache und enthält keine eigene Kundenphase mehr. Die Recruiting-Phase ist die verbindliche Grundlage der Kontaktsteuerung. Kontakte lassen sich direkt archivieren und wieder aktivieren.
 

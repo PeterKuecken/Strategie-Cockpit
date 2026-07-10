@@ -1,3 +1,11 @@
+# Version 1.8.7 – 10.07.2026
+
+- Recruiting-Assistent schlägt je Recruiting-Phase automatisch ein Wiedervorlagedatum vor.
+- Das vorgeschlagene Datum ist direkt in der Kontaktakte sichtbar und änderbar.
+- „Aufgabe anlegen“ und „Empfehlung übernehmen“ verwenden das ausgewählte Datum.
+- Wiedervorlagen bleiben ohne Uhrzeit.
+- Alle übrigen Funktionen bleiben unverändert.
+
 # Version 1.8.6 – 10.07.2026
 
 - Recruiting-Assistent trennt Vorlagen nach Peter und Martina.
