@@ -55,3 +55,12 @@ Version 1.9.1 ergänzt proaktive Hinweise für überfällige, nicht terminierte 
 
 ### Version 1.9.4
 Die persönlichen Tagesbereiche beginnen mit dem jeweiligen 52-Wochen-Jahresplan. Die Recruiting-Bibliothek ist in getrennte Unterordner für Peter und Martina gegliedert.
+
+### Version 1.9.4.1
+Die persönlichen Tagesbereiche besitzen eigene Startseiten. Der jeweilige 52-Wochen-Jahresplan steht an erster Stelle. Die Recruiting-Bibliothek ist in die getrennten Unterordner Peter und Martina gegliedert. Neue Dateinamen verhindern das Laden alter Inhalte aus dem Browser-Cache.
+
+
+### Version 1.9.4.3
+- Nummerierung in „Peter heute“ und „Martina heute“ vollständig neu geordnet.
+- Der 52-Wochen-Jahresplan beginnt in beiden Bereichen mit Nummer 1.
+- Alle nachfolgenden Inhalte sind fortlaufend nummeriert.

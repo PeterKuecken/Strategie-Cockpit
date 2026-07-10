@@ -1,3 +1,10 @@
+# Version 1.9.4.3
+
+- Echte Überschriften in „Martina heute“ wiederhergestellt.
+- 52-Wochen-Jahresplan bleibt an Position 1.
+- Übersicht bleibt an Position 2.
+- Die fünf Inhaltsbereiche stehen mit ihren vollständigen Überschriften an Position 3 bis 7.
+
 # Version 1.9.3
 
 - Hauptnavigation: Dashboard, Kontakte, Recruiting-Assistent, Peter heute, Martina heute, Recruiting-Bibliothek, Vertriebscockpit, Einstellungen.
@@ -201,3 +208,16 @@ Version 1.8.9.1: Die empfohlene Wiedervorlage wird im Recruiting-Assistenten als
 - Recruiting-Bibliothek in die Unterordner „Peter“ und „Martina“ getrennt.
 - Inhalte werden im jeweiligen Unterordner nach Person gefiltert.
 - Der Recruiting-Assistent öffnet automatisch den passenden Bibliotheksordner.
+
+## Version 1.9.4.1
+- Cache-Problem der Inhaltsdatei behoben: neue Dateinamen für App, Layout und Inhalte.
+- „Peter heute“ öffnet jetzt eine eigene Startseite. Der 52-Wochen-Jahresplan steht dort an erster Stelle.
+- „Martina heute“ öffnet jetzt eine eigene Startseite. Der 52-Wochen-Jahresplan steht dort an erster Stelle.
+- „Recruiting-Bibliothek“ öffnet jetzt eine eigene Startseite mit den zwei getrennten Unterordnern „Peter“ und „Martina“.
+- Bestehende Inhalte und Funktionen bleiben erhalten.
+
+
+## Version 1.9.4.3
+- Nummerierung in „Peter heute“ und „Martina heute“ korrigiert.
+- 52-Wochen-Jahresplan jeweils an Position 1.
+- Unterpunkte fortlaufend und widerspruchsfrei nummeriert.
