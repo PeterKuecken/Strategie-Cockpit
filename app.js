@@ -9,7 +9,7 @@ const firebaseConfig = {
   appId: "1:523160644442:web:ff840ac629a9f62ebae163"
 };
 
-const APP_VERSION='1.7.2';
+const APP_VERSION='1.7.3';
 const LANDINGPAGE_URL='https://www.ichmachdicherfolgreich.de';
 const APP_BUILD='10.07.2026';
 let firebaseApp=null;
@@ -375,9 +375,9 @@ function renderNav(){
     const groupBtn=document.createElement('button');
     groupBtn.className='nav-btn nav-group'+(isActive?' active':'');
     groupBtn.textContent=g.label;
-    groupBtn.onclick=()=>toggleNavGroup(g.label);
+    groupBtn.onclick=()=>g.directTarget ? go(g.directTarget) : toggleNavGroup(g.label);
     nav.appendChild(groupBtn);
-    if(isOpen){
+    if(isOpen && !g.directTarget){
       (g.sections||[]).forEach(id=>{
         const s=sectionById(id); if(!s)return;
         const b=document.createElement('button');
@@ -1312,7 +1312,7 @@ function renderKnowledge(s){
   const q=(knowledgeQuery||'').trim().toLowerCase();
   const filtered=KNOWLEDGE_TEMPLATES.filter(t=>(knowledgeCategory==='Alle'||t.category===knowledgeCategory) && (!q||`${t.title} ${t.category} ${t.keywords} ${t.text}`.toLowerCase().includes(q)));
   const contact=selectedContactId?crmFindContact(selectedContactId):null;
-  view.innerHTML=`<div class="card knowledge-head"><p class="eyebrow">Version 1.6.3</p><h2>${esc(s.title)}</h2><p>${esc(s.text)}</p>${contact?`<p class="knowledge-contact">Aktueller Kontakt: <strong>${esc(crmFullName(contact))}</strong> · ${esc(contact.contactCode||'')}</p>`:''}<input class="knowledge-search" type="search" placeholder="Vorlage suchen, z. B. Landingpage oder Follow-up" value="${esc(knowledgeQuery)}" oninput="knowledgeQuery=this.value; renderKnowledge(sectionById('wissen'))"></div>
+  view.innerHTML=`<div class="card knowledge-head"><p class="eyebrow">Version 1.7.3</p><h2>${esc(s.title)}</h2><p>${esc(s.text)}</p>${contact?`<p class="knowledge-contact">Aktueller Kontakt: <strong>${esc(crmFullName(contact))}</strong> · ${esc(contact.contactCode||'')}</p>`:''}<input class="knowledge-search" type="search" placeholder="Vorlage suchen, z. B. Landingpage oder Follow-up" value="${esc(knowledgeQuery)}" oninput="knowledgeQuery=this.value; renderKnowledge(sectionById('wissen'))"></div>
   <div class="knowledge-categories">${cats.map(cat=>`<button class="${knowledgeCategory===cat?'primary':'copy-btn'}" onclick="knowledgeSetCategory('${esc(cat)}')">${esc(cat)}</button>`).join('')}</div>
   <div class="knowledge-grid">${filtered.length?filtered.map(t=>`<article class="knowledge-card"><span class="knowledge-label">${esc(t.category)}</span><h3>${esc(t.title)}</h3><div class="knowledge-text">${esc(knowledgeContactText(t,contact)).replaceAll('\n','<br>')}</div><div class="knowledge-actions"><button class="copy-btn" onclick="knowledgeCopy('${esc(t.id)}')">Kopieren</button><button class="primary" onclick="knowledgeSend('${esc(t.id)}')">Jetzt verwenden</button></div></article>`).join(''):'<div class="card"><p>Keine passende Vorlage gefunden.</p></div>'}</div>`;
 }

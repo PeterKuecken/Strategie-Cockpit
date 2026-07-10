@@ -1,8 +1,6 @@
-# Version 1.7.2 – 10.07.2026
+# Version 1.7.3 – 10.07.2026
 
-- Schnellzugriff aus dem Dashboard entfernt.
-- Dashboard neu gegliedert in Tagesübersicht, Aufgaben und Vertriebs-Cockpit.
-- Vertriebs-Cockpit aus dem bisherigen Hauptpunkt Auswertungen ins Dashboard verschoben.
-- Hauptmenüpunkt Auswertungen entfernt.
-- Wissensbereich in Recruiting-Wissen umbenannt.
-- Alle bestehenden Inhalte und Funktionen aus Version 1.7.1 beibehalten.
+- Kontakte als direkten Hauptmenüpunkt eingerichtet.
+- Unterpunkt „4. Recruiting“ entfernt.
+- Klick auf „Kontakte“ öffnet sofort die vollständige Kontaktverwaltung.
+- Alle Inhalte und Funktionen aus Version 1.7.2 beibehalten.

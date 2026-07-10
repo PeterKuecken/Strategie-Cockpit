@@ -2903,8 +2903,8 @@ window.APP_CONTENT = {
     },
     {
       "id": "recruiting",
-      "title": "4. Recruiting",
-      "navTitle": "4. Recruiting",
+      "title": "Kontakte",
+      "navTitle": "Kontakte",
       "type": "recruiting",
       "text": "Arbeitsbereich für Kontaktverwaltung, Wiedervorlagen, Aufgaben und gemeinsames Recruiting von Peter und Martina.",
       "tags": [
@@ -2946,7 +2946,8 @@ window.APP_CONTENT = {
       "label": "Kontakte",
       "sections": [
         "recruiting"
-      ]
+      ],
+      "directTarget": "recruiting"
     },
     {
       "label": "Peter",

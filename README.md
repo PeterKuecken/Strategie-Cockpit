@@ -1,13 +1,9 @@
 # Recruiting-Cockpit Peter & Martina Kücken
 
-Vollständige Version 1.7.2.
+Vollständige Version 1.7.3.
 
-## Hauptnavigation
-Dashboard, Kontakte, Peter, Martina, Recruiting-Bibliothek, Einstellungen.
+Änderung gegenüber Version 1.7.2:
 
-## Dashboard
-1. Tagesübersicht
-2. Aufgaben
-3. Vertriebs-Cockpit
-
-Der bisherige Schnellzugriff und der Hauptmenüpunkt Auswertungen wurden entfernt. Das Vertriebs-Cockpit liegt jetzt im Dashboard. Der bisherige Wissensbereich heißt Recruiting-Wissen.
+- Der Menüpunkt Kontakte öffnet die Kontaktverwaltung jetzt direkt.
+- Der bisherige Unterpunkt 4. Recruiting wurde entfernt.
+- Alle bestehenden Inhalte und Funktionen bleiben erhalten.
