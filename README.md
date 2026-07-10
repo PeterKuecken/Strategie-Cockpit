@@ -64,3 +64,11 @@ Die persönlichen Tagesbereiche besitzen eigene Startseiten. Der jeweilige 52-Wo
 - Nummerierung in „Peter heute“ und „Martina heute“ vollständig neu geordnet.
 - Der 52-Wochen-Jahresplan beginnt in beiden Bereichen mit Nummer 1.
 - Alle nachfolgenden Inhalte sind fortlaufend nummeriert.
+
+
+## Version 1.9.5
+- Startdatum der 52-Wochen-Jahrespläne von Peter und Martina: 01.08.2026.
+- Startseiten „Peter heute“ und „Martina heute“ sprachlich geschärft.
+- Recruiting-Vorlagen systematisch nach Person und Recruiting-Phase zugeordnet.
+- Vollständigkeitsprüfung stellt sicher, dass jede Phase für Peter und Martina mindestens eine Vorlage besitzt.
+- Keine Änderungen am Vertriebscockpit oder an den Einstellungen.

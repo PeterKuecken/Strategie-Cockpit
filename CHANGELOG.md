@@ -1,3 +1,11 @@
+# Version 1.9.5
+- Startdatum beider 52-Wochen-Jahrespläne auf 01.08.2026 geändert.
+- Feinschliff in „Peter heute“ und „Martina heute“.
+- Alle Recruiting-Vorlagen systematisch Personen und Recruiting-Phasen zugeordnet.
+- Fehlende Vorlagen für Peter und Martina ergänzt.
+- Vollständigkeitsprüfung der Phasenabdeckung eingebaut.
+- Vertriebscockpit und Einstellungen unverändert.
+
 # Version 1.9.4.3
 
 - Echte Überschriften in „Martina heute“ wiederhergestellt.
