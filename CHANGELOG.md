@@ -1,3 +1,13 @@
+# Version 1.8.2
+
+- Recruiting-Pipeline mit zwölf Phasen ergänzt.
+- Visuelle Fortschrittsleiste in der Kontaktakte ergänzt.
+- Phasenwechsel per Klick mit automatischem Chronik-Eintrag.
+- Bestehende Statuswerte werden automatisch auf die neue Pipeline übertragen.
+- Anzeige der aktuellen Phase in Kontaktübersicht, Dashboard und Vertriebscockpit vereinheitlicht.
+- Desktop- und Smartphone-Darstellung angepasst.
+- Alle bisherigen Funktionen und Inhalte bleiben erhalten.
+
 # Version 1.8.0
 
 - Schlagwörter für Kontakte ergänzt.
