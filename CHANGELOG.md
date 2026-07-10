@@ -1,6 +1,14 @@
+# Version 1.7.8
+
+- Dashboard mit ausgeschriebenem Datum ergänzt.
+- Automatisches Tagesziel und Fortschrittsanzeige ergänzt.
+- Überfällige Kontakte werden deutlich hervorgehoben und öffnen direkt die Arbeitsliste.
+- Keine zusätzlichen Eingaben im Dashboard.
+- Kalender und 7-Tage-Statistik bewusst nicht ergänzt.
+
 # Änderungsprotokoll
 
-## Version 1.7.7
+## Version 1.7.8
 - Vertriebscockpit im Dashboard automatisiert.
 - Zeiträume Heute, Diese Woche und Dieser Monat ergänzt.
 - Kennzahlen: neue Kontakte, Erstgespräche, Informationen versendet, Termine vereinbart, Präsentationen, neue Kunden und neue Geschäftspartner.
