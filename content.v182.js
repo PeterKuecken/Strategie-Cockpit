@@ -2930,11 +2930,29 @@ window.APP_CONTENT = {
       ]
     },
     {
-      "id": "wissen",
-      "title": "Recruiting-Wissen",
-      "navTitle": "Recruiting-Wissen",
+      "id": "wissen_peter",
+      "title": "Recruiting-Bibliothek Peter",
+      "navTitle": "Peter",
       "type": "knowledge",
-      "text": "Praxiswissen, Leitfäden und Vorlagen für den gesamten Recruiting-Prozess.",
+      "owner": "Peter",
+      "text": "Peters Vorlagen, Leitfäden und Inhalte für den gesamten Recruiting-Prozess.",
+      "tags": [
+        "Wissen",
+        "Vorlagen",
+        "LinkedIn",
+        "Facebook",
+        "WhatsApp",
+        "E-Mail",
+        "Gespräch"
+      ]
+    },
+    {
+      "id": "wissen_martina",
+      "title": "Recruiting-Bibliothek Martina",
+      "navTitle": "Martina",
+      "type": "knowledge",
+      "owner": "Martina",
+      "text": "Martinas Vorlagen, Leitfäden und Inhalte für den gesamten Recruiting-Prozess.",
       "tags": [
         "Wissen",
         "Vorlagen",
@@ -2971,6 +2989,7 @@ window.APP_CONTENT = {
     {
       "label": "Peter heute",
       "sections": [
+        "peter52",
         "whatsapp_lib",
         "linkedin_lib",
         "facebook_lib",
@@ -2979,7 +2998,6 @@ window.APP_CONTENT = {
         "kunden_lib",
         "einwaende_lib",
         "video_lib",
-        "peter52",
         "linkedin52",
         "facebook52",
         "videos52"
@@ -2988,21 +3006,21 @@ window.APP_CONTENT = {
     {
       "label": "Martina heute",
       "sections": [
+        "martina52",
         "martina_home",
         "martina_band1",
         "martina_band2",
         "martina_band3",
         "martina_band4",
-        "martina_band5",
-        "martina52"
+        "martina_band5"
       ]
     },
     {
       "label": "Recruiting-Bibliothek",
       "sections": [
-        "wissen"
-      ],
-      "directTarget": "wissen"
+        "wissen_peter",
+        "wissen_martina"
+      ]
     },
     {
       "label": "Vertriebscockpit",

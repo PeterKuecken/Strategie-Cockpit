@@ -194,3 +194,10 @@ Version 1.8.9.1: Die empfohlene Wiedervorlage wird im Recruiting-Assistenten als
 - Kontakte, die zu lange in derselben Recruiting-Phase stehen, werden markiert.
 - Dringende Kontakte werden im Recruiting-Assistenten zuerst angezeigt.
 - Alle bisherigen Funktionen bleiben unverändert.
+
+## Version 1.9.4
+- 52-Wochen-Jahresplan in „Peter heute“ an die erste Stelle gesetzt.
+- 52-Wochen-Jahresplan in „Martina heute“ an die erste Stelle gesetzt.
+- Recruiting-Bibliothek in die Unterordner „Peter“ und „Martina“ getrennt.
+- Inhalte werden im jeweiligen Unterordner nach Person gefiltert.
+- Der Recruiting-Assistent öffnet automatisch den passenden Bibliotheksordner.

@@ -52,3 +52,6 @@ Version 1.9.1 ergänzt proaktive Hinweise für überfällige, nicht terminierte 
 - Recruiting-Assistent als eigener Hauptmenüpunkt.
 - Vertriebscockpit als eigener Hauptmenüpunkt.
 - 52-Wochen-Pläne und alle Inhalte bleiben unverändert erhalten.
+
+### Version 1.9.4
+Die persönlichen Tagesbereiche beginnen mit dem jeweiligen 52-Wochen-Jahresplan. Die Recruiting-Bibliothek ist in getrennte Unterordner für Peter und Martina gegliedert.
