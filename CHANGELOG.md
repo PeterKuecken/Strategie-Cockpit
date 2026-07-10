@@ -1,25 +1,10 @@
-# Changelog
+# Änderungsprotokoll
 
-## Version 1.5.1 RC1
+## Version 1.6.0 – 10.07.2026
 
-- Recruiting-Assistent ergänzt.
-- Nächste empfohlene Aktion pro Kontakt.
-- Assistentenkarte im Dashboard.
-- Aufgaben aus Empfehlungen anlegen.
-- Prozessschritte direkt markieren.
-- Kontakt-Zeitachse protokolliert Assistenten-Aktionen.
-- Versionsnummer und Cache-Buster aktualisiert.
-
-# Changelog
-
-## Version 1.5.0 RC2
-- Überfällige Aufgaben als roter Aufgabenbereich dargestellt.
-- Aufgabenanzeige in mehrere Zeilen gegliedert.
-- Aufgabe, Fälligkeit und Priorität stehen klar getrennt.
-- Prioritäten A, B und C farblich markiert.
-- Erledigt-Schaltfläche bleibt pro Aufgabe vorhanden.
-
-## Version 1.5.0 RC1
-- Aufgaben- und Prozessmanager ergänzt.
-- Dashboard-Bereiche Überfällig, Heute, Diese Woche und Neue Kontakte ergänzt.
-- Dashboard-Kennzahlen und automatische Vorschläge ergänzt.
+- Wissensbereich mit LinkedIn, Facebook, WhatsApp, E-Mail und Gespräch ergänzt.
+- Gemeinsame Suche über alle Vorlagen.
+- Vorlagen können kopiert oder direkt an einen Kontakt gesendet werden.
+- WhatsApp und E-Mail öffnen mit Empfänger und vorbereitetem Text.
+- Recruiting-Assistent verlinkt auf passende Vorlagen.
+- Darstellung für PC und Smartphone angepasst.

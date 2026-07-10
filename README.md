@@ -1,5 +1,5 @@
 # Recruiting-Cockpit Peter & Martina Kücken
 
-Version 1.5.1 RC1
+Vollständige Version 1.6.0 mit Wissensbereich und Vorlagenbibliothek.
 
-Neu: Recruiting-Assistent mit nächsten empfohlenen Aktionen, Aufgabenanlage und automatischer Fortschreibung im Kontakt.
+Für GitHub Pages den Inhalt dieses Ordners direkt in das Hauptverzeichnis des Repositorys hochladen.

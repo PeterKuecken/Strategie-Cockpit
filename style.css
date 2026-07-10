@@ -533,3 +533,7 @@ footer{padding:10px 22px;color:var(--muted);background:#fff;border-top:1px solid
 .assistant-actions{display:flex;flex-direction:column;gap:8px;min-width:170px}
 .contact-assistant{margin-top:14px;margin-bottom:14px}
 @media(max-width:720px){.assistant-actions{width:100%;min-width:0}.assistant-actions button{width:100%}}
+
+
+/* Wissensbereich 1.6.0 */
+.knowledge-head{margin-bottom:14px}.knowledge-search{width:100%;margin-top:12px}.knowledge-contact{padding:10px 12px;background:#eef6ff;border-radius:10px}.knowledge-categories{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}.knowledge-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}.knowledge-card{background:#fff;border:1px solid #d9e2ec;border-radius:14px;padding:16px;box-shadow:0 4px 14px rgba(16,42,67,.06)}.knowledge-card h3{margin:6px 0 12px}.knowledge-label{display:inline-block;font-size:.78rem;font-weight:700;color:#486581;background:#f0f4f8;border-radius:999px;padding:4px 9px}.knowledge-text{white-space:normal;line-height:1.55;color:#243b53}.knowledge-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:15px}.knowledge-actions button{flex:1;min-width:120px}@media(max-width:640px){.knowledge-grid{grid-template-columns:1fr}.knowledge-categories button{flex:1 1 44%}.knowledge-actions{flex-direction:column}.knowledge-actions button{width:100%}}

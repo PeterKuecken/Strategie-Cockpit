@@ -3013,6 +3013,22 @@ window.APP_CONTENT = {
         "Facebook",
         "WhatsApp"
       ]
+    },
+    {
+      "id": "wissen",
+      "title": "5. Wissensbereich",
+      "navTitle": "5. Wissensbereich",
+      "type": "knowledge",
+      "text": "Vorlagen für LinkedIn, Facebook, WhatsApp, E-Mail und Gespräche.",
+      "tags": [
+        "Wissen",
+        "Vorlagen",
+        "LinkedIn",
+        "Facebook",
+        "WhatsApp",
+        "E-Mail",
+        "Gespräch"
+      ]
     }
   ],
   "navGroups": [
@@ -3060,7 +3076,13 @@ window.APP_CONTENT = {
       ]
     },
     {
-      "label": "5. Impressum",
+      "label": "5. Wissensbereich",
+      "sections": [
+        "wissen"
+      ]
+    },
+    {
+      "label": "6. Impressum",
       "sections": [
         "impressum"
       ]

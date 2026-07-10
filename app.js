@@ -9,8 +9,8 @@ const firebaseConfig = {
   appId: "1:523160644442:web:ff840ac629a9f62ebae163"
 };
 
-const APP_VERSION='1.5.1 RC1';
-const APP_BUILD='09.07.2026';
+const APP_VERSION='1.6.0';
+const APP_BUILD='10.07.2026';
 let firebaseApp=null;
 let auth=null;
 let db=null;
@@ -59,6 +59,8 @@ let selectedContactTab='overview';
 let crmLastOpenedContactId=null;
 let crmFilters={q:'',owner:'Meine',status:'',source:'',priority:'',job:'',branch:'',targetGroup:''};
 let crmSortMode='updated';
+let knowledgeQuery='';
+let knowledgeCategory='Alle';
 
 const publishSections=['linkedin52','facebook52','videos52','peter52','martina52'];
 
@@ -398,6 +400,7 @@ function render(){
   if(s.type==='sales_cockpit')return renderSalesCockpit(s);
   if(s.type==='impressum')return renderImpressum(s);
   if(s.type==='recruiting')return renderRecruiting(s);
+  if(s.type==='knowledge')return renderKnowledge(s);
   if(s.type==='kpi')return renderSalesCockpit(s);
   renderContent(s);
 }
@@ -1185,6 +1188,82 @@ function crmTodayTaskList(person,my,due,open){
   if(open.length)base.push(['open',`${open.length} Kontakt${open.length===1?'':'e'} ohne nächsten Schritt klären`]);
   return base;
 }
+
+const KNOWLEDGE_TEMPLATES=[
+  {id:'li-request',category:'LinkedIn',title:'Kontaktanfrage',keywords:'vernetzen kontaktanfrage',text:'Hallo [Vorname], dein Profil hat mein Interesse geweckt. Ich vernetze mich gerne mit Unternehmern und Selbstständigen aus der Region. Ich freue mich auf den Austausch.'},
+  {id:'li-first',category:'LinkedIn',title:'Erstnachricht',keywords:'erstkontakt erste nachricht',text:'Hallo [Vorname], vielen Dank für die Vernetzung. Mich interessiert, wie du zu deiner heutigen Tätigkeit gekommen bist.'},
+  {id:'li-follow',category:'LinkedIn',title:'Nachfassen',keywords:'follow-up nachfassen',text:'Hallo [Vorname], ich wollte unseren Austausch noch einmal aufgreifen. Was beschäftigt dich beruflich aktuell am meisten?'},
+  {id:'fb-first',category:'Facebook',title:'Messenger Erstkontakt',keywords:'messenger erstkontakt',text:'Hallo [Vorname], vielen Dank für die Verbindung. Ich freue mich über neue Kontakte aus der Region. Was machst du beruflich genau?'},
+  {id:'fb-follow',category:'Facebook',title:'Messenger Nachfassen',keywords:'messenger follow-up nachfassen',text:'Hallo [Vorname], ich wollte kurz an unseren Austausch anknüpfen. Wie sieht deine aktuelle Situation aus?'},
+  {id:'fb-appointment',category:'Facebook',title:'Terminvereinbarung',keywords:'termin telefon zoom',text:'Ich finde unseren Austausch interessant. Ein kurzes Telefonat ist oft leichter als viele Nachrichten. Wann passen dir etwa 15 Minuten?'},
+  {id:'wa-first',category:'WhatsApp',title:'Erstkontakt',keywords:'erstkontakt erste nachricht',text:'Hallo [Vorname], schön, dass wir jetzt auch über WhatsApp verbunden sind. Danke für den angenehmen Austausch. Mich interessiert noch: Wie bist du zu deiner heutigen Tätigkeit gekommen?'},
+  {id:'wa-landing',category:'WhatsApp',title:'Landingpage senden',keywords:'landingpage informationen',text:'Hallo [Vorname], hier ist wie besprochen der Link zu unserer kurzen Info-Seite. Schau dir alles in Ruhe an. Danach interessiert mich deine ehrliche Einschätzung.'},
+  {id:'wa-video1',category:'WhatsApp',title:'Video 1',keywords:'video 1 nachfragen',text:'Hallo [Vorname], konntest du dir Video 1 bereits ansehen? Was war dein erster Eindruck?'},
+  {id:'wa-video2',category:'WhatsApp',title:'Video 2',keywords:'video 2 senden',text:'Hallo [Vorname], wenn Video 1 für dich gepasst hat, ist Video 2 jetzt der nächste Schritt. Gib mir danach bitte kurz deine Einschätzung.'},
+  {id:'wa-video3',category:'WhatsApp',title:'Video 3',keywords:'video 3 senden',text:'Hallo [Vorname], Video 3 rundet die Informationen ab. Danach können wir uns kurz austauschen und offene Fragen klären.'},
+  {id:'wa-follow',category:'WhatsApp',title:'Follow-up',keywords:'follow-up nachfassen',text:'Hallo [Vorname], ich wollte kurz hören, wie dein Eindruck nach den Informationen ist. Welche Frage ist bei dir noch offen?'},
+  {id:'mail-first',category:'E-Mail',title:'Erstkontakt',keywords:'erstkontakt erste mail',subject:'Unser Austausch',text:'Hallo [Vorname],\n\nvielen Dank für den angenehmen Kontakt. Ich freue mich auf den weiteren Austausch.\n\nViele Grüße\n[Absender]'},
+  {id:'mail-landing',category:'E-Mail',title:'Landingpage senden',keywords:'landingpage informationen',subject:'Informationen wie besprochen',text:'Hallo [Vorname],\n\nwie besprochen sende ich dir hier die Informationen. Schau dir alles in Ruhe an. Danach interessiert mich deine ehrliche Einschätzung.\n\nViele Grüße\n[Absender]'},
+  {id:'mail-appointment',category:'E-Mail',title:'Terminvereinbarung',keywords:'termin bestätigen vereinbaren',subject:'Unser Termin',text:'Hallo [Vorname],\n\nlass uns die offenen Punkte in einem kurzen Gespräch klären. Welche Zeit passt dir in den nächsten Tagen?\n\nViele Grüße\n[Absender]'},
+  {id:'talk-phone',category:'Gespräch',title:'Telefonleitfaden',keywords:'telefon leitfaden gespräch',text:'1. Persönlich einsteigen.\n2. Nach der aktuellen Situation fragen.\n3. Ziele und Wünsche verstehen.\n4. Prüfen, ob Interesse an einer zusätzlichen Perspektive besteht.\n5. Einen klaren nächsten Schritt vereinbaren.'},
+  {id:'talk-zoom',category:'Gespräch',title:'Zoom-Leitfaden',keywords:'zoom leitfaden präsentation',text:'1. Ziel und Dauer des Gesprächs klären.\n2. Bedarf kurz zusammenfassen.\n3. Firma, Produkt und Geschäft verständlich vorstellen.\n4. Fragen beantworten.\n5. Konkreten nächsten Schritt mit Datum festlegen.'}
+];
+function knowledgeContactText(t,c){
+  const first=(c&&c.firstName)||((c&&crmFullName(c))||'').split(' ')[0]||'';
+  return String(t.text||'').replaceAll('[Vorname]',first||'du').replaceAll('[Absender]',currentPerson());
+}
+function knowledgeTemplate(id){return KNOWLEDGE_TEMPLATES.find(t=>t.id===id)}
+function knowledgeSetCategory(cat){knowledgeCategory=cat; render()}
+function knowledgeSetQuery(v){knowledgeQuery=v||''; render()}
+async function knowledgeCopy(id){
+  const t=knowledgeTemplate(id); if(!t)return;
+  const c=selectedContactId?crmFindContact(selectedContactId):null;
+  await copyText(knowledgeContactText(t,c));
+}
+function knowledgeFindContact(){
+  const term=window.prompt('Name, Firma oder Kontakt-ID eingeben:');
+  if(!term)return null;
+  const q=term.trim().toLowerCase();
+  const matches=crmContacts().filter(c=>crmPersonFilter(c) && crmShortLabel(c).toLowerCase().includes(q));
+  if(!matches.length){alert('Kein passender Kontakt gefunden.'); return null;}
+  if(matches.length===1)return matches[0];
+  const list=matches.slice(0,10).map((c,i)=>`${i+1}. ${crmFullName(c)} · ${c.contactCode||''} · ${c.company||''}`).join('\n');
+  const pick=Number(window.prompt(`Mehrere Kontakte gefunden:\n${list}\n\nNummer auswählen:`));
+  return matches[pick-1]||null;
+}
+function knowledgeSend(id){
+  const t=knowledgeTemplate(id); if(!t)return;
+  const c=(selectedContactId&&crmFindContact(selectedContactId))||knowledgeFindContact();
+  if(!c)return;
+  const text=knowledgeContactText(t,c);
+  if(t.category==='WhatsApp'){
+    const num=crmFullPhone(c); if(!num){alert('Bei diesem Kontakt fehlt die Mobilnummer.');return;}
+    crmAddCommunicationLog(c,'WhatsApp',t.title); save(); window.location.href=`https://wa.me/${num}?text=${encodeURIComponent(text)}`; return;
+  }
+  if(t.category==='E-Mail'){
+    if(!c.email){alert('Bei diesem Kontakt fehlt die E-Mail-Adresse.');return;}
+    crmAddCommunicationLog(c,'E-Mail',t.title); save(); window.location.href=`mailto:${encodeURIComponent(c.email)}?subject=${encodeURIComponent(t.subject||t.title)}&body=${encodeURIComponent(text)}`; return;
+  }
+  copyText(text); selectedContactId=c.id; selectedContactTab='communication'; current='recruiting'; render();
+  setTimeout(()=>alert('Vorlage kopiert. Die Kontaktakte wurde geöffnet.'),50);
+}
+function knowledgeOpenForRecommendation(contactId){
+  const c=crmFindContact(contactId); if(!c)return;
+  const rec=crmAssistantRecommendation(c); selectedContactId=c.id;
+  knowledgeQuery=(rec&&rec.title)||c.nextStep||'';
+  knowledgeCategory='Alle'; current='wissen'; openNavGroupLabel='5. Wissensbereich'; searchInput.value=''; render();
+  setTimeout(()=>scrollToContent(),0);
+}
+function renderKnowledge(s){
+  const cats=['Alle','LinkedIn','Facebook','WhatsApp','E-Mail','Gespräch'];
+  const q=(knowledgeQuery||'').trim().toLowerCase();
+  const filtered=KNOWLEDGE_TEMPLATES.filter(t=>(knowledgeCategory==='Alle'||t.category===knowledgeCategory) && (!q||`${t.title} ${t.category} ${t.keywords} ${t.text}`.toLowerCase().includes(q)));
+  const contact=selectedContactId?crmFindContact(selectedContactId):null;
+  view.innerHTML=`<div class="card knowledge-head"><p class="eyebrow">Version 1.6.0</p><h2>${esc(s.title)}</h2><p>${esc(s.text)}</p>${contact?`<p class="knowledge-contact">Aktueller Kontakt: <strong>${esc(crmFullName(contact))}</strong> · ${esc(contact.contactCode||'')}</p>`:''}<input class="knowledge-search" type="search" placeholder="Vorlage suchen, z. B. Landingpage oder Video 2" value="${esc(knowledgeQuery)}" oninput="knowledgeQuery=this.value; renderKnowledge(sectionById('wissen'))"></div>
+  <div class="knowledge-categories">${cats.map(cat=>`<button class="${knowledgeCategory===cat?'primary':'copy-btn'}" onclick="knowledgeSetCategory('${esc(cat)}')">${esc(cat)}</button>`).join('')}</div>
+  <div class="knowledge-grid">${filtered.length?filtered.map(t=>`<article class="knowledge-card"><span class="knowledge-label">${esc(t.category)}</span><h3>${esc(t.title)}</h3><div class="knowledge-text">${esc(knowledgeContactText(t,contact)).replaceAll('\n','<br>')}</div><div class="knowledge-actions"><button class="copy-btn" onclick="knowledgeCopy('${esc(t.id)}')">Kopieren</button><button class="primary" onclick="knowledgeSend('${esc(t.id)}')">An Kontakt senden</button></div></article>`).join(''):'<div class="card"><p>Keine passende Vorlage gefunden.</p></div>'}</div>`;
+}
+
 function renderRecruiting(s){
   ensureCrm();
   const person=currentPerson();
@@ -1342,12 +1421,12 @@ function crmAssistantApply(contactId){
 }
 function crmRenderAssistantList(person,limit=6){
   const items=crmAssistantItems(person).slice(0,limit);
-  return `<div class="process-card assistant-card"><div class="process-card-head"><h4>Recruiting-Assistent</h4><span class="process-count">${items.length} Vorschläge</span></div>${items.length?`<div class="process-list">${items.map(({c,rec})=>`<div class="process-item assistant-item"><button class="process-main" onclick="crmOpenContact('${esc(c.id)}')"><strong>${esc(crmFullName(c))}</strong><span>${esc(c.contactCode||'')} · ${esc(c.company||c.job||'')} ${c.city?'· '+esc(c.city):''}</span><div class="process-task-line"><b>Empfohlener Schritt:</b> ${esc(rec.title)}</div><small>${esc(rec.hint)}</small></button><div class="assistant-actions"><button class="copy-btn" onclick="crmAssistantCreateTask('${esc(c.id)}',${Number(rec.days||1)})">Aufgabe anlegen</button><button class="primary" onclick="crmAssistantApply('${esc(c.id)}')">${esc(rec.button)}</button></div></div>`).join('')}</div>`:'<p class="small">Aktuell gibt es keine neuen Empfehlungen.</p>'}</div>`;
+  return `<div class="process-card assistant-card"><div class="process-card-head"><h4>Recruiting-Assistent</h4><span class="process-count">${items.length} Vorschläge</span></div>${items.length?`<div class="process-list">${items.map(({c,rec})=>`<div class="process-item assistant-item"><button class="process-main" onclick="crmOpenContact('${esc(c.id)}')"><strong>${esc(crmFullName(c))}</strong><span>${esc(c.contactCode||'')} · ${esc(c.company||c.job||'')} ${c.city?'· '+esc(c.city):''}</span><div class="process-task-line"><b>Empfohlener Schritt:</b> ${esc(rec.title)}</div><small>${esc(rec.hint)}</small></button><div class="assistant-actions"><button class="copy-btn" onclick="knowledgeOpenForRecommendation('${esc(c.id)}')">Passende Vorlage</button><button class="copy-btn" onclick="crmAssistantCreateTask('${esc(c.id)}',${Number(rec.days||1)})">Aufgabe anlegen</button><button class="primary" onclick="crmAssistantApply('${esc(c.id)}')">${esc(rec.button)}</button></div></div>`).join('')}</div>`:'<p class="small">Aktuell gibt es keine neuen Empfehlungen.</p>'}</div>`;
 }
 function crmRenderContactAssistant(c){
   const rec=crmAssistantRecommendation(c);
   if(!rec)return '';
-  return `<div class="process-card assistant-card contact-assistant"><div class="process-card-head"><h4>Nächste empfohlene Aktion</h4><span class="badge">Assistent</span></div><p><strong>${esc(rec.title)}</strong></p><p class="small">${esc(rec.hint)}</p><div class="quick-actions"><button class="copy-btn" onclick="crmAssistantCreateTask('${esc(c.id)}',${Number(rec.days||1)})">Aufgabe anlegen</button><button class="primary" onclick="crmAssistantApply('${esc(c.id)}')">${esc(rec.button)}</button></div></div>`;
+  return `<div class="process-card assistant-card contact-assistant"><div class="process-card-head"><h4>Nächste empfohlene Aktion</h4><span class="badge">Assistent</span></div><p><strong>${esc(rec.title)}</strong></p><p class="small">${esc(rec.hint)}</p><div class="quick-actions"><button class="copy-btn" onclick="knowledgeOpenForRecommendation('${esc(c.id)}')">Passende Vorlage</button><button class="copy-btn" onclick="crmAssistantCreateTask('${esc(c.id)}',${Number(rec.days||1)})">Aufgabe anlegen</button><button class="primary" onclick="crmAssistantApply('${esc(c.id)}')">${esc(rec.button)}</button></div></div>`;
 }
 function renderProcessManager(person){
   const all=crmProcessItems(person);
