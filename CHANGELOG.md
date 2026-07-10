@@ -1,4 +1,19 @@
-# Version 1.8.2.1
+# Version 1.8.2.3
+
+- Recruiting-Pipeline auf Smartphones als vertikale Liste dargestellt.
+- Volle Bildschirmbreite der Kontaktakte wiederhergestellt.
+- Normale, gut lesbare Schriftgröße auf kleinen Bildschirmen.
+- Desktop-Darstellung bleibt horizontal.
+- Alle bestehenden Funktionen bleiben unverändert.
+
+# Version 1.8.2.2
+
+- Doppelte Handlungsempfehlungen in der Kontaktakte entfernt.
+- Die Empfehlung erscheint nur noch im Bereich „Nächste empfohlene Aktion“.
+- Wiederholung im Kontaktkopf und im Kommunikationsbereich entfernt.
+- Alle übrigen Funktionen bleiben unverändert.
+
+# Version 1.8.2.2
 
 - Mobile Kontaktöffnung korrigiert.
 - Geöffnete Kontaktakte erscheint auf Smartphones direkt oberhalb der Kontaktliste.

@@ -1,12 +1,5 @@
-# Recruiting-Cockpit Peter und Martina Kücken
+# Recruiting-Cockpit Peter & Martina Kücken
 
-Master-Version 1.8.2.1
+Version 1.8.2.3
 
-Neu: Automatisches Vertriebscockpit mit den Zeiträumen Heute, Diese Woche und Dieser Monat. Alle Kennzahlen stammen aus der Kontaktverwaltung. Jede Kennzahl öffnet die passenden Kontakte.
-
-
-## Version 1.8.2.1
-Die Kontaktübersicht zeigt Status, Priorität, Wiedervorlage, nächsten Schritt und letzte Aktivität. Schnellaktionen öffnen Telefon, WhatsApp, E-Mail und LinkedIn direkt. Wiedervorlagen verwenden nur noch ein Datum.
-
-
-Mobile Korrektur: Kontakte lassen sich auf Smartphones zuverlässig öffnen.
+Diese vollständige Master-Version enthält die Recruiting-Pipeline. Auf dem Smartphone erscheint sie als vertikale Liste in voller Bildschirmbreite. Auf dem Desktop bleibt die horizontale Darstellung erhalten. Alle bisherigen Funktionen und Inhalte bleiben bestehen.
