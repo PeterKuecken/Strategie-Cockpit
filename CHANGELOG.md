@@ -1,3 +1,10 @@
+# Version 1.8.2.1
+
+- Mobile Kontaktöffnung korrigiert.
+- Geöffnete Kontaktakte erscheint auf Smartphones direkt oberhalb der Kontaktliste.
+- Zusätzliche Touch-Klicklogik für Kontaktkarte und Schaltfläche „Kontakt öffnen“.
+- Desktop-Darstellung und alle übrigen Funktionen bleiben unverändert.
+
 # Version 1.8.2
 
 - Schlagwörter für Kontakte ergänzt.
