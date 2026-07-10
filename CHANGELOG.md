@@ -1,4 +1,11 @@
-# Version 1.7.9
+# Version 1.8.0
+
+- Schlagwörter für Kontakte ergänzt.
+- Mehrere Schlagwörter können kommagetrennt gespeichert werden.
+- Schlagwörter erscheinen in Kontaktliste und Kontaktakte.
+- Kontaktliste kann nach Schlagwort gefiltert werden.
+- Suche berücksichtigt Schlagwörter.
+- Alle bisherigen Funktionen bleiben erhalten.
 
 - Kontaktübersicht für den täglichen Arbeitsablauf erweitert.
 - Priorität, Status, Wiedervorlage, nächster Schritt und letzte Aktivität direkt sichtbar.
