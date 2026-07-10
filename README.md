@@ -1,9 +1,10 @@
-# Recruiting-Cockpit Peter & Martina Kücken
+# Recruiting-Cockpit Peter und Martina Kücken
 
-Vollständige Version 1.7.3.
+Vollständige Master-Version 1.7.5.
 
-Änderung gegenüber Version 1.7.2:
+Änderung in dieser Version:
 
-- Der Menüpunkt Kontakte öffnet die Kontaktverwaltung jetzt direkt.
-- Der bisherige Unterpunkt 4. Recruiting wurde entfernt.
-- Alle bestehenden Inhalte und Funktionen bleiben erhalten.
+- Recruiting-Bibliothek öffnet direkt den Inhalt.
+- Der zusätzliche Unterpunkt Recruiting-Wissen entfällt in der Navigation.
+- Desktop und Smartphone verwenden dieselbe direkte Navigation.
+- Alle bisherigen Inhalte und Funktionen bleiben erhalten.
